@@ -9,7 +9,7 @@ UPLOAD_DIR = "stem_lab_records"
 os.makedirs(UPLOAD_DIR, exist_ok=True)
 
 # ----------------- IN-LINE FILE PREVIEW RENDERER -----------------
-def render_file_preview(file_path, file_name):
+def render_file_preview(file_path, file_name, unique_key):
     ext = os.path.splitext(file_name)[1].lower()
 
     # 1. Images Preview
@@ -26,26 +26,46 @@ def render_file_preview(file_path, file_name):
             st.markdown(f"📊 **Data Table: {file_name}** ({len(df)} rows)")
             st.dataframe(df, use_container_width=True)
         except Exception as e:
-            st.error(f"Error previewing spreadsheet: {e}")
+            st.error(f"Error reading spreadsheet: {e}")
 
-    # 3. PDF Preview (Embedded Viewer)
+    # 3. PDF Direct In-Browser View
     elif ext == ".pdf":
         try:
             with open(file_path, "rb") as f:
-                base64_pdf = base64.b64encode(f.read()).decode('utf-8')
-            pdf_display = f'<iframe src="data:application/pdf;base64,{base64_pdf}" width="100%" height="600" type="application/pdf" style="border: 1px solid #ddd; border-radius: 8px;"></iframe>'
-            st.markdown(f"📄 **PDF Document: {file_name}**", unsafe_allow_html=True)
-            st.markdown(pdf_display, unsafe_allow_html=True)
+                pdf_bytes = f.read()
+            
+            base64_pdf = base64.b64encode(pdf_bytes).decode('utf-8')
+            pdf_embed = f'''
+                <object data="data:application/pdf;base64,{base64_pdf}#toolbar=1" type="application/pdf" width="100%" height="650">
+                    <embed src="data:application/pdf;base64,{base64_pdf}#toolbar=1" type="application/pdf" width="100%" height="650" />
+                </object>
+            '''
+            st.markdown(f"📄 **PDF Document:** {file_name}")
+            st.markdown(pdf_embed, unsafe_allow_html=True)
+            
+            st.download_button(
+                label=f"📥 Download / Open {file_name}",
+                data=pdf_bytes,
+                file_name=file_name,
+                mime="application/pdf",
+                key=f"dl_pdf_{unique_key}"
+            )
         except Exception as e:
-            st.error(f"Error previewing PDF: {e}")
+            st.error(f"Error loading PDF: {e}")
 
-    # 4. Video Player Preview
+    # 4. Videos Preview
     elif ext in [".mp4", ".mov", ".avi"]:
         st.video(file_path)
 
-    # 5. Other Documents / Plain Text
+    # 5. Other Documents (Word/Text)
     else:
-        st.info(f"📄 {file_name} (Preview not supported for this extension)")
+        with open(file_path, "rb") as f:
+            st.download_button(
+                label=f"📥 Download {file_name}",
+                data=f.read(),
+                file_name=file_name,
+                key=f"dl_doc_{unique_key}"
+            )
 
 # ----------------- STUDENT EXCEL VIEWER HELPER -----------------
 def render_student_excel():
@@ -336,10 +356,9 @@ else:
                     
                     if files:
                         st.markdown("---")
-                        for fname in files:
+                        for idx, fname in enumerate(files):
                             fpath = os.path.join(record_dir, fname)
-                            # Direct in-browser display without download necessity
-                            render_file_preview(fpath, fname)
+                            render_file_preview(fpath, fname, f"{sno}_{idx}")
                             st.write("")
                     elif not is_builtin:
                         st.info("No documents uploaded yet for this parameter.")
