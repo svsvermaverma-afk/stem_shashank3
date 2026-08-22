@@ -18,7 +18,27 @@ os.makedirs(DATA_DIR, exist_ok=True)
 STUDENT_ATTENDANCE_FILE = os.path.join(DATA_DIR, "student_attendance.csv")
 TEACHER_ATTENDANCE_FILE = os.path.join(DATA_DIR, "teacher_attendance.csv")
 
-# ----------------- ATTENDANCE INITIALIZATION -----------------
+MONTHS_LIST = [
+    "April 2026", "May 2026", "June 2026", "July 2026",
+    "August 2026", "September 2026", "October 2026", "November 2026",
+    "December 2026", "January 2027", "February 2027", "March 2027"
+]
+WEEKS_LIST = ["Week 1", "Week 2", "Week 3", "Week 4"]
+
+TEACHER_NAMES = [
+    "Mrs. Manju Bala Jindal",
+    "Mrs. Dev Jyoti Choudhary",
+    "Mrs. Monika Mishra",
+    "Mr. Shiv Narayan Singh",
+    "Mr. Shashank Verma",
+    "Mr. Shashank Shekhar Tiwari",
+    "Dr. Rakesh Singh",
+    "Mr. Chandra Mohan Singh",
+    "Mr. Harendra Dwivedi",
+    "Mr. Praveen Kumar"
+]
+
+# ----------------- ATTENDANCE DATA MANAGERS -----------------
 def reset_student_attendance():
     classes = ["VI (A, B, C, D)", "VII (A, B, C, D)", "VIII (A, B, C, D)", "IX (A to H)"]
     structure = {
@@ -34,43 +54,61 @@ def reset_student_attendance():
     }
     pd.DataFrame(structure).to_csv(STUDENT_ATTENDANCE_FILE, index=False)
 
-def reset_teacher_attendance():
-    teachers = [
-        "Mrs. Manju Bala Jindal",
-        "Mrs. Dev Jyoti Choudhary",
-        "Mrs. Monika Mishra",
-        "Mr. Shiv Narayan Singh",
-        "Mr. Shashank Verma",
-        "Mr. Shashank Shekhar Tiwari",
-        "Dr. Rakesh Singh",
-        "Mr. Chandra Mohan Singh",
-        "Mr. Harendra Dwivedi",
-        "Mr. Praveen Kumar"
-    ]
-    structure = {
-        "S.No.": list(range(1, len(teachers) + 1)),
-        "Teacher Name": teachers,
-        "Class & Section Taught": ["" for _ in teachers],
-        "Period / Time Slot": ["" for _ in teachers],
-        "Lab Activity / Topic Covered": ["" for _ in teachers],
-        "Total Present Students": ["" for _ in teachers],
-        "In-Time": ["" for _ in teachers],
-        "Out-Time": ["" for _ in teachers],
-        "Teacher Signature": ["" for _ in teachers]
-    }
-    pd.DataFrame(structure).to_csv(TEACHER_ATTENDANCE_FILE, index=False)
-
 if not os.path.exists(STUDENT_ATTENDANCE_FILE):
     reset_student_attendance()
-
-if not os.path.exists(TEACHER_ATTENDANCE_FILE):
-    reset_teacher_attendance()
 
 def get_student_attendance_df():
     return pd.read_csv(STUDENT_ATTENDANCE_FILE, dtype=str).fillna("")
 
-def get_teacher_attendance_df():
-    return pd.read_csv(TEACHER_ATTENDANCE_FILE, dtype=str).fillna("")
+# Multi-Week Teacher Attendance Engine
+def get_all_teacher_attendance():
+    if os.path.exists(TEACHER_ATTENDANCE_FILE):
+        return pd.read_csv(TEACHER_ATTENDANCE_FILE, dtype=str).fillna("")
+    else:
+        cols = [
+            "Month", "Week", "S.No.", "Teacher Name", "Class & Section Taught",
+            "Period / Time Slot", "Lab Activity / Topic Covered",
+            "Total Present Students", "In-Time", "Out-Time", "Teacher Signature"
+        ]
+        return pd.DataFrame(columns=cols)
+
+def get_teacher_week_data(month, week):
+    df = get_all_teacher_attendance()
+    filtered = df[(df["Month"] == month) & (df["Week"] == week)]
+    if not filtered.empty:
+        display_cols = [
+            "S.No.", "Teacher Name", "Class & Section Taught",
+            "Period / Time Slot", "Lab Activity / Topic Covered",
+            "Total Present Students", "In-Time", "Out-Time", "Teacher Signature"
+        ]
+        return filtered[display_cols].reset_index(drop=True)
+    else:
+        return pd.DataFrame({
+            "S.No.": list(range(1, len(TEACHER_NAMES) + 1)),
+            "Teacher Name": TEACHER_NAMES,
+            "Class & Section Taught": ["" for _ in TEACHER_NAMES],
+            "Period / Time Slot": ["" for _ in TEACHER_NAMES],
+            "Lab Activity / Topic Covered": ["" for _ in TEACHER_NAMES],
+            "Total Present Students": ["" for _ in TEACHER_NAMES],
+            "In-Time": ["" for _ in TEACHER_NAMES],
+            "Out-Time": ["" for _ in TEACHER_NAMES],
+            "Teacher Signature": ["" for _ in TEACHER_NAMES]
+        })
+
+def save_teacher_week_data(month, week, edited_df):
+    df_all = get_all_teacher_attendance()
+    df_remaining = df_all[~((df_all["Month"] == month) & (df_all["Week"] == week))]
+    
+    edited_df["Month"] = month
+    edited_df["Week"] = week
+    
+    cols_order = [
+        "Month", "Week", "S.No.", "Teacher Name", "Class & Section Taught",
+        "Period / Time Slot", "Lab Activity / Topic Covered",
+        "Total Present Students", "In-Time", "Out-Time", "Teacher Signature"
+    ]
+    updated_full = pd.concat([df_remaining, edited_df[cols_order]], ignore_index=True)
+    updated_full.to_csv(TEACHER_ATTENDANCE_FILE, index=False)
 
 # ----------------- IN-LINE FILE PREVIEW RENDERER -----------------
 def render_file_preview(file_path, file_name, unique_key):
@@ -144,6 +182,16 @@ def render_student_excel():
             st.error(f"Error reading {found_file}: {e}")
     else:
         st.info("ℹ️ LMS STUDENT DATA.xlsx file project folder me rakhein.")
+
+# ----------------- TEACHER ATTENDANCE VIEWER FUNCTION -----------------
+def render_viewer_teacher_attendance():
+    st.markdown("### 🧑‍🏫 STEM Teacher Duty & Attendance Register")
+    col1, col2 = st.columns(2)
+    sel_month = col1.selectbox("📅 Select Month:", MONTHS_LIST, key="viewer_t_month")
+    sel_week = col2.selectbox("📆 Select Week:", WEEKS_LIST, key="viewer_t_week")
+    
+    current_data = get_teacher_week_data(sel_month, sel_week)
+    st.dataframe(current_data, use_container_width=True, hide_index=True)
 
 # ----------------- EMBEDDED MASTER DATA -----------------
 def render_profile():
@@ -427,10 +475,7 @@ BUILTIN_RECORDS = {
         st.markdown("### 📊 Class-wise Student STEM Attendance Record"),
         st.dataframe(get_student_attendance_df(), use_container_width=True, hide_index=True)
     )},
-    10: {"title": "Teacher Attendance", "render": lambda: (
-        st.markdown("### 🧑‍🏫 STEM Teacher Lab Duty & Activity Attendance"),
-        st.dataframe(get_teacher_attendance_df(), use_container_width=True, hide_index=True)
-    )},
+    10: {"title": "Teacher Attendance", "render": render_viewer_teacher_attendance},
     11: {"title": "Lab Inventory (Teacher & Student Kits)", "render": lambda: st.markdown("""
         ### 📦 Verified STEM Lab Inventory
         * **Supplier / Source:** ScienceUtsav & ABPS Kit
@@ -576,7 +621,7 @@ if access_mode == "Admin Workspace":
             os.makedirs(record_dir, exist_ok=True)
 
             with st.expander(f"**#{sno}. {title}**", expanded=False):
-                # SPECIAL HANDLER FOR #9 STUDENT ATTENDANCE (DIRECT EDIT)
+                # SPECIAL HANDLER FOR #9 STUDENT ATTENDANCE
                 if sno == 9:
                     st.markdown("#### 📝 Edit Student Attendance")
                     st.caption("Table cells me direct values type karein aur Save par click karein.")
@@ -593,21 +638,21 @@ if access_mode == "Admin Workspace":
                         st.warning("Table reset ho gayi!")
                         st.rerun()
 
-                # SPECIAL HANDLER FOR #10 TEACHER ATTENDANCE (DIRECT EDIT)
+                # SPECIAL HANDLER FOR #10 TEACHER ATTENDANCE (MONTH & WEEK SELECTOR)
                 elif sno == 10:
-                    st.markdown("#### 🧑‍🏫 Edit Teacher Attendance")
-                    st.caption("Teachers ki lab duty, topics aur timing enter karein aur Save par click karein.")
-                    df_tc_att = get_teacher_attendance_df()
-                    edited_tc_df = st.data_editor(df_tc_att, num_rows="dynamic", use_container_width=True, key="admin_edit_tc_att")
+                    st.markdown("#### 🧑‍🏫 Edit Teacher Attendance (Week-wise)")
+                    c_mon, c_wk = st.columns(2)
+                    sel_month_admin = c_mon.selectbox("Select Month to Update:", MONTHS_LIST, key="admin_t_month")
+                    sel_week_admin = c_wk.selectbox("Select Week to Update:", WEEKS_LIST, key="admin_t_week")
                     
-                    c1_t, c2_t = st.columns([2, 2])
-                    if c1_t.button("💾 Save Teacher Attendance", type="primary", key="save_tc_btn"):
-                        edited_tc_df.to_csv(TEACHER_ATTENDANCE_FILE, index=False)
-                        st.success("Teacher Attendance save ho gaya!")
-                        st.rerun()
-                    if c2_t.button("🔄 Reset Table to Blank", key="reset_tc_btn"):
-                        reset_teacher_attendance()
-                        st.warning("Table reset ho gayi!")
+                    current_week_df = get_teacher_week_data(sel_month_admin, sel_week_admin)
+                    
+                    st.caption(f"Currently Editing: **{sel_month_admin} - {sel_week_admin}**")
+                    edited_tc_df = st.data_editor(current_week_df, num_rows="dynamic", use_container_width=True, key=f"editor_tc_{sel_month_admin}_{sel_week_admin}")
+                    
+                    if st.button(f"💾 Save Attendance for {sel_month_admin} ({sel_week_admin})", type="primary", key="save_tc_week_btn"):
+                        save_teacher_week_data(sel_month_admin, sel_week_admin, edited_tc_df)
+                        st.success(f"{sel_month_admin} ke {sel_week_admin} ka data successfully save ho gaya!")
                         st.rerun()
 
                 # REGULAR FILE UPLOADER FOR OTHER PARAMETERS
