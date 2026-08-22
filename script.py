@@ -7,6 +7,47 @@ st.set_page_config(page_title="ABIC STEM Lab Portal", page_icon="🔬", layout="
 UPLOAD_DIR = "stem_lab_records"
 os.makedirs(UPLOAD_DIR, exist_ok=True)
 
+# ----------------- STUDENT EXCEL VIEWER HELPER -----------------
+def render_student_excel():
+    possible_names = ["LMS STUDENT DATA.xlsx", "LMS STUDENT DATA.xls"]
+    found_file = None
+    for name in possible_names:
+        if os.path.exists(name):
+            found_file = name
+            break
+
+    if found_file:
+        try:
+            df = pd.read_excel(found_file)
+            st.markdown("### 👨‍🎓 Registered Student Database (Classes VI – IX)")
+            
+            # Smart Class Filter
+            class_col = next((c for c in df.columns if c.strip().lower() == "class"), None)
+            if class_col:
+                unique_classes = ["All Classes"] + sorted([str(x) for x in df[class_col].dropna().unique()])
+                selected_class = st.selectbox("Filter by Class:", unique_classes)
+                if selected_class != "All Classes":
+                    df_display = df[df[class_col].astype(str) == selected_class]
+                else:
+                    df_display = df
+            else:
+                df_display = df
+
+            st.write(f"**Total Students Displayed:** {len(df_display)}")
+            st.dataframe(df_display, use_container_width=True, hide_index=True)
+
+            with open(found_file, "rb") as f:
+                st.download_button(
+                    label="📥 Download Official Student Excel Sheet",
+                    data=f.read(),
+                    file_name=found_file,
+                    mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+                )
+        except Exception as e:
+            st.error(f"Error reading {found_file}: {e}")
+    else:
+        st.warning("⚠️ **LMS STUDENT DATA.xlsx** file project folder me nahi mili. File ko project folder me paste karein.")
+
 # ----------------- EMBEDDED MASTER DATA -----------------
 BUILTIN_RECORDS = {
     1: {
@@ -14,30 +55,30 @@ BUILTIN_RECORDS = {
         "type": "embed",
         "render": lambda: st.markdown("""
         ### 🏫 STEM Lab Profile
-        * **School Name:** Aditya Birla Intermediate College, Renukoot
-        * **Academic Session:** 2026-27
-        * **STEM Lab Name:** School STEM Innovation & Learning Laboratory
-        * **STEM Coordinator / SPOC:** Shashank Verma
+        * **School Name:** Aditya Birla Intermediate College, Renukoot[cite: 1]
+        * **Academic Session:** 2026-27[cite: 1]
+        * **STEM Lab Name:** School STEM Innovation & Learning Laboratory[cite: 1]
+        * **STEM Coordinator / SPOC:** Shashank Verma[cite: 1]
         
         #### 1. Introduction
-        The STEM Lab of Aditya Birla Intermediate College, Renukoot is a dedicated space for promoting Science, Technology, Engineering and Mathematics (STEM) learning through hands-on activities, experimentation, problem-solving, innovation and project-based learning.
+        The STEM Lab of Aditya Birla Intermediate College, Renukoot is a dedicated space for promoting Science, Technology, Engineering and Mathematics (STEM) learning through hands-on activities, experimentation, problem-solving, innovation and project-based learning.[cite: 1]
         
         #### 2. Classes Covered
-        * Class VI
-        * Class VII
-        * Class VIII
-        * Class IX
-        *(Activities are also organized for other classes for special competitions & projects)*
+        * Class VI[cite: 1]
+        * Class VII[cite: 1]
+        * Class VIII[cite: 1]
+        * Class IX[cite: 1]
+        *(Activities are also organized for other classes for special competitions & projects)*[cite: 1]
         
         #### 3. Major Objectives
-        * Develop scientific thinking and curiosity.
-        * Promote hands-on and experiential learning.
-        * Encourage problem-solving, critical thinking, design thinking & prototyping.
-        * Provide exposure to electronics, Arduino, coding, sensors, robotics & IoT.
-        * Connect STEM concepts with real-life applications and competitions.
+        * Develop scientific thinking and curiosity.[cite: 1]
+        * Promote hands-on and experiential learning.[cite: 1]
+        * Encourage problem-solving, critical thinking, design thinking & prototyping.[cite: 1]
+        * Provide exposure to electronics, Arduino, coding, sensors, robotics & IoT.[cite: 1]
+        * Connect STEM concepts with real-life applications and competitions.[cite: 1]
         
         #### 4. Learning Approach
-        `Problem → Explore → Imagine Design → Build → Test → Improve → Present`
+        `Problem → Explore → Imagine Design → Build → Test → Improve → Present`[cite: 1]
         """)
     },
     2: {
@@ -46,18 +87,18 @@ BUILTIN_RECORDS = {
         "render": lambda: st.markdown("""
         ### 📋 Lab Objectives & Guidelines (Session 2026-27)
         #### A. Key Objectives
-        1. **Experiential Learning:** Practical activities, experiments, and hands-on projects.
-        2. **Problem Solving:** Identify real-life problems and engineer appropriate solutions.
-        3. **Innovation & Prototyping:** Build functional models, circuits, and prototypes.
-        4. **Scientific Temper & Tech Skills:** Coding, electronics, microcontrollers, and digital tools.
-        5. **Collaboration & Presentation:** Team-based problem solving and project pitching.
+        1. **Experiential Learning:** Practical activities, experiments, and hands-on projects.[cite: 2]
+        2. **Problem Solving:** Identify real-life problems and engineer appropriate solutions.[cite: 2]
+        3. **Innovation & Prototyping:** Build functional models, circuits, and prototypes.[cite: 2]
+        4. **Scientific Temper & Tech Skills:** Coding, electronics, microcontrollers, and digital tools.[cite: 2]
+        5. **Collaboration & Presentation:** Team-based problem solving and project pitching.[cite: 2]
 
         #### B. Laboratory Guidelines & Safety Rules
-        * Entry permitted only under teacher/instructor supervision.
-        * Equipment must be used only for designated activities and returned to original boxes.
-        * Keep liquids away from electrical equipment and microcontrollers.
-        * Report any damaged components immediately in the Maintenance/Inventory record.
-        * Maintain documentation for every activity: `Activity → Date → Class → Objective → Procedure → Outcome → Photos`.
+        * Entry permitted only under teacher/instructor supervision.[cite: 2]
+        * Equipment must be used only for designated activities and returned to original boxes.[cite: 2]
+        * Keep liquids away from electrical equipment and microcontrollers.[cite: 2]
+        * Report any damaged components immediately in the Maintenance/Inventory record.[cite: 2]
+        * Maintain documentation for every activity: `Activity → Date → Class → Objective → Procedure → Outcome → Photos`.[cite: 2]
         """)
     },
     3: {
@@ -65,44 +106,39 @@ BUILTIN_RECORDS = {
         "type": "embed",
         "render": lambda: st.markdown("""
         ### 👤 STEM Coordinator / SPOC Details
-        * **Institution:** Aditya Birla Intermediate College, Renukoot (Sonbhadra, UP)
-        * **Name:** Shashank Verma
-        * **Designation:** TGT
-        * **Academic Qualification:** M.Sc., B.Ed.
-        * **Role:** STEM Coordinator / STEM Lab SPOC
-        * **Official Email:** `shashank.verma@adityabirlaschools.in`
-        * **Official Contact:** `9826594665`
+        * **Institution:** Aditya Birla Intermediate College, Renukoot (Sonbhadra, UP)[cite: 3]
+        * **Name:** Shashank Verma[cite: 3]
+        * **Designation:** TGT[cite: 3]
+        * **Academic Qualification:** M.Sc., B.Ed.[cite: 3]
+        * **Role:** STEM Coordinator / STEM Lab SPOC[cite: 3]
+        * **Official Email:** `shashank.verma@adityabirlaschools.in`[cite: 3]
+        * **Official Contact:** `9826594665`[cite: 3]
         
         #### Key Responsibilities:
-        * Planning and coordinating annual/monthly STEM activity calendars.
-        * Maintaining student lists, attendance, digital inventories, and lab equipment.
-        * Mentoring student prototypes, competitions (STEM SPARK, VVM, exhibitions).
-        * Documentation, workshop reporting, and periodic digital backups.
+        * Planning and coordinating annual/monthly STEM activity calendars.[cite: 3]
+        * Maintaining student lists, attendance, digital inventories, and lab equipment.[cite: 3]
+        * Mentoring student prototypes, competitions (STEM SPARK, VVM, exhibitions).[cite: 3]
+        * Documentation, workshop reporting, and periodic digital backups.[cite: 3]
         """)
     },
     8: {
         "title": "Student List (Class VI to IX)",
-        "type": "embed",
-        "render": lambda: st.markdown("""
-        ### 👨‍🎓 Registered Student Database (Classes VI – IX)
-        * **Target Batch:** All sections of Class 6th, 7th, 8th, and 9th.
-        * **Structure:** `SerialNo`, `AdmNo`, `Name`, `Class`, `Gender`.
-        * *Source linked directly from official school enrollment registry.*
-        """)
+        "type": "excel_view",
+        "render": render_student_excel
     },
     11: {
         "title": "Lab Inventory (Teacher & Student Kits)",
         "type": "embed",
         "render": lambda: st.markdown("""
         ### 📦 Complete STEM Lab Inventory
-        * **Supplier / Source:** ScienceUtsav & ABPS Kit
-        * **Status:** Verified & Working
+        * **Supplier / Source:** ScienceUtsav & ABPS Kit[cite: 4, 5]
+        * **Status:** Verified & Working[cite: 5]
         * **Key Categories:**
-          * **Controllers:** Arduino UNO DIP Type, Custom Shields, Bluetooth HC-05, IR Remotes & Receivers.
-          * **Sensors:** DHT11 Temp/Humidity, Rain, Vibration, Ultrasonic, MQ2 Smoke, Flame, Moisture, LDR, Hall Effect, Touch sensors.
-          * **Actuators & Motors:** BO Motors (60 RPM), SG90 Micro Servo Motors, 3-6V Mini Submersible Water Pumps, CD Motors.
-          * **Electronics & Displays:** 16x2 I2C LCD Displays, 7-Segment Displays, WS2812B RGB Addressable LED Strips, 1W LED PCBs, DPDT modules.
-          * **Tools & Hardware:** 3D Printer (Bambu Lab A1 Mini), Peg Boards, Screwdrivers, Li-Ion 18650 Batteries, Multi-pin RMC cables.
+          * **Controllers:** Arduino UNO DIP Type, Custom Shields, Bluetooth HC-05, IR Remotes & Receivers.[cite: 4, 5]
+          * **Sensors:** DHT11 Temp/Humidity, Rain, Vibration, Ultrasonic, MQ2 Smoke, Flame, Moisture, LDR, Hall Effect, Touch sensors.[cite: 4, 5]
+          * **Actuators & Motors:** BO Motors (60 RPM), SG90 Micro Servo Motors, 3-6V Mini Submersible Water Pumps, CD Motors.[cite: 4, 5]
+          * **Electronics & Displays:** 16x2 I2C LCD Displays, 7-Segment Displays, WS2812B RGB Addressable LED Strips, 1W LED PCBs, DPDT modules.[cite: 4, 5]
+          * **Tools & Hardware:** 3D Printer (Bambu Lab A1 Mini), Peg Boards, Screwdrivers, Li-Ion 18650 Batteries, Multi-pin RMC cables.[cite: 4, 5]
         """)
     },
     12: {
@@ -110,10 +146,10 @@ BUILTIN_RECORDS = {
         "type": "embed",
         "render": lambda: st.markdown("""
         ### 🔬 Detailed Equipment Specifications
-        * **Core Microcontroller:** Arduino UNO (Atmega328P DIP) with custom expansion shield.
-        * **Rapid Prototyping:** Bambu Lab A1 Mini 3D Printer for student structural components.
-        * **Sensor Integration:** 3-Pin / 4-Pin standard RMC locking connectors for plug-and-play prototyping.
-        * **Power Management:** 5V DC adapters and dual 18650 Li-Ion rechargeable battery packs with DC barrel jacks.
+        * **Core Microcontroller:** Arduino UNO (Atmega328P DIP) with custom expansion shield.[cite: 4, 5]
+        * **Rapid Prototyping:** Bambu Lab A1 Mini 3D Printer for student structural components.[cite: 4]
+        * **Sensor Integration:** 3-Pin / 4-Pin standard RMC locking connectors for plug-and-play prototyping.[cite: 4, 5]
+        * **Power Management:** 5V DC adapters and dual 18650 Li-Ion rechargeable battery packs with DC barrel jacks.[cite: 4, 5]
         """)
     }
 }
@@ -201,7 +237,7 @@ if access_mode == "Admin Workspace":
     if password == "stem@admin123":
         st.sidebar.success("Authenticated as SPOC")
         st.title("⚙️ Admin Workspace: Upload & Manage Records")
-        st.info("💡 Note: Parameters #1, #2, #3, #8, #11, and #12 are permanently pre-loaded from school records.")
+        st.info("💡 Note: Parameters #1, #2, #3, #8 (via LMS STUDENT DATA.xlsx), #11, and #12 are built directly into the system.")
 
         selected_section = st.selectbox("Select Category to Manage", list(CATEGORIES.keys()))
         items = CATEGORIES[selected_section]
@@ -214,9 +250,9 @@ if access_mode == "Admin Workspace":
 
             is_builtin = sno in BUILTIN_RECORDS
 
-            with st.expander(f"**#{sno}. {title}** {'(Pre-loaded Master Data)' if is_builtin else ''}", expanded=False):
+            with st.expander(f"**#{sno}. {title}** {'(Integrated Master Data)' if is_builtin else ''}", expanded=False):
                 if is_builtin:
-                    st.success("✅ Pre-loaded directly into system.")
+                    st.success("✅ Integrated system record.")
                 
                 uploaded_files = st.file_uploader(
                     f"Upload extra/replacement files for #{sno} ({', '.join(formats)})",
