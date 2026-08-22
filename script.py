@@ -18,7 +18,7 @@ os.makedirs(DATA_DIR, exist_ok=True)
 STUDENT_ATTENDANCE_FILE = os.path.join(DATA_DIR, "student_attendance.csv")
 TEACHER_ATTENDANCE_FILE = os.path.join(DATA_DIR, "teacher_attendance.csv")
 
-# ----------------- ATTENDANCE INITIALIZATION (BLANK TEMPLATES) -----------------
+# ----------------- ATTENDANCE INITIALIZATION -----------------
 def reset_student_attendance():
     classes = ["VI (A, B, C, D)", "VII (A, B, C, D)", "VIII (A, B, C, D)", "IX (A to H)"]
     structure = {
@@ -146,345 +146,319 @@ def render_student_excel():
         st.info("ℹ️ LMS STUDENT DATA.xlsx file project folder me rakhein.")
 
 # ----------------- EMBEDDED MASTER DATA -----------------
+def render_profile():
+    st.markdown("""
+    ### 🏫 STEM LAB PROFILE
+
+    * **School Name:** Aditya Birla Intermediate College, Renukoot
+    * **Academic Session:** 2026-27
+    * **STEM Lab:** School STEM Innovation & Learning Laboratory
+    * **STEM Coordinator / SPOC:** Shashank Verma
+
+    ---
+
+    #### 1. Introduction
+    The STEM Lab of Aditya Birla Intermediate College, Renukoot is a dedicated space for promoting Science, Technology, Engineering and Mathematics (STEM) learning through hands-on activities, experimentation, problem-solving, innovation and project-based learning. The laboratory provides students with opportunities to connect classroom concepts with real-life situations and develop practical skills through designing, making, testing and improving solutions.
+
+    #### 2. Classes Covered
+    The STEM Lab activities are primarily conducted for:
+    * Class VI
+    * Class VII
+    * Class VIII
+    * Class IX
+
+    *Activities may also be organized for other classes as required under school programmes, competitions and special projects.*
+
+    #### 3. Major Objectives
+    1. To develop scientific thinking and curiosity among students.
+    2. To promote hands-on and experiential learning.
+    3. To develop problem-solving and critical-thinking skills.
+    4. To encourage students to identify real-life problems and develop solutions.
+    5. To promote creativity, innovation and design thinking.
+    6. To provide exposure to technology, electronics, coding, robotics and prototyping.
+    7. To encourage teamwork and collaborative learning.
+    8. To develop communication, presentation and documentation skills.
+    9. To connect STEM concepts with real-life applications.
+    10. To encourage participation in STEM competitions and innovation programmes.
+
+    #### 4. Major Areas of STEM Learning
+    * Science Experiments
+    * Mathematics Applications
+    * Electronics
+    * Arduino and Microcontrollers
+    * Robotics
+    * Sensors and Actuators
+    * Coding and Computational Thinking
+    * IoT and Smart Systems
+    * Design Thinking
+    * 3D/Prototype Development
+    * Environmental Innovation
+    * E-waste Management
+    * Problem Identification and Solution Development
+
+    #### 5. Teaching-Learning Approach
+    The STEM Lab follows an activity-oriented approach based on:
+    > **Problem → Explore → Imagine Design → Build → Test → Improve → Present**
+
+    Students are encouraged to work individually as well as in teams.
+
+    #### 6. Major Activities
+    The STEM Lab may conduct:
+    * Hands-on STEM activities
+    * Experiments and demonstrations
+    * Design challenges
+    * Innovation challenges
+    * Project development
+    * Prototype development
+    * Robotics and electronics activities
+    * Coding activities
+    * STEM competitions
+    * Workshops and training programmes
+    * Exhibition and project presentations
+
+    #### 7. Documentation
+    The following records are maintained digitally:
+    * Student records
+    * Attendance
+    * Inventory
+    * Activity reports
+    * Lesson/session plans
+    * Project reports
+    * Assessment records
+    * Training records
+    * Competition records
+    * Photographs and videos
+    * Circulars and official communication
+    * Monthly and annual reports
+
+    #### 8. Expected Learning Outcomes
+    Students participating in STEM Lab activities are expected to develop:
+    * Observation skills
+    * Scientific reasoning
+    * Problem-solving ability
+    * Creativity
+    * Computational thinking
+    * Design and prototyping skills
+    * Teamwork
+    * Communication skills
+    * Presentation skills
+    * Innovation mindset
+
+    #### 9. Evidence of STEM Lab Activities
+    Evidence is maintained through:
+    * Activity reports
+    * Student worksheets
+    * Project reports
+    * Photographs
+    * Videos
+    * Assessment records
+    * Certificates
+    * Competition results
+    * Student presentations
+    """)
+
+def render_guidelines():
+    st.markdown("""
+    ### 📋 STEM LAB OBJECTIVES & GUIDELINES
+
+    * **School:** Aditya Birla Intermediate College, Renukoot
+    * **Academic Session:** 2026-27
+    * **STEM Coordinator / SPOC:** Shashank Verma
+
+    ---
+
+    #### A. Objectives of the STEM Lab
+
+    1. **Experiential Learning**
+    To provide students with opportunities to learn through practical activities, experiments, and hands-on projects.
+
+    2. **Problem Solving**
+    To encourage students to identify real-life problems, analyse them, and develop appropriate solutions.
+
+    3. **Innovation**
+    To promote the ability of students to develop new ideas, designs, and prototypes.
+
+    4. **Scientific Temper**
+    To develop the habits of observation, questioning, experimentation, evidence-based reasoning, and drawing logical conclusions.
+
+    5. **Technology Skills**
+    To introduce students to coding, electronics, sensors, microcontrollers, robotics, and digital tools.
+
+    6. **Collaboration**
+    To promote teamwork, peer learning, and collaborative problem solving.
+
+    7. **Communication**
+    To provide students with opportunities to effectively explain and present their ideas, experiments, and projects.
+
+    ---
+
+    #### B. STEM Lab Guidelines
+
+    ##### 1. General Rules
+    * Students shall enter the STEM Lab only with the permission of the teacher/instructor.
+    * Students shall use equipment only as instructed and for the designated activity.
+    * Discipline and silence shall be maintained inside the lab.
+    * No equipment shall be removed from the lab without permission.
+    * After completing an activity, all materials shall be returned to their designated places.
+
+    ##### 2. Safety Guidelines
+    * Electrical equipment shall be handled carefully.
+    * Damaged wires or equipment shall not be used.
+    * Power supplies shall not be connected or disconnected without the permission of the teacher/instructor.
+    * Water and electrical equipment shall be kept away from each other.
+    * Any problem or malfunction in equipment shall be immediately reported to the teacher.
+    * Running, pushing, or any form of unsafe behaviour inside the lab is strictly prohibited.
+    * In case of an emergency, students shall follow the instructions of the teacher/instructor.
+
+    ##### 3. Equipment Handling
+    * Arduino boards, sensors, motors, and electronic components shall be handled carefully.
+    * Components shall be stored in their designated boxes/containers after use.
+    * Tools shall be used only for their intended purpose.
+    * The condition of equipment shall be checked after every experiment/activity.
+    * Any damaged equipment shall be reported and recorded in the Inventory/Maintenance Record.
+
+    ##### 4. Student Responsibilities
+    Students shall:
+    * Follow all instructions given by the teacher/instructor.
+    * Keep their workstation clean and organised.
+    * Cooperate with other members of their team.
+    * Record observations made during experiments and activities.
+    * Properly document their projects and work.
+
+    ##### 5. Documentation Guidelines
+    For every major STEM activity/project, the following evidence should be maintained:
+    > **Activity Name → Date → Class → Participants → Objective → Materials → Procedure → Outcome → Assessment → Photographs**
+
+    ##### 6. Digital Record Management
+    * STEM Lab records shall be systematically maintained in the designated Google Drive/School Digital Storage.
+    * Important documents and records shall be backed up regularly to prevent data loss.
+
+    ##### 7. Review
+    * STEM Lab activities and records shall be reviewed periodically by the STEM Coordinator/SPOC to ensure proper implementation, documentation, safety, and record maintenance.
+    """)
+
+def render_spoc():
+    st.markdown("""
+    ### 👤 STEM LAB COORDINATOR / SPOC DETAILS
+
+    **Academic Session:** 2026-27
+
+    ---
+
+    #### 1. School Details
+    * **School Name:** Aditya Birla Intermediate College, Renukoot
+    * **Location:** Renukoot, Sonbhadra, Uttar Pradesh
+
+    #### 2. STEM Coordinator / SPOC
+    * **Name:** Shashank Verma
+    * **Designation:** PGT
+    * **Academic Qualification:** M.Sc., B.Ed.
+    * **Role:** STEM Coordinator / STEM Lab SPOC
+
+    #### 3. Major Responsibilities
+    The STEM Coordinator / SPOC is responsible for:
+    1. Planning and coordinating STEM Lab activities.
+    2. Preparing the annual and monthly STEM activity plan.
+    3. Coordinating STEM Lab sessions for designated classes.
+    4. Maintaining student participation and attendance records.
+    5. Maintaining the STEM Lab inventory and equipment records.
+    6. Coordinating maintenance and safe use of equipment.
+    7. Supporting teachers in conducting STEM activities.
+    8. Coordinating student projects and prototypes.
+    9. Encouraging participation in STEM competitions and innovation programmes.
+    10. Coordinating STEM SPARK and other STEM-related programmes.
+    11. Maintaining activity photographs, videos and reports.
+    12. Maintaining training and workshop records.
+    13. Preparing monthly, quarterly and annual STEM Lab reports.
+    14. Coordinating communication with school administration and programme authorities.
+    15. Promoting a safe, innovative and collaborative learning environment in the STEM Lab.
+
+    #### 4. Key Focus Areas
+    * Experiential Learning
+    * Project-Based Learning
+    * Design Thinking
+    * Innovation
+    * Robotics
+    * Electronics
+    * Coding
+    * Prototyping
+    * Problem Solving
+    * STEM Competitions
+
+    #### 5. Record Maintenance
+    The Coordinator/SPOC will ensure systematic maintenance of:
+    * Lab Inventory
+    * Attendance
+    * Activity Records
+    * Project Records
+    * Assessment Records
+    * Training Records
+    * Competition Records
+    * Safety Records
+    * Circulars and Communication
+    * Photo/Video Documentation
+    * Monthly and Annual Reports
+
+    #### 6. Contact Details
+    * **Official School Email:** `shashank.verma@adityabirlaschools.in`
+    * **Official Contact Number:** `9826594665`
+    """)
+
 BUILTIN_RECORDS = {
-    1: {
-        "title": "STEM Lab Profile",
-        "render": lambda: st.markdown("""
-        ### 🏫 STEM LAB PROFILE
-
-        * **School Name:** Aditya Birla Intermediate College, Renukoot
-        * **Academic Session:** 2026-27
-        * **STEM Lab:** School STEM Innovation & Learning Laboratory
-        * **STEM Coordinator / SPOC:** Shashank Verma
-
-        ---
-
-        #### 1. Introduction
-        The STEM Lab of Aditya Birla Intermediate College, Renukoot is a dedicated space for promoting Science, Technology, Engineering and Mathematics (STEM) learning through hands-on activities, experimentation, problem-solving, innovation and project-based learning. The laboratory provides students with opportunities to connect classroom concepts with real-life situations and develop practical skills through designing, making, testing and improving solutions.
-
-        #### 2. Classes Covered
-        The STEM Lab activities are primarily conducted for:
-        * Class VI
-        * Class VII
-        * Class VIII
-        * Class IX
-
-        *Activities may also be organized for other classes as required under school programmes, competitions and special projects.*
-
-        #### 3. Major Objectives
-        1. To develop scientific thinking and curiosity among students.
-        2. To promote hands-on and experiential learning.
-        3. To develop problem-solving and critical-thinking skills.
-        4. To encourage students to identify real-life problems and develop solutions.
-        5. To promote creativity, innovation and design thinking.
-        6. To provide exposure to technology, electronics, coding, robotics and prototyping.
-        7. To encourage teamwork and collaborative learning.
-        8. To develop communication, presentation and documentation skills.
-        9. To connect STEM concepts with real-life applications.
-        10. To encourage participation in STEM competitions and innovation programmes.
-
-        #### 4. Major Areas of STEM Learning
-        * Science Experiments
-        * Mathematics Applications
-        * Electronics
-        * Arduino and Microcontrollers
-        * Robotics
-        * Sensors and Actuators
-        * Coding and Computational Thinking
-        * IoT and Smart Systems
-        * Design Thinking
-        * 3D/Prototype Development
-        * Environmental Innovation
-        * E-waste Management
-        * Problem Identification and Solution Development
-
-        #### 5. Teaching-Learning Approach
-        The STEM Lab follows an activity-oriented approach based on:
-        > **Problem → Explore → Imagine Design → Build → Test → Improve → Present**
-
-        Students are encouraged to work individually as well as in teams.
-
-        #### 6. Major Activities
-        The STEM Lab may conduct:
-        * Hands-on STEM activities
-        * Experiments and demonstrations
-        * Design challenges
-        * Innovation challenges
-        * Project development
-        * Prototype development
-        * Robotics and electronics activities
-        * Coding activities
-        * STEM competitions
-        * Workshops and training programmes
-        * Exhibition and project presentations
-
-        #### 7. Documentation
-        The following records are maintained digitally:
-        * Student records
-        * Attendance
-        * Inventory
-        * Activity reports
-        * Lesson/session plans
-        * Project reports
-        * Assessment records
-        * Training records
-        * Competition records
-        * Photographs and videos
-        * Circulars and official communication
-        * Monthly and annual reports
-
-        #### 8. Expected Learning Outcomes
-        Students participating in STEM Lab activities are expected to develop:
-        * Observation skills
-        * Scientific reasoning
-        * Problem-solving ability
-        * Creativity
-        * Computational thinking
-        * Design and prototyping skills
-        * Teamwork
-        * Communication skills
-        * Presentation skills
-        * Innovation mindset
-
-        #### 9. Evidence of STEM Lab Activities
-        Evidence is maintained through:
-        * Activity reports
-        * Student worksheets
-        * Project reports
-        * Photographs
-        * Videos
-        * Assessment records
-        * Certificates
-        * Competition results
-        * Student presentations
-        """)
-    },
-    2: {
-        "title": "Lab Objectives & Guidelines",
-        "render": lambda: st.markdown("""
-        ### 📋 STEM LAB OBJECTIVES & GUIDELINES
-
-        * **School:** Aditya Birla Intermediate College, Renukoot
-        * **Academic Session:** 2026-27
-        * **STEM Coordinator / SPOC:** Shashank Verma
-
-        ---
-
-        #### A. Objectives of the STEM Lab
-
-        1. **Experiential Learning**
-        To provide students with opportunities to learn through practical activities, experiments, and hands-on projects.
-
-        2. **Problem Solving**
-        To encourage students to identify real-life problems, analyse them, and develop appropriate solutions.
-
-        3. **Innovation**
-        To promote the ability of students to develop new ideas, designs, and prototypes.
-
-        4. **Scientific Temper**
-        To develop the habits of observation, questioning, experimentation, evidence-based reasoning, and drawing logical conclusions.
-
-        5. **Technology Skills**
-        To introduce students to coding, electronics, sensors, microcontrollers, robotics, and digital tools.
-
-        6. **Collaboration**
-        To promote teamwork, peer learning, and collaborative problem solving.
-
-        7. **Communication**
-        To provide students with opportunities to effectively explain and present their ideas, experiments, and projects.
-
-        ---
-
-        #### B. STEM Lab Guidelines
-
-        ##### 1. General Rules
-        * Students shall enter the STEM Lab only with the permission of the teacher/instructor.
-        * Students shall use equipment only as instructed and for the designated activity.
-        * Discipline and silence shall be maintained inside the lab.
-        * No equipment shall be removed from the lab without permission.
-        * After completing an activity, all materials shall be returned to their designated places.
-
-        ##### 2. Safety Guidelines
-        * Electrical equipment shall be handled carefully.
-        * Damaged wires or equipment shall not be used.
-        * Power supplies shall not be connected or disconnected without the permission of the teacher/instructor.
-        * Water and electrical equipment shall be kept away from each other.
-        * Any problem or malfunction in equipment shall be immediately reported to the teacher.
-        * Running, pushing, or any form of unsafe behaviour inside the lab is strictly prohibited.
-        * In case of an emergency, students shall follow the instructions of the teacher/instructor.
-
-        ##### 3. Equipment Handling
-        * Arduino boards, sensors, motors, and electronic components shall be handled carefully.
-        * Components shall be stored in their designated boxes/containers after use.
-        * Tools shall be used only for their intended purpose.
-        * The condition of equipment shall be checked after every experiment/activity.
-        * Any damaged equipment shall be reported and recorded in the Inventory/Maintenance Record.
-
-        ##### 4. Student Responsibilities
-        Students shall:
-        * Follow all instructions given by the teacher/instructor.
-        * Keep their workstation clean and organised.
-        * Cooperate with other members of their team.
-        * Record observations made during experiments and activities.
-        * Properly document their projects and work.
-
-        ##### 5. Documentation Guidelines
-        For every major STEM activity/project, the following evidence should be maintained:
-        > **Activity Name → Date → Class → Participants → Objective → Materials → Procedure → Outcome → Assessment → Photographs**
-
-        ##### 6. Digital Record Management
-        * STEM Lab records shall be systematically maintained in the designated Google Drive/School Digital Storage.
-        * Important documents and records shall be backed up regularly to prevent data loss.
-
-        ##### 7. Review
-        * STEM Lab activities and records shall be reviewed periodically by the STEM Coordinator/SPOC to ensure proper implementation, documentation, safety, and record maintenance.
-        """)
-    },
-    3: {
-        "title": "Coordinator / SPOC Details",
-        "render": lambda: st.markdown("""
-        ### 👤 STEM LAB COORDINATOR / SPOC DETAILS
-
-        **Academic Session:** 2026-27
-
-        ---
-
-        #### 1. School Details
-        * **School Name:** Aditya Birla Intermediate College, Renukoot
-        * **Location:** Renukoot, Sonbhadra, Uttar Pradesh
-
-        #### 2. STEM Coordinator / SPOC
-        * **Name:** Shashank Verma
-        * **Designation:** PGT
-        * **Academic Qualification:** M.Sc., B.Ed.
-        * **Role:** STEM Coordinator / STEM Lab SPOC
-
-        #### 3. Major Responsibilities
-        The STEM Coordinator / SPOC is responsible for:
-        1. Planning and coordinating STEM Lab activities.
-        2. Preparing the annual and monthly STEM activity plan.
-        3. Coordinating STEM Lab sessions for designated classes.
-        4. Maintaining student participation and attendance records.
-        5. Maintaining the STEM Lab inventory and equipment records.
-        6. Coordinating maintenance and safe use of equipment.
-        7. Supporting teachers in conducting STEM activities.
-        8. Coordinating student projects and prototypes.
-        9. Encouraging participation in STEM competitions and innovation programmes.
-        10. Coordinating STEM SPARK and other STEM-related programmes.
-        11. Maintaining activity photographs, videos and reports.
-        12. Maintaining training and workshop records.
-        13. Preparing monthly, quarterly and annual STEM Lab reports.
-        14. Coordinating communication with school administration and programme authorities.
-        15. Promoting a safe, innovative and collaborative learning environment in the STEM Lab.
-
-        #### 4. Key Focus Areas
-        * Experiential Learning
-        * Project-Based Learning
-        * Design Thinking
-        * Innovation
-        * Robotics
-        * Electronics
-        * Coding
-        * Prototyping
-        * Problem Solving
-        * STEM Competitions
-
-        #### 5. Record Maintenance
-        The Coordinator/SPOC will ensure systematic maintenance of:
-        * Lab Inventory
-        * Attendance
-        * Activity Records
-        * Project Records
-        * Assessment Records
-        * Training Records
-        * Competition Records
-        * Safety Records
-        * Circulars and Communication
-        * Photo/Video Documentation
-        * Monthly and Annual Reports
-
-        #### 6. Contact Details
-        * **Official School Email:** `shashank.verma@adityabirlaschools.in`
-        * **Official Contact Number:** `9826594665`
-        """)
-    },
-    4: {
-        "title": "Annual STEM Plan",
-        "render": lambda: st.markdown("""
+    1: {"title": "STEM Lab Profile", "render": render_profile},
+    2: {"title": "Lab Objectives & Guidelines", "render": render_guidelines},
+    3: {"title": "Coordinator / SPOC Details", "render": render_spoc},
+    4: {"title": "Annual STEM Plan", "render": lambda: st.markdown("""
         ### 📅 Annual STEM Academic Roadmap (2026-27)
         * **Quarter 1 (Apr - Jul):** Fundamentals of Circuits, Electronic Components, Basic Sensor Interfacing.
         * **Quarter 2 (Aug - Oct):** Arduino Microcontroller Programming, Display Systems, STEM SPARK Ideation.
         * **Quarter 3 (Nov - Jan):** Robotics, Motor Drivers, 3D Design & 3D Printing Prototyping.
         * **Quarter 4 (Feb - Mar):** Capstone Project Exhibitions, Annual Lab Safety Audits, Student Portfolios.
-        """)
-    },
-    6: {
-        "title": "Class-wise Timetable",
-        "render": lambda: st.markdown("""
+    """)},
+    6: {"title": "Class-wise Timetable", "render": lambda: st.markdown("""
         ### ⏰ Weekly STEM Lab Schedule
         * **Class VI:** Tuesday & Thursday (Period 4)
         * **Class VII:** Monday & Wednesday (Period 5)
         * **Class VIII:** Wednesday & Friday (Period 6)
         * **Class IX:** Saturday (Period 2 to 4)
-        """)
-    },
-    8: {
-        "title": "Student List (Class VI to IX)",
-        "render": render_student_excel
-    },
-    9: {
-        "title": "Student Attendance",
-        "render": lambda: (
-            st.markdown("### 📊 Class-wise Student STEM Attendance Record"),
-            st.dataframe(get_student_attendance_df(), use_container_width=True, hide_index=True)
-        )
-    },
-    10: {
-        "title": "Teacher Attendance",
-        "render": lambda: (
-            st.markdown("### 🧑‍🏫 STEM Teacher Lab Duty & Activity Attendance"),
-            st.dataframe(get_teacher_attendance_df(), use_container_width=True, hide_index=True)
-        )
-    },
-    11: {
-        "title": "Lab Inventory (Teacher & Student Kits)",
-        "render": lambda: st.markdown("""
+    """)},
+    8: {"title": "Student List (Class VI to IX)", "render": render_student_excel},
+    9: {"title": "Student Attendance", "render": lambda: (
+        st.markdown("### 📊 Class-wise Student STEM Attendance Record"),
+        st.dataframe(get_student_attendance_df(), use_container_width=True, hide_index=True)
+    )},
+    10: {"title": "Teacher Attendance", "render": lambda: (
+        st.markdown("### 🧑‍🏫 STEM Teacher Lab Duty & Activity Attendance"),
+        st.dataframe(get_teacher_attendance_df(), use_container_width=True, hide_index=True)
+    )},
+    11: {"title": "Lab Inventory (Teacher & Student Kits)", "render": lambda: st.markdown("""
         ### 📦 Verified STEM Lab Inventory
         * **Supplier / Source:** ScienceUtsav & ABPS Kit
         * **Controllers:** Arduino UNO DIP Microcontrollers, Custom Expansion Shields.
         * **Sensors:** DHT11 Temp/Humidity, Rain, Vibration, Ultrasonic, MQ2 Gas, Flame, Moisture, LDR, Touch.
         * **Actuators & 3D:** BO Motors, SG90 Servos, Water Pumps, Bambu Lab A1 Mini 3D Printer.
-        """)
-    },
-    12: {
-        "title": "Equipment Details",
-        "render": lambda: st.markdown("""
+    """)},
+    12: {"title": "Equipment Details", "render": lambda: st.markdown("""
         ### 🔬 Technical Equipment Details
         * **Microcontroller:** Arduino Uno (ATmega328P DIP), 16 MHz Clock, 5V.
         * **Connectors:** 3-Pin / 4-Pin RMC locking connectors.
         * **Prototyping:** Bambu Lab A1 Mini FDM 3D Printer.
     """)},
-    16: {
-        "title": "Lab Safety Rules",
-        "render": lambda: st.markdown("""
+    16: {"title": "Lab Safety Rules", "render": lambda: st.markdown("""
         ### ⚠️ Mandatory STEM Lab Safety Rules
         1. Entry permitted only under teacher/instructor supervision.
         2. Never short circuit battery terminals; verify circuit polarity before turning on power.
         3. Zero food and liquid zone near equipment workbenches.
         4. In case of smoke or loose wiring, immediately switch off main bench supply.
     """)},
-    17: {
-        "title": "Safety Checklist",
-        "render": lambda: st.markdown("""
+    17: {"title": "Safety Checklist", "render": lambda: st.markdown("""
         ### ✅ Laboratory Periodic Safety Audit Checklist
         * [x] **Fire Safety:** CO2 Fire Extinguisher inspected at lab entrance.
         * [x] **First Aid:** Fully-stocked medical kit accessible.
         * [x] **Power Infrastructure:** Surge protectors and MCB circuit breakers active.
         * [x] **Tool Storage:** Screwdrivers, strippers, and cutters organized in labeled toolboxes.
     """)},
-    18: {
-        "title": "STEM Activities",
-        "render": lambda: st.markdown("""
+    18: {"title": "STEM Activities", "render": lambda: st.markdown("""
         ### 💡 Core Laboratory Activity Modules
         1. Automatic Smart Street Light (LDR + Transistor)
         2. Smart Fire & Smoke Alert System (MQ2 + Flame Sensor)
@@ -492,22 +466,16 @@ BUILTIN_RECORDS = {
         4. Weather Monitoring Station (DHT11 + 16x2 LCD)
         5. Automated Plant Watering System (Soil Moisture Probe + DC Pump)
     """)},
-    28: {
-        "title": "Assessment Rubrics",
-        "render": lambda: st.markdown("""
+    28: {"title": "Assessment Rubrics", "render": lambda: st.markdown("""
         ### 📊 Student STEM Assessment Framework
         * **Problem Definition:** 20% | **Circuit Assembly:** 20% | **Coding Logic:** 20% | **Prototyping:** 20% | **Presentation:** 20%
     """)},
-    36: {
-        "title": "Teacher Training Records",
-        "render": lambda: st.markdown("""
+    36: {"title": "Teacher Training Records", "render": lambda: st.markdown("""
         ### 🧑‍🏫 STEM Capacity Building & Teacher Training
         * **Conducted by:** ScienceUtsav Technical Team & STEM SPOC
         * **Topics:** Arduino Programming, 3D Design/Printing, Sensor Interfacing & Pedagogy.
     """)},
-    47: {
-        "title": "Annual Report",
-        "render": lambda: st.markdown("""
+    47: {"title": "Annual Report", "render": lambda: st.markdown("""
         ### 📑 Annual STEM Innovation Lab Report (2026-27 Executive Summary)
         * Over 400+ students actively trained from Classes VI to IX.
         * 15+ student working prototypes completed.
@@ -598,19 +566,52 @@ if access_mode == "Admin Workspace":
         st.sidebar.success("Authenticated as SPOC")
         st.title("⚙️ Admin Workspace: Manage Records & Live Attendance")
 
-        admin_tabs = st.tabs(["📁 File Uploader & Records", "📝 Edit Student Attendance", "🧑‍🏫 Edit Teacher Attendance"])
+        selected_section = st.selectbox("Select Category to Manage", list(CATEGORIES.keys()))
+        items = CATEGORIES[selected_section]
+        st.divider()
 
-        with admin_tabs[0]:
-            selected_section = st.selectbox("Select Category to Manage", list(CATEGORIES.keys()))
-            items = CATEGORIES[selected_section]
-            st.divider()
+        for sno, title, formats in items:
+            folder_name = get_folder_name(sno, title)
+            record_dir = os.path.join(UPLOAD_DIR, folder_name)
+            os.makedirs(record_dir, exist_ok=True)
 
-            for sno, title, formats in items:
-                folder_name = get_folder_name(sno, title)
-                record_dir = os.path.join(UPLOAD_DIR, folder_name)
-                os.makedirs(record_dir, exist_ok=True)
+            with st.expander(f"**#{sno}. {title}**", expanded=False):
+                # SPECIAL HANDLER FOR #9 STUDENT ATTENDANCE (DIRECT EDIT)
+                if sno == 9:
+                    st.markdown("#### 📝 Edit Student Attendance")
+                    st.caption("Table cells me direct values type karein aur Save par click karein.")
+                    df_st_att = get_student_attendance_df()
+                    edited_st_df = st.data_editor(df_st_att, num_rows="dynamic", use_container_width=True, key="admin_edit_st_att")
+                    
+                    c1, c2 = st.columns([2, 2])
+                    if c1.button("💾 Save Student Attendance", type="primary", key="save_st_btn"):
+                        edited_st_df.to_csv(STUDENT_ATTENDANCE_FILE, index=False)
+                        st.success("Student Attendance save ho gaya!")
+                        st.rerun()
+                    if c2.button("🔄 Reset Table to Blank", key="reset_st_btn"):
+                        reset_student_attendance()
+                        st.warning("Table reset ho gayi!")
+                        st.rerun()
 
-                with st.expander(f"**#{sno}. {title}**", expanded=False):
+                # SPECIAL HANDLER FOR #10 TEACHER ATTENDANCE (DIRECT EDIT)
+                elif sno == 10:
+                    st.markdown("#### 🧑‍🏫 Edit Teacher Attendance")
+                    st.caption("Teachers ki lab duty, topics aur timing enter karein aur Save par click karein.")
+                    df_tc_att = get_teacher_attendance_df()
+                    edited_tc_df = st.data_editor(df_tc_att, num_rows="dynamic", use_container_width=True, key="admin_edit_tc_att")
+                    
+                    c1_t, c2_t = st.columns([2, 2])
+                    if c1_t.button("💾 Save Teacher Attendance", type="primary", key="save_tc_btn"):
+                        edited_tc_df.to_csv(TEACHER_ATTENDANCE_FILE, index=False)
+                        st.success("Teacher Attendance save ho gaya!")
+                        st.rerun()
+                    if c2_t.button("🔄 Reset Table to Blank", key="reset_tc_btn"):
+                        reset_teacher_attendance()
+                        st.warning("Table reset ho gayi!")
+                        st.rerun()
+
+                # REGULAR FILE UPLOADER FOR OTHER PARAMETERS
+                else:
                     uploaded_files = st.file_uploader(
                         f"Upload files for #{sno} ({', '.join(formats)})",
                         type=formats,
@@ -634,42 +635,6 @@ if access_mode == "Admin Workspace":
                             if col_b.button("Delete", key=f"del_{sno}_{fname}"):
                                 os.remove(os.path.join(record_dir, fname))
                                 st.rerun()
-
-        with admin_tabs[1]:
-            st.subheader("📝 Live Editor: Parameter #9 Student Attendance")
-            st.caption("Cells me data type karein aur Save karein.")
-            
-            df_st_att = get_student_attendance_df()
-            edited_st_df = st.data_editor(df_st_att, num_rows="dynamic", use_container_width=True, key="editor_student_attendance")
-            
-            col_save, col_reset = st.columns([2, 2])
-            if col_save.button("💾 Save Student Attendance Changes", type="primary"):
-                edited_st_df.to_csv(STUDENT_ATTENDANCE_FILE, index=False)
-                st.success("Student Attendance save ho gaya!")
-                st.rerun()
-            
-            if col_reset.button("🔄 Reset to Blank Template (Student)"):
-                reset_student_attendance()
-                st.warning("Table reset ho gayi!")
-                st.rerun()
-
-        with admin_tabs[2]:
-            st.subheader("🧑‍🏫 Live Editor: Parameter #10 Teacher Attendance")
-            st.caption("Teachers ki lab duty, topics aur timing enter karein.")
-            
-            df_tc_att = get_teacher_attendance_df()
-            edited_tc_df = st.data_editor(df_tc_att, num_rows="dynamic", use_container_width=True, key="editor_teacher_attendance")
-            
-            col_save_t, col_reset_t = st.columns([2, 2])
-            if col_save_t.button("💾 Save Teacher Attendance Changes", type="primary"):
-                edited_tc_df.to_csv(TEACHER_ATTENDANCE_FILE, index=False)
-                st.success("Teacher Attendance save ho gaya!")
-                st.rerun()
-
-            if col_reset_t.button("🔄 Reset to Blank Template (Teacher)"):
-                reset_teacher_attendance()
-                st.warning("Table reset ho gayi!")
-                st.rerun()
 
     else:
         st.title("🔒 Restricted Access")
