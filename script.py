@@ -286,20 +286,69 @@ BUILTIN_RECORDS = {
     3: {
         "title": "Coordinator / SPOC Details",
         "render": lambda: st.markdown("""
-        ### 👤 STEM Coordinator / SPOC Details
-        * **Institution:** Aditya Birla Intermediate College, Renukoot (Sonbhadra, UP)[cite: 3]
+        ### 👤 STEM LAB COORDINATOR / SPOC DETAILS
+
+        **Academic Session:** 2026-27[cite: 3]
+
+        ---
+
+        #### 1. School Details
+        * **School Name:** Aditya Birla Intermediate College, Renukoot[cite: 3]
+        * **Location:** Renukoot, Sonbhadra, Uttar Pradesh[cite: 3]
+
+        #### 2. STEM Coordinator / SPOC
         * **Name:** Shashank Verma[cite: 3]
-        * **Designation:** TGT
+        * **Designation:** PGT[cite: 3]
         * **Academic Qualification:** M.Sc., B.Ed.[cite: 3]
         * **Role:** STEM Coordinator / STEM Lab SPOC[cite: 3]
-        * **Official Email:** `shashank.verma@adityabirlaschools.in`[cite: 3]
-        * **Official Contact:** `9826594665`[cite: 3]
-        
-        #### Key Responsibilities:
-        * Planning and coordinating annual/monthly STEM activity calendars.[cite: 3]
-        * Maintaining student lists, attendance, digital inventories, and lab equipment.[cite: 3]
-        * Mentoring student prototypes, competitions (STEM SPARK, VVM, exhibitions).[cite: 3]
-        * Documentation, workshop reporting, and periodic digital backups.[cite: 3]
+
+        #### 3. Major Responsibilities
+        The STEM Coordinator / SPOC is responsible for:[cite: 3]
+        1. Planning and coordinating STEM Lab activities.[cite: 3]
+        2. Preparing the annual and monthly STEM activity plan.[cite: 3]
+        3. Coordinating STEM Lab sessions for designated classes.[cite: 3]
+        4. Maintaining student participation and attendance records.[cite: 3]
+        5. Maintaining the STEM Lab inventory and equipment records.[cite: 3]
+        6. Coordinating maintenance and safe use of equipment.[cite: 3]
+        7. Supporting teachers in conducting STEM activities.[cite: 3]
+        8. Coordinating student projects and prototypes.[cite: 3]
+        9. Encouraging participation in STEM competitions and innovation programmes.[cite: 3]
+        10. Coordinating STEM SPARK and other STEM-related programmes.[cite: 3]
+        11. Maintaining activity photographs, videos and reports.[cite: 3]
+        12. Maintaining training and workshop records.[cite: 3]
+        13. Preparing monthly, quarterly and annual STEM Lab reports.[cite: 3]
+        14. Coordinating communication with school administration and programme authorities.[cite: 3]
+        15. Promoting a safe, innovative and collaborative learning environment in the STEM Lab.[cite: 3]
+
+        #### 4. Key Focus Areas
+        * Experiential Learning[cite: 3]
+        * Project-Based Learning[cite: 3]
+        * Design Thinking[cite: 3]
+        * Innovation[cite: 3]
+        * Robotics[cite: 3]
+        * Electronics[cite: 3]
+        * Coding[cite: 3]
+        * Prototyping[cite: 3]
+        * Problem Solving[cite: 3]
+        * STEM Competitions[cite: 3]
+
+        #### 5. Record Maintenance
+        The Coordinator/SPOC will ensure systematic maintenance of:[cite: 3]
+        * Lab Inventory[cite: 3]
+        * Attendance[cite: 3]
+        * Activity Records[cite: 3]
+        * Project Records[cite: 3]
+        * Assessment Records[cite: 3]
+        * Training Records[cite: 3]
+        * Competition Records[cite: 3]
+        * Safety Records[cite: 3]
+        * Circulars and Communication[cite: 3]
+        * Photo/Video Documentation[cite: 3]
+        * Monthly and Annual Reports[cite: 3]
+
+        #### 6. Contact Details
+        * **Official School Email:** `shashank.verma@adityabirlaschools.in`[cite: 3]
+        * **Official Contact Number:** `9826594665`[cite: 3]
         """)
     },
     4: {
