@@ -67,7 +67,7 @@ BUILTIN_RECORDS = {
         ### 👤 STEM Coordinator / SPOC Details
         * **Institution:** Aditya Birla Intermediate College, Renukoot (Sonbhadra, UP)
         * **Name:** Shashank Verma
-        * **Designation:** PGT
+        * **Designation:** TGT
         * **Academic Qualification:** M.Sc., B.Ed.
         * **Role:** STEM Coordinator / STEM Lab SPOC
         * **Official Email:** `shashank.verma@adityabirlaschools.in`
