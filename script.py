@@ -46,7 +46,7 @@ def render_student_excel():
         except Exception as e:
             st.error(f"Error reading {found_file}: {e}")
     else:
-        st.warning("⚠️ **LMS STUDENT DATA.xlsx** file project folder me nahi mili. File ko project folder me paste karein.")
+        st.warning("⚠️ LMS STUDENT DATA.xlsx file project folder me nahi mili. File ko project folder me paste karein.")
 
 # ----------------- EMBEDDED MASTER DATA -----------------
 BUILTIN_RECORDS = {
@@ -55,30 +55,30 @@ BUILTIN_RECORDS = {
         "type": "embed",
         "render": lambda: st.markdown("""
         ### 🏫 STEM Lab Profile
-        * **School Name:** Aditya Birla Intermediate College, Renukoot[cite: 1]
-        * **Academic Session:** 2026-27[cite: 1]
-        * **STEM Lab Name:** School STEM Innovation & Learning Laboratory[cite: 1]
-        * **STEM Coordinator / SPOC:** Shashank Verma[cite: 1]
+        * **School Name:** Aditya Birla Intermediate College, Renukoot
+        * **Academic Session:** 2026-27
+        * **STEM Lab Name:** School STEM Innovation & Learning Laboratory
+        * **STEM Coordinator / SPOC:** Shashank Verma
         
         #### 1. Introduction
-        The STEM Lab of Aditya Birla Intermediate College, Renukoot is a dedicated space for promoting Science, Technology, Engineering and Mathematics (STEM) learning through hands-on activities, experimentation, problem-solving, innovation and project-based learning.[cite: 1]
+        The STEM Lab of Aditya Birla Intermediate College, Renukoot is a dedicated space for promoting Science, Technology, Engineering and Mathematics (STEM) learning through hands-on activities, experimentation, problem-solving, innovation and project-based learning.
         
         #### 2. Classes Covered
-        * Class VI[cite: 1]
-        * Class VII[cite: 1]
-        * Class VIII[cite: 1]
-        * Class IX[cite: 1]
-        *(Activities are also organized for other classes for special competitions & projects)*[cite: 1]
+        * Class VI
+        * Class VII
+        * Class VIII
+        * Class IX
+        *(Activities are also organized for other classes for special competitions & projects)*
         
         #### 3. Major Objectives
-        * Develop scientific thinking and curiosity.[cite: 1]
-        * Promote hands-on and experiential learning.[cite: 1]
-        * Encourage problem-solving, critical thinking, design thinking & prototyping.[cite: 1]
-        * Provide exposure to electronics, Arduino, coding, sensors, robotics & IoT.[cite: 1]
-        * Connect STEM concepts with real-life applications and competitions.[cite: 1]
+        * Develop scientific thinking and curiosity.
+        * Promote hands-on and experiential learning.
+        * Encourage problem-solving, critical thinking, design thinking & prototyping.
+        * Provide exposure to electronics, Arduino, coding, sensors, robotics & IoT.
+        * Connect STEM concepts with real-life applications and competitions.
         
         #### 4. Learning Approach
-        `Problem → Explore → Imagine Design → Build → Test → Improve → Present`[cite: 1]
+        `Problem → Explore → Imagine Design → Build → Test → Improve → Present`
         """)
     },
     2: {
@@ -87,18 +87,18 @@ BUILTIN_RECORDS = {
         "render": lambda: st.markdown("""
         ### 📋 Lab Objectives & Guidelines (Session 2026-27)
         #### A. Key Objectives
-        1. **Experiential Learning:** Practical activities, experiments, and hands-on projects.[cite: 2]
-        2. **Problem Solving:** Identify real-life problems and engineer appropriate solutions.[cite: 2]
-        3. **Innovation & Prototyping:** Build functional models, circuits, and prototypes.[cite: 2]
-        4. **Scientific Temper & Tech Skills:** Coding, electronics, microcontrollers, and digital tools.[cite: 2]
-        5. **Collaboration & Presentation:** Team-based problem solving and project pitching.[cite: 2]
+        1. **Experiential Learning:** Practical activities, experiments, and hands-on projects.
+        2. **Problem Solving:** Identify real-life problems and engineer appropriate solutions.
+        3. **Innovation & Prototyping:** Build functional models, circuits, and prototypes.
+        4. **Scientific Temper & Tech Skills:** Coding, electronics, microcontrollers, and digital tools.
+        5. **Collaboration & Presentation:** Team-based problem solving and project pitching.
 
         #### B. Laboratory Guidelines & Safety Rules
-        * Entry permitted only under teacher/instructor supervision.[cite: 2]
-        * Equipment must be used only for designated activities and returned to original boxes.[cite: 2]
-        * Keep liquids away from electrical equipment and microcontrollers.[cite: 2]
-        * Report any damaged components immediately in the Maintenance/Inventory record.[cite: 2]
-        * Maintain documentation for every activity: `Activity → Date → Class → Objective → Procedure → Outcome → Photos`.[cite: 2]
+        * Entry permitted only under teacher/instructor supervision.
+        * Equipment must be used only for designated activities and returned to original boxes.
+        * Keep liquids away from electrical equipment and microcontrollers.
+        * Report any damaged components immediately in the Maintenance/Inventory record.
+        * Maintain documentation for every activity: `Activity → Date → Class → Objective → Procedure → Outcome → Photos`.
         """)
     },
     3: {
@@ -106,19 +106,19 @@ BUILTIN_RECORDS = {
         "type": "embed",
         "render": lambda: st.markdown("""
         ### 👤 STEM Coordinator / SPOC Details
-        * **Institution:** Aditya Birla Intermediate College, Renukoot (Sonbhadra, UP)[cite: 3]
-        * **Name:** Shashank Verma[cite: 3]
-        * **Designation:** TGT[cite: 3]
-        * **Academic Qualification:** M.Sc., B.Ed.[cite: 3]
-        * **Role:** STEM Coordinator / STEM Lab SPOC[cite: 3]
-        * **Official Email:** `shashank.verma@adityabirlaschools.in`[cite: 3]
-        * **Official Contact:** `9826594665`[cite: 3]
+        * **Institution:** Aditya Birla Intermediate College, Renukoot (Sonbhadra, UP)
+        * **Name:** Shashank Verma
+        * **Designation:** PGT
+        * **Academic Qualification:** M.Sc., B.Ed.
+        * **Role:** STEM Coordinator / STEM Lab SPOC
+        * **Official Email:** `shashank.verma@adityabirlaschools.in`
+        * **Official Contact:** `9826594665`
         
         #### Key Responsibilities:
-        * Planning and coordinating annual/monthly STEM activity calendars.[cite: 3]
-        * Maintaining student lists, attendance, digital inventories, and lab equipment.[cite: 3]
-        * Mentoring student prototypes, competitions (STEM SPARK, VVM, exhibitions).[cite: 3]
-        * Documentation, workshop reporting, and periodic digital backups.[cite: 3]
+        * Planning and coordinating annual/monthly STEM activity calendars.
+        * Maintaining student lists, attendance, digital inventories, and lab equipment.
+        * Mentoring student prototypes, competitions (STEM SPARK, VVM, exhibitions).
+        * Documentation, workshop reporting, and periodic digital backups.
         """)
     },
     8: {
@@ -131,14 +131,14 @@ BUILTIN_RECORDS = {
         "type": "embed",
         "render": lambda: st.markdown("""
         ### 📦 Complete STEM Lab Inventory
-        * **Supplier / Source:** ScienceUtsav & ABPS Kit[cite: 4, 5]
-        * **Status:** Verified & Working[cite: 5]
+        * **Supplier / Source:** ScienceUtsav & ABPS Kit
+        * **Status:** Verified & Working
         * **Key Categories:**
-          * **Controllers:** Arduino UNO DIP Type, Custom Shields, Bluetooth HC-05, IR Remotes & Receivers.[cite: 4, 5]
-          * **Sensors:** DHT11 Temp/Humidity, Rain, Vibration, Ultrasonic, MQ2 Smoke, Flame, Moisture, LDR, Hall Effect, Touch sensors.[cite: 4, 5]
-          * **Actuators & Motors:** BO Motors (60 RPM), SG90 Micro Servo Motors, 3-6V Mini Submersible Water Pumps, CD Motors.[cite: 4, 5]
-          * **Electronics & Displays:** 16x2 I2C LCD Displays, 7-Segment Displays, WS2812B RGB Addressable LED Strips, 1W LED PCBs, DPDT modules.[cite: 4, 5]
-          * **Tools & Hardware:** 3D Printer (Bambu Lab A1 Mini), Peg Boards, Screwdrivers, Li-Ion 18650 Batteries, Multi-pin RMC cables.[cite: 4, 5]
+          * **Controllers:** Arduino UNO DIP Type, Custom Shields, Bluetooth HC-05, IR Remotes & Receivers.
+          * **Sensors:** DHT11 Temp/Humidity, Rain, Vibration, Ultrasonic, MQ2 Smoke, Flame, Moisture, LDR, Hall Effect, Touch sensors.
+          * **Actuators & Motors:** BO Motors (60 RPM), SG90 Micro Servo Motors, 3-6V Mini Submersible Water Pumps, CD Motors.
+          * **Electronics & Displays:** 16x2 I2C LCD Displays, 7-Segment Displays, WS2812B RGB Addressable LED Strips, 1W LED PCBs, DPDT modules.
+          * **Tools & Hardware:** 3D Printer (Bambu Lab A1 Mini), Peg Boards, Screwdrivers, Li-Ion 18650 Batteries, Multi-pin RMC cables.
         """)
     },
     12: {
@@ -146,10 +146,10 @@ BUILTIN_RECORDS = {
         "type": "embed",
         "render": lambda: st.markdown("""
         ### 🔬 Detailed Equipment Specifications
-        * **Core Microcontroller:** Arduino UNO (Atmega328P DIP) with custom expansion shield.[cite: 4, 5]
-        * **Rapid Prototyping:** Bambu Lab A1 Mini 3D Printer for student structural components.[cite: 4]
-        * **Sensor Integration:** 3-Pin / 4-Pin standard RMC locking connectors for plug-and-play prototyping.[cite: 4, 5]
-        * **Power Management:** 5V DC adapters and dual 18650 Li-Ion rechargeable battery packs with DC barrel jacks.[cite: 4, 5]
+        * **Core Microcontroller:** Arduino UNO (Atmega328P DIP) with custom expansion shield.
+        * **Rapid Prototyping:** Bambu Lab A1 Mini 3D Printer for student structural components.
+        * **Sensor Integration:** 3-Pin / 4-Pin standard RMC locking connectors for plug-and-play prototyping.
+        * **Power Management:** 5V DC adapters and dual 18650 Li-Ion rechargeable battery packs with DC barrel jacks.
         """)
     }
 }
