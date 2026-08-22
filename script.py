@@ -1,11 +1,51 @@
 import streamlit as st
 import pandas as pd
 import os
+import base64
 
 st.set_page_config(page_title="ABIC STEM Lab Portal", page_icon="🔬", layout="wide")
 
 UPLOAD_DIR = "stem_lab_records"
 os.makedirs(UPLOAD_DIR, exist_ok=True)
+
+# ----------------- IN-LINE FILE PREVIEW RENDERER -----------------
+def render_file_preview(file_path, file_name):
+    ext = os.path.splitext(file_name)[1].lower()
+
+    # 1. Images Preview
+    if ext in [".jpg", ".jpeg", ".png"]:
+        st.image(file_path, caption=file_name, use_container_width=True)
+
+    # 2. Excel & CSV Preview (Direct Interactive Table)
+    elif ext in [".xlsx", ".xls", ".csv"]:
+        try:
+            if ext == ".csv":
+                df = pd.read_csv(file_path)
+            else:
+                df = pd.read_excel(file_path)
+            st.markdown(f"📊 **Data Table: {file_name}** ({len(df)} rows)")
+            st.dataframe(df, use_container_width=True)
+        except Exception as e:
+            st.error(f"Error previewing spreadsheet: {e}")
+
+    # 3. PDF Preview (Embedded Viewer)
+    elif ext == ".pdf":
+        try:
+            with open(file_path, "rb") as f:
+                base64_pdf = base64.b64encode(f.read()).decode('utf-8')
+            pdf_display = f'<iframe src="data:application/pdf;base64,{base64_pdf}" width="100%" height="600" type="application/pdf" style="border: 1px solid #ddd; border-radius: 8px;"></iframe>'
+            st.markdown(f"📄 **PDF Document: {file_name}**", unsafe_allow_html=True)
+            st.markdown(pdf_display, unsafe_allow_html=True)
+        except Exception as e:
+            st.error(f"Error previewing PDF: {e}")
+
+    # 4. Video Player Preview
+    elif ext in [".mp4", ".mov", ".avi"]:
+        st.video(file_path)
+
+    # 5. Other Documents / Plain Text
+    else:
+        st.info(f"📄 {file_name} (Preview not supported for this extension)")
 
 # ----------------- STUDENT EXCEL VIEWER HELPER -----------------
 def render_student_excel():
@@ -21,7 +61,6 @@ def render_student_excel():
             df = pd.read_excel(found_file)
             st.markdown("### 👨‍🎓 Registered Student Database (Classes VI – IX)")
             
-            # Smart Class Filter
             class_col = next((c for c in df.columns if c.strip().lower() == "class"), None)
             if class_col:
                 unique_classes = ["All Classes"] + sorted([str(x) for x in df[class_col].dropna().unique()])
@@ -35,14 +74,6 @@ def render_student_excel():
 
             st.write(f"**Total Students Displayed:** {len(df_display)}")
             st.dataframe(df_display, use_container_width=True, hide_index=True)
-
-            with open(found_file, "rb") as f:
-                st.download_button(
-                    label="📥 Download Official Student Excel Sheet",
-                    data=f.read(),
-                    file_name=found_file,
-                    mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-                )
         except Exception as e:
             st.error(f"Error reading {found_file}: {e}")
     else:
@@ -237,7 +268,7 @@ if access_mode == "Admin Workspace":
     if password == "stem@admin123":
         st.sidebar.success("Authenticated as SPOC")
         st.title("⚙️ Admin Workspace: Upload & Manage Records")
-        st.info("💡 Parameters #1, #2, #3, #8 (LMS STUDENT DATA.xlsx), #11, and #12 are pre-integrated.")
+        st.info("💡 Files uploaded here will automatically open inside the browser for viewers.")
 
         selected_section = st.selectbox("Select Category to Manage", list(CATEGORIES.keys()))
         items = CATEGORIES[selected_section]
@@ -270,7 +301,7 @@ if access_mode == "Admin Workspace":
 
                 existing_files = os.listdir(record_dir)
                 if existing_files:
-                    st.markdown("**Uploaded Files:**")
+                    st.markdown("**Manage Uploaded Files:**")
                     for fname in existing_files:
                         col_a, col_b = st.columns([5, 1])
                         col_a.text(f"📄 {fname}")
@@ -281,7 +312,7 @@ if access_mode == "Admin Workspace":
         st.title("🔒 Restricted Access")
         st.info("Enter admin password to upload and modify records.")
 
-# ----------------- PUBLIC VIEWER -----------------
+# ----------------- PUBLIC VIEWER (DIRECT VIEW) -----------------
 else:
     st.title("🔬 STEM Innovation & Learning Laboratory")
     st.caption("Aditya Birla Intermediate College, Renukoot | Academic Session 2026-27")
@@ -305,24 +336,11 @@ else:
                     
                     if files:
                         st.markdown("---")
-                        image_exts = [".jpg", ".jpeg", ".png"]
-                        image_files = [f for f in files if any(f.lower().endswith(ext) for ext in image_exts)]
-                        doc_files = [f for f in files if not any(f.lower().endswith(ext) for ext in image_exts)]
-                        
-                        if image_files:
-                            st.markdown("📷 **Photo Gallery:**")
-                            cols = st.columns(3)
-                            for idx, img_name in enumerate(image_files):
-                                img_path = os.path.join(record_dir, img_name)
-                                cols[idx % 3].image(img_path, caption=img_name, use_container_width=True)
-                        
-                        if doc_files:
-                            st.markdown("📄 **Official Documents:**")
-                            for fname in doc_files:
-                                col1, col2 = st.columns([4, 1])
-                                col1.text(f"📄 {fname}")
-                                with open(os.path.join(record_dir, fname), "rb") as f_data:
-                                    col2.download_button("Download", data=f_data.read(), file_name=fname, key=f"dl_{sno}_{fname}")
+                        for fname in files:
+                            fpath = os.path.join(record_dir, fname)
+                            # Direct in-browser display without download necessity
+                            render_file_preview(fpath, fname)
+                            st.write("")
                     elif not is_builtin:
                         st.info("No documents uploaded yet for this parameter.")
 
