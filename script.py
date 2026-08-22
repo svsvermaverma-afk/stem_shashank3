@@ -94,30 +94,30 @@ BUILTIN_RECORDS = {
         "title": "STEM Lab Profile",
         "render": lambda: st.markdown("""
         ### 🏫 STEM Lab Profile
-        * **School Name:** Aditya Birla Intermediate College, Renukoot[cite: 1]
-        * **Academic Session:** 2026-27[cite: 1]
-        * **STEM Lab Name:** School STEM Innovation & Learning Laboratory[cite: 1]
-        * **STEM Coordinator / SPOC:** Shashank Verma[cite: 1]
+        * **School Name:** Aditya Birla Intermediate College, Renukoot
+        * **Academic Session:** 2026-27
+        * **STEM Lab Name:** School STEM Innovation & Learning Laboratory
+        * **STEM Coordinator / SPOC:** Shashank Verma
         
         #### 1. Introduction
-        The STEM Lab of Aditya Birla Intermediate College, Renukoot is a dedicated space for promoting Science, Technology, Engineering and Mathematics (STEM) learning through hands-on activities, experimentation, problem-solving, innovation and project-based learning.[cite: 1]
+        The STEM Lab of Aditya Birla Intermediate College, Renukoot is a dedicated space for promoting Science, Technology, Engineering and Mathematics (STEM) learning through hands-on activities, experimentation, problem-solving, innovation and project-based learning.
         
         #### 2. Classes Covered
-        * Class VI[cite: 1]
-        * Class VII[cite: 1]
-        * Class VIII[cite: 1]
-        * Class IX[cite: 1]
-        *(Activities are also organized for other classes for special competitions & projects)*[cite: 1]
+        * Class VI
+        * Class VII
+        * Class VIII
+        * Class IX
+        *(Activities are also organized for other classes for special competitions & projects)*
         
         #### 3. Major Objectives
-        * Develop scientific thinking and curiosity.[cite: 1]
-        * Promote hands-on and experiential learning.[cite: 1]
-        * Encourage problem-solving, critical thinking, design thinking & prototyping.[cite: 1]
-        * Provide exposure to electronics, Arduino, coding, sensors, robotics & IoT.[cite: 1]
-        * Connect STEM concepts with real-life applications and competitions.[cite: 1]
+        * Develop scientific thinking and curiosity.
+        * Promote hands-on and experiential learning.
+        * Encourage problem-solving, critical thinking, design thinking & prototyping.
+        * Provide exposure to electronics, Arduino, coding, sensors, robotics & IoT.
+        * Connect STEM concepts with real-life applications and competitions.
         
         #### 4. Learning Approach
-        `Problem → Explore → Imagine Design → Build → Test → Improve → Present`[cite: 1]
+        `Problem → Explore → Imagine Design → Build → Test → Improve → Present`
         """)
     },
     2: {
@@ -125,37 +125,37 @@ BUILTIN_RECORDS = {
         "render": lambda: st.markdown("""
         ### 📋 Lab Objectives & Guidelines (Session 2026-27)
         #### A. Key Objectives
-        1. **Experiential Learning:** Practical activities, experiments, and hands-on projects.[cite: 2]
-        2. **Problem Solving:** Identify real-life problems and engineer appropriate solutions.[cite: 2]
-        3. **Innovation & Prototyping:** Build functional models, circuits, and prototypes.[cite: 2]
-        4. **Scientific Temper & Tech Skills:** Coding, electronics, microcontrollers, and digital tools.[cite: 2]
-        5. **Collaboration & Presentation:** Team-based problem solving and project pitching.[cite: 2]
+        1. **Experiential Learning:** Practical activities, experiments, and hands-on projects.
+        2. **Problem Solving:** Identify real-life problems and engineer appropriate solutions.
+        3. **Innovation & Prototyping:** Build functional models, circuits, and prototypes.
+        4. **Scientific Temper & Tech Skills:** Coding, electronics, microcontrollers, and digital tools.
+        5. **Collaboration & Presentation:** Team-based problem solving and project pitching.
 
         #### B. Laboratory Guidelines & Safety Rules
-        * Entry permitted only under teacher/instructor supervision.[cite: 2]
-        * Equipment must be used only for designated activities and returned to original boxes.[cite: 2]
-        * Keep liquids away from electrical equipment and microcontrollers.[cite: 2]
-        * Report any damaged components immediately in the Maintenance/Inventory record.[cite: 2]
-        * Maintain documentation for every activity: `Activity → Date → Class → Objective → Procedure → Outcome → Photos`.[cite: 2]
+        * Entry permitted only under teacher/instructor supervision.
+        * Equipment must be used only for designated activities and returned to original boxes.
+        * Keep liquids away from electrical equipment and microcontrollers.
+        * Report any damaged components immediately in the Maintenance/Inventory record.
+        * Maintain documentation for every activity: `Activity → Date → Class → Objective → Procedure → Outcome → Photos`.
         """)
     },
     3: {
         "title": "Coordinator / SPOC Details",
         "render": lambda: st.markdown("""
         ### 👤 STEM Coordinator / SPOC Details
-        * **Institution:** Aditya Birla Intermediate College, Renukoot (Sonbhadra, UP)[cite: 3]
-        * **Name:** Shashank Verma[cite: 3]
+        * **Institution:** Aditya Birla Intermediate College, Renukoot (Sonbhadra, UP)
+        * **Name:** Shashank Verma
         * **Designation:** TGT
-        * **Academic Qualification:** M.Sc., B.Ed.[cite: 3]
-        * **Role:** STEM Coordinator / STEM Lab SPOC[cite: 3]
-        * **Official Email:** `shashank.verma@adityabirlaschools.in`[cite: 3]
-        * **Official Contact:** `9826594665`[cite: 3]
+        * **Academic Qualification:** M.Sc., B.Ed.
+        * **Role:** STEM Coordinator / STEM Lab SPOC
+        * **Official Email:** `shashank.verma@adityabirlaschools.in`
+        * **Official Contact:** `9826594665`
         
         #### Key Responsibilities:
-        * Planning and coordinating annual/monthly STEM activity calendars.[cite: 3]
-        * Maintaining student lists, attendance, digital inventories, and lab equipment.[cite: 3]
-        * Mentoring student prototypes, competitions (STEM SPARK, VVM, exhibitions).[cite: 3]
-        * Documentation, workshop reporting, and periodic digital backups.[cite: 3]
+        * Planning and coordinating annual/monthly STEM activity calendars.
+        * Maintaining student lists, attendance, digital inventories, and lab equipment.
+        * Mentoring student prototypes, competitions (STEM SPARK, VVM, exhibitions).
+        * Documentation, workshop reporting, and periodic digital backups.
         """)
     },
     4: {
@@ -186,35 +186,35 @@ BUILTIN_RECORDS = {
         "title": "Lab Inventory (Teacher & Student Kits)",
         "render": lambda: st.markdown("""
         ### 📦 Verified STEM Lab Inventory
-        * **Supplier / Source:** ScienceUtsav & ABPS Kit[cite: 4, 5]
-        * **Status:** 100% Items Verified & Operational[cite: 5]
+        * **Supplier / Source:** ScienceUtsav & ABPS Kit
+        * **Status:** 100% Items Verified & Operational
         * **Hardware Summary:**
-          * **Controllers:** Arduino UNO DIP Microcontrollers, Custom Expansion Shields[cite: 4, 5].
-          * **Sensors:** DHT11 Temperature & Humidity, Rain, Vibration, Ultrasonic Distance, MQ2 Smoke, Flame, Moisture, Hall Effect, LDR, Touch Sensors[cite: 4, 5].
-          * **Actuators:** BO Motors 60 RPM, SG90 Micro Servo Motors, 3-6V Mini Submersible DC Water Pumps[cite: 4, 5].
-          * **Displays & Output:** 16x2 I2C LCD, 7-Segment, WS2812B RGB Addressable Strips, 1W Color LED Modules, Buzzers[cite: 4, 5].
-          * **Fabrication & Power:** Bambu Lab A1 Mini 3D Printer, Dual 18650 Li-Ion Rechargeable Battery Units, 5V DC Adapters[cite: 4, 5].
+          * **Controllers:** Arduino UNO DIP Microcontrollers, Custom Expansion Shields.
+          * **Sensors:** DHT11 Temperature & Humidity, Rain, Vibration, Ultrasonic Distance, MQ2 Smoke, Flame, Moisture, Hall Effect, LDR, Touch Sensors.
+          * **Actuators:** BO Motors 60 RPM, SG90 Micro Servo Motors, 3-6V Mini Submersible DC Water Pumps.
+          * **Displays & Output:** 16x2 I2C LCD, 7-Segment, WS2812B RGB Addressable Strips, 1W Color LED Modules, Buzzers.
+          * **Fabrication & Power:** Bambu Lab A1 Mini 3D Printer, Dual 18650 Li-Ion Rechargeable Battery Units, 5V DC Adapters.
         """)
     },
     12: {
         "title": "Equipment Details",
         "render": lambda: st.markdown("""
         ### 🔬 Technical Equipment Details & Interfacing
-        * **Microcontroller Platform:** Arduino Uno (ATmega328P DIP), 16 MHz Clock, 5V Operating Voltage[cite: 4, 5].
-        * **Sensor Interfacing:** Standard 3-Pin / 4-Pin RMC locking connectors with custom breakout shields[cite: 4, 5].
-        * **3D Prototyping Unit:** Bambu Lab A1 Mini High-Precision FDM 3D Printer for structural brackets and chassis components[cite: 4].
-        * **Power Management:** Dual 18650 2000mAh Li-ion battery holders with integrated on/off rock-switches and 2.1mm DC barrel jacks[cite: 4, 5].
+        * **Microcontroller Platform:** Arduino Uno (ATmega328P DIP), 16 MHz Clock, 5V Operating Voltage.
+        * **Sensor Interfacing:** Standard 3-Pin / 4-Pin RMC locking connectors with custom breakout shields.
+        * **3D Prototyping Unit:** Bambu Lab A1 Mini High-Precision FDM 3D Printer for structural brackets and chassis components.
+        * **Power Management:** Dual 18650 2000mAh Li-ion battery holders with integrated on/off rock-switches and 2.1mm DC barrel jacks.
         """)
     },
     16: {
         "title": "Lab Safety Rules",
         "render": lambda: st.markdown("""
         ### ⚠️ Mandatory STEM Lab Safety Rules
-        1. **Supervised Access:** No student is permitted inside the laboratory without the presence of the SPOC / Subject Teacher.[cite: 2]
+        1. **Supervised Access:** No student is permitted inside the laboratory without the presence of the SPOC / Subject Teacher.
         2. **Power Safety:** Never short circuit battery terminals; verify circuit polarity before turning on 5V DC adapters or Li-Ion power packs.
-        3. **Component Handling:** Handle microcontrollers, 3D printer nozzles, and sensor breakout boards with clean, dry hands.[cite: 2]
-        4. **Zero Food / Liquid Zone:** Strict ban on water bottles and food near workbench power supplies.[cite: 2]
-        5. **Emergency Response:** In the event of smoke, overheating components, or loose wiring, turn off the main bench switch and report immediately.[cite: 2]
+        3. **Component Handling:** Handle microcontrollers, 3D printer nozzles, and sensor breakout boards with clean, dry hands.
+        4. **Zero Food / Liquid Zone:** Strict ban on water bottles and food near workbench power supplies.
+        5. **Emergency Response:** In the event of smoke, overheating components, or loose wiring, turn off the main bench switch and report immediately.
         """)
     },
     17: {
@@ -255,7 +255,7 @@ BUILTIN_RECORDS = {
         "render": lambda: st.markdown("""
         ### 🧑‍🏫 STEM Capacity Building & Teacher Training
         * **Program:** Experiential STEM Pedagogy & Microcontroller Interfacing
-        * **Conducted by:** ScienceUtsav Technical Team & School STEM Coordinator[cite: 3, 5]
+        * **Conducted by:** ScienceUtsav Technical Team & School STEM Coordinator
         * **Modules Covered:** Embedded C / Block Coding, 3D Slicing & Printing, IoT Sensor Integrations, Design Thinking in Science Curriculum.
         """)
     },
@@ -263,10 +263,10 @@ BUILTIN_RECORDS = {
         "title": "Annual Report",
         "render": lambda: st.markdown("""
         ### 📑 Annual STEM Innovation Lab Report (2026-27 Executive Summary)
-        * **Student Engagement:** Over 400+ students from Classes VI to IX actively attended hands-on lab sessions[cite: 1].
-        * **Hardware Status:** 100% ScienceUtsav and ABPS toolkits fully operational and maintained[cite: 5].
+        * **Student Engagement:** Over 400+ students from Classes VI to IX actively attended hands-on lab sessions.
+        * **Hardware Status:** 100% ScienceUtsav and ABPS toolkits fully operational and maintained.
         * **Project Milestones:** 15+ student working prototypes developed across Smart Automation, Agriculture, and Robotics.
-        * **Safety Compliance:** Zero incidents recorded; 100% compliance with laboratory guidelines[cite: 2].
+        * **Safety Compliance:** Zero incidents recorded; 100% compliance with laboratory guidelines.
         """)
     }
 }
