@@ -1,7 +1,7 @@
 import streamlit as st
 import pandas as pd
 import os
-import base64
+import pypdfium2 as pdfium
 
 st.set_page_config(page_title="ABIC STEM Lab Portal", page_icon="🔬", layout="wide")
 
@@ -16,7 +16,7 @@ def render_file_preview(file_path, file_name, unique_key):
     if ext in [".jpg", ".jpeg", ".png"]:
         st.image(file_path, caption=file_name, use_container_width=True)
 
-    # 2. Excel & CSV Preview (Direct Interactive Table)
+    # 2. Excel & CSV Preview
     elif ext in [".xlsx", ".xls", ".csv"]:
         try:
             if ext == ".csv":
@@ -28,36 +28,44 @@ def render_file_preview(file_path, file_name, unique_key):
         except Exception as e:
             st.error(f"Error reading spreadsheet: {e}")
 
-    # 3. PDF Direct In-Browser View
+    # 3. PDF Direct In-Page Rendering (100% Reliable without blocking)
     elif ext == ".pdf":
+        st.markdown(f"📄 **PDF Document:** {file_name}")
         try:
+            pdf = pdfium.PdfDocument(file_path)
+            total_pages = len(pdf)
+            
+            # Display all pages directly as clean high-res images
+            for page_num in range(total_pages):
+                page = pdf[page_num]
+                image = page.render(scale=2).to_pil()
+                st.image(image, caption=f"Page {page_num + 1} of {total_pages}", use_container_width=True)
+            
+            # Download fallback button
             with open(file_path, "rb") as f:
-                pdf_bytes = f.read()
-            
-            base64_pdf = base64.b64encode(pdf_bytes).decode('utf-8')
-            pdf_embed = f'''
-                <object data="data:application/pdf;base64,{base64_pdf}#toolbar=1" type="application/pdf" width="100%" height="650">
-                    <embed src="data:application/pdf;base64,{base64_pdf}#toolbar=1" type="application/pdf" width="100%" height="650" />
-                </object>
-            '''
-            st.markdown(f"📄 **PDF Document:** {file_name}")
-            st.markdown(pdf_embed, unsafe_allow_html=True)
-            
-            st.download_button(
-                label=f"📥 Download / Open {file_name}",
-                data=pdf_bytes,
-                file_name=file_name,
-                mime="application/pdf",
-                key=f"dl_pdf_{unique_key}"
-            )
+                st.download_button(
+                    label=f"📥 Download Original PDF ({file_name})",
+                    data=f.read(),
+                    file_name=file_name,
+                    mime="application/pdf",
+                    key=f"dl_pdf_{unique_key}"
+                )
         except Exception as e:
-            st.error(f"Error loading PDF: {e}")
+            # Fallback direct download if render fails
+            with open(file_path, "rb") as f:
+                st.download_button(
+                    label=f"📥 Open / Download PDF ({file_name})",
+                    data=f.read(),
+                    file_name=file_name,
+                    mime="application/pdf",
+                    key=f"dl_pdf_fallback_{unique_key}"
+                )
 
     # 4. Videos Preview
     elif ext in [".mp4", ".mov", ".avi"]:
         st.video(file_path)
 
-    # 5. Other Documents (Word/Text)
+    # 5. Word / Other Documents
     else:
         with open(file_path, "rb") as f:
             st.download_button(
