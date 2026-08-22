@@ -20,8 +20,8 @@ TEACHER_ATTENDANCE_FILE = os.path.join(DATA_DIR, "teacher_attendance.csv")
 
 MONTHS = ["April", "May", "June", "July", "August", "September", "October", "November", "December", "January", "February", "March"]
 WEEKS = ["Week 1", "Week 2", "Week 3", "Week 4", "Week 5"]
+DAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"]
 
-# Detailed Section-wise breakdown (Class 6th to 9th)
 SECTIONS_LIST = [
     "Class VI - Section A", "Class VI - Section B", "Class VI - Section C", "Class VI - Section D",
     "Class VII - Section A", "Class VII - Section B", "Class VII - Section C", "Class VII - Section D",
@@ -43,13 +43,14 @@ TEACHERS_LIST = [
     "Mr. Praveen Kumar"
 ]
 
-# ----------------- ATTENDANCE INITIALIZATION (AUTO-MIGRATING) -----------------
+# ----------------- ATTENDANCE INITIALIZATION -----------------
 def init_student_attendance():
     needs_init = True
     if os.path.exists(STUDENT_ATTENDANCE_FILE):
         try:
             temp_df = pd.read_csv(STUDENT_ATTENDANCE_FILE)
-            if "Month" in temp_df.columns and "Week" in temp_df.columns:
+            required_cols = {"Month", "Week", "Day", "Class & Section", "Period 1", "Period 2", "Total Present", "Total Absent"}
+            if required_cols.issubset(set(temp_df.columns)):
                 needs_init = False
         except Exception:
             needs_init = True
@@ -58,15 +59,12 @@ def init_student_attendance():
         structure = {
             "Month": [],
             "Week": [],
+            "Day": [],
             "Class & Section": [],
-            "Total Registered Students": [],
-            "Total Working Days": [],
-            "Sessions Planned": [],
-            "Sessions Conducted": [],
-            "Total Present Count": [],
-            "Total Absent Count": [],
-            "Average Attendance %": [],
-            "Remarks": []
+            "Period 1": [],
+            "Period 2": [],
+            "Total Present": [],
+            "Total Absent": []
         }
         pd.DataFrame(structure).to_csv(STUDENT_ATTENDANCE_FILE, index=False)
 
@@ -75,7 +73,8 @@ def init_teacher_attendance():
     if os.path.exists(TEACHER_ATTENDANCE_FILE):
         try:
             temp_df = pd.read_csv(TEACHER_ATTENDANCE_FILE)
-            if "Month" in temp_df.columns and "Week" in temp_df.columns:
+            required_cols = {"Month", "Week", "Day", "S.No.", "Teacher Name", "Class & Section Taught", "Period / Time Slot", "Lab Activity / Topic Covered", "Total Present Students", "In-Time", "Out-Time", "Teacher Signature"}
+            if required_cols.issubset(set(temp_df.columns)):
                 needs_init = False
         except Exception:
             needs_init = True
@@ -84,6 +83,7 @@ def init_teacher_attendance():
         structure = {
             "Month": [],
             "Week": [],
+            "Day": [],
             "S.No.": [],
             "Teacher Name": [],
             "Class & Section Taught": [],
@@ -103,7 +103,8 @@ init_teacher_attendance()
 def get_student_attendance_all():
     try:
         df = pd.read_csv(STUDENT_ATTENDANCE_FILE, dtype=str).fillna("")
-        if "Month" not in df.columns or "Week" not in df.columns:
+        required_cols = {"Month", "Week", "Day", "Class & Section", "Period 1", "Period 2", "Total Present", "Total Absent"}
+        if not required_cols.issubset(set(df.columns)):
             init_student_attendance()
             df = pd.read_csv(STUDENT_ATTENDANCE_FILE, dtype=str).fillna("")
         return df
@@ -111,36 +112,33 @@ def get_student_attendance_all():
         init_student_attendance()
         return pd.read_csv(STUDENT_ATTENDANCE_FILE, dtype=str).fillna("")
 
-def get_student_attendance_for_slot(month, week):
+def get_student_attendance_for_slot(month, week, day):
     df_all = get_student_attendance_all()
-    if not df_all.empty and "Month" in df_all.columns and "Week" in df_all.columns:
-        filtered = df_all[(df_all["Month"] == str(month)) & (df_all["Week"] == str(week))]
+    if not df_all.empty and {"Month", "Week", "Day"}.issubset(set(df_all.columns)):
+        filtered = df_all[(df_all["Month"] == str(month)) & (df_all["Week"] == str(week)) & (df_all["Day"] == str(day))]
         if not filtered.empty:
-            cols_to_drop = [c for c in ["Month", "Week"] if c in filtered.columns]
+            cols_to_drop = [c for c in ["Month", "Week", "Day"] if c in filtered.columns]
             return filtered.drop(columns=cols_to_drop)
     
     return pd.DataFrame({
         "Class & Section": SECTIONS_LIST,
-        "Total Registered Students": ["" for _ in SECTIONS_LIST],
-        "Total Working Days": ["" for _ in SECTIONS_LIST],
-        "Sessions Planned": ["" for _ in SECTIONS_LIST],
-        "Sessions Conducted": ["" for _ in SECTIONS_LIST],
-        "Total Present Count": ["" for _ in SECTIONS_LIST],
-        "Total Absent Count": ["" for _ in SECTIONS_LIST],
-        "Average Attendance %": ["" for _ in SECTIONS_LIST],
-        "Remarks": ["" for _ in SECTIONS_LIST]
+        "Period 1": ["" for _ in SECTIONS_LIST],
+        "Period 2": ["" for _ in SECTIONS_LIST],
+        "Total Present": ["" for _ in SECTIONS_LIST],
+        "Total Absent": ["" for _ in SECTIONS_LIST]
     })
 
-def save_student_attendance_slot(month, week, edited_df):
+def save_student_attendance_slot(month, week, day, edited_df):
     df_all = get_student_attendance_all()
     edited_df = edited_df.copy()
     edited_df["Month"] = str(month)
     edited_df["Week"] = str(week)
+    edited_df["Day"] = str(day)
     
     if df_all.empty:
         df_updated = edited_df
     else:
-        df_remaining = df_all[~((df_all["Month"] == str(month)) & (df_all["Week"] == str(week)))]
+        df_remaining = df_all[~((df_all["Month"] == str(month)) & (df_all["Week"] == str(week)) & (df_all["Day"] == str(day)))]
         df_updated = pd.concat([df_remaining, edited_df], ignore_index=True)
         
     df_updated.to_csv(STUDENT_ATTENDANCE_FILE, index=False)
@@ -149,7 +147,8 @@ def save_student_attendance_slot(month, week, edited_df):
 def get_teacher_attendance_all():
     try:
         df = pd.read_csv(TEACHER_ATTENDANCE_FILE, dtype=str).fillna("")
-        if "Month" not in df.columns or "Week" not in df.columns:
+        required_cols = {"Month", "Week", "Day", "S.No.", "Teacher Name", "Class & Section Taught", "Period / Time Slot", "Lab Activity / Topic Covered", "Total Present Students", "In-Time", "Out-Time", "Teacher Signature"}
+        if not required_cols.issubset(set(df.columns)):
             init_teacher_attendance()
             df = pd.read_csv(TEACHER_ATTENDANCE_FILE, dtype=str).fillna("")
         return df
@@ -157,12 +156,12 @@ def get_teacher_attendance_all():
         init_teacher_attendance()
         return pd.read_csv(TEACHER_ATTENDANCE_FILE, dtype=str).fillna("")
 
-def get_teacher_attendance_for_slot(month, week):
+def get_teacher_attendance_for_slot(month, week, day):
     df_all = get_teacher_attendance_all()
-    if not df_all.empty and "Month" in df_all.columns and "Week" in df_all.columns:
-        filtered = df_all[(df_all["Month"] == str(month)) & (df_all["Week"] == str(week))]
+    if not df_all.empty and {"Month", "Week", "Day"}.issubset(set(df_all.columns)):
+        filtered = df_all[(df_all["Month"] == str(month)) & (df_all["Week"] == str(week)) & (df_all["Day"] == str(day))]
         if not filtered.empty:
-            cols_to_drop = [c for c in ["Month", "Week"] if c in filtered.columns]
+            cols_to_drop = [c for c in ["Month", "Week", "Day"] if c in filtered.columns]
             return filtered.drop(columns=cols_to_drop)
     
     return pd.DataFrame({
@@ -177,16 +176,17 @@ def get_teacher_attendance_for_slot(month, week):
         "Teacher Signature": ["" for _ in TEACHERS_LIST]
     })
 
-def save_teacher_attendance_slot(month, week, edited_df):
+def save_teacher_attendance_slot(month, week, day, edited_df):
     df_all = get_teacher_attendance_all()
     edited_df = edited_df.copy()
     edited_df["Month"] = str(month)
     edited_df["Week"] = str(week)
+    edited_df["Day"] = str(day)
     
     if df_all.empty:
         df_updated = edited_df
     else:
-        df_remaining = df_all[~((df_all["Month"] == str(month)) & (df_all["Week"] == str(week)))]
+        df_remaining = df_all[~((df_all["Month"] == str(month)) & (df_all["Week"] == str(week)) & (df_all["Day"] == str(day)))]
         df_updated = pd.concat([df_remaining, edited_df], ignore_index=True)
         
     df_updated.to_csv(TEACHER_ATTENDANCE_FILE, index=False)
@@ -267,22 +267,24 @@ def render_student_excel():
 # ----------------- ATTENDANCE VIEWER FUNCTIONS -----------------
 def render_student_attendance_viewer():
     st.markdown("### 📊 Section-wise Student STEM Attendance Record")
-    col_m, col_w = st.columns(2)
-    sel_month = col_m.selectbox("Select Month to View (Student):", MONTHS, key="view_st_month")
-    sel_week = col_w.selectbox("Select Week to View (Student):", WEEKS, key="view_st_week")
+    c1, c2, c3 = st.columns(3)
+    sel_month = c1.selectbox("Select Month:", MONTHS, key="view_st_month")
+    sel_week = c2.selectbox("Select Week:", WEEKS, key="view_st_week")
+    sel_day = c3.selectbox("Select Day:", DAYS, key="view_st_day")
     
-    df_slot = get_student_attendance_for_slot(sel_month, sel_week)
-    st.caption(f"Showing Student Attendance for: **{sel_month} - {sel_week}**")
+    df_slot = get_student_attendance_for_slot(sel_month, sel_week, sel_day)
+    st.caption(f"Showing Student Attendance for: **{sel_month} | {sel_week} | {sel_day}**")
     st.dataframe(df_slot, use_container_width=True, hide_index=True)
 
 def render_teacher_attendance_viewer():
     st.markdown("### 🧑‍🏫 STEM Teacher Lab Duty & Activity Attendance")
-    col_m, col_w = st.columns(2)
-    sel_month = col_m.selectbox("Select Month to View (Teacher):", MONTHS, key="view_tc_month")
-    sel_week = col_w.selectbox("Select Week to View (Teacher):", WEEKS, key="view_tc_week")
+    c1, c2, c3 = st.columns(3)
+    sel_month = c1.selectbox("Select Month:", MONTHS, key="view_tc_month")
+    sel_week = c2.selectbox("Select Week:", WEEKS, key="view_tc_week")
+    sel_day = c3.selectbox("Select Day:", DAYS, key="view_tc_day")
     
-    df_slot = get_teacher_attendance_for_slot(sel_month, sel_week)
-    st.caption(f"Showing Teacher Attendance for: **{sel_month} - {sel_week}**")
+    df_slot = get_teacher_attendance_for_slot(sel_month, sel_week, sel_day)
+    st.caption(f"Showing Teacher Attendance for: **{sel_month} | {sel_week} | {sel_day}**")
     st.dataframe(df_slot, use_container_width=True, hide_index=True)
 
 # ----------------- EMBEDDED MASTER DATA -----------------
@@ -710,40 +712,42 @@ if access_mode == "Admin Workspace":
             os.makedirs(record_dir, exist_ok=True)
 
             with st.expander(f"**#{sno}. {title}**", expanded=False):
-                # SPECIAL HANDLER FOR #9 STUDENT ATTENDANCE (MONTH & WEEK WISE SELECTION & SEPARATE SECTIONS)
+                # SPECIAL HANDLER FOR #9 STUDENT ATTENDANCE (MONTH, WEEK & DAY WISE)
                 if sno == 9:
-                    st.markdown("#### 📝 Edit Student Attendance (Month & Week-wise)")
-                    col_adm_st_m, col_adm_st_w = st.columns(2)
-                    admin_sel_st_month = col_adm_st_m.selectbox("Select Month (Student):", MONTHS, key="admin_st_month")
-                    admin_sel_st_week = col_adm_st_w.selectbox("Select Week (Student):", WEEKS, key="admin_st_week")
+                    st.markdown("#### 📝 Edit Student Attendance (Month, Week & Day-wise)")
+                    c1, c2, c3 = st.columns(3)
+                    admin_st_month = c1.selectbox("Select Month (Student):", MONTHS, key="admin_st_month")
+                    admin_st_week = c2.selectbox("Select Week (Student):", WEEKS, key="admin_st_week")
+                    admin_st_day = c3.selectbox("Select Day (Student):", DAYS, key="admin_st_day")
                     
-                    st.caption(f"Currently Editing Student Attendance: **{admin_sel_st_month} - {admin_sel_st_week}**")
+                    st.caption(f"Editing Student Attendance: **{admin_st_month} | {admin_st_week} | {admin_st_day}**")
                     
-                    current_st_slot_df = get_student_attendance_for_slot(admin_sel_st_month, admin_sel_st_week)
-                    editor_st_slot_key = f"admin_st_editor_{admin_sel_st_month}_{admin_sel_st_week}"
+                    current_st_slot_df = get_student_attendance_for_slot(admin_st_month, admin_st_week, admin_st_day)
+                    editor_st_slot_key = f"admin_st_editor_{admin_st_month}_{admin_st_week}_{admin_st_day}"
                     edited_st_slot_df = st.data_editor(current_st_slot_df, num_rows="dynamic", use_container_width=True, key=editor_st_slot_key)
                     
-                    if st.button(f"💾 Save Student Attendance for {admin_sel_st_month} - {admin_sel_st_week}", type="primary", key="save_st_slot_btn"):
-                        save_student_attendance_slot(admin_sel_st_month, admin_sel_st_week, edited_st_slot_df)
-                        st.success(f"Student Attendance for {admin_sel_st_month} ({admin_sel_st_week}) successfully saved!")
+                    if st.button(f"💾 Save Student Attendance for {admin_st_day} ({admin_st_week})", type="primary", key="save_st_slot_btn"):
+                        save_student_attendance_slot(admin_st_month, admin_st_week, admin_st_day, edited_st_slot_df)
+                        st.success(f"Student Attendance for {admin_st_month} - {admin_st_week} - {admin_st_day} saved!")
                         st.rerun()
 
-                # SPECIAL HANDLER FOR #10 TEACHER ATTENDANCE (MONTH & WEEK WISE SELECTION & PERSISTENCE)
+                # SPECIAL HANDLER FOR #10 TEACHER ATTENDANCE (MONTH, WEEK & DAY WISE)
                 elif sno == 10:
-                    st.markdown("#### 🧑‍🏫 Edit Teacher Attendance (Month & Week-wise)")
-                    col_adm_m, col_adm_w = st.columns(2)
-                    admin_sel_month = col_adm_m.selectbox("Select Month (Teacher):", MONTHS, key="admin_tc_month")
-                    admin_sel_week = col_adm_w.selectbox("Select Week (Teacher):", WEEKS, key="admin_tc_week")
+                    st.markdown("#### 🧑‍🏫 Edit Teacher Attendance (Month, Week & Day-wise)")
+                    c1, c2, c3 = st.columns(3)
+                    admin_tc_month = c1.selectbox("Select Month (Teacher):", MONTHS, key="admin_tc_month")
+                    admin_tc_week = c2.selectbox("Select Week (Teacher):", WEEKS, key="admin_tc_week")
+                    admin_tc_day = c3.selectbox("Select Day (Teacher):", DAYS, key="admin_tc_day")
                     
-                    st.caption(f"Currently Editing Teacher Attendance: **{admin_sel_month} - {admin_sel_week}**")
+                    st.caption(f"Editing Teacher Attendance: **{admin_tc_month} | {admin_tc_week} | {admin_tc_day}**")
                     
-                    current_slot_df = get_teacher_attendance_for_slot(admin_sel_month, admin_sel_week)
-                    editor_slot_key = f"admin_tc_editor_{admin_sel_month}_{admin_sel_week}"
-                    edited_slot_df = st.data_editor(current_slot_df, num_rows="dynamic", use_container_width=True, key=editor_slot_key)
+                    current_tc_slot_df = get_teacher_attendance_for_slot(admin_tc_month, admin_tc_week, admin_tc_day)
+                    editor_tc_slot_key = f"admin_tc_editor_{admin_tc_month}_{admin_tc_week}_{admin_tc_day}"
+                    edited_tc_slot_df = st.data_editor(current_tc_slot_df, num_rows="dynamic", use_container_width=True, key=editor_tc_slot_key)
                     
-                    if st.button(f"💾 Save Teacher Attendance for {admin_sel_month} - {admin_sel_week}", type="primary", key="save_tc_slot_btn"):
-                        save_teacher_attendance_slot(admin_sel_month, admin_sel_week, edited_slot_df)
-                        st.success(f"Teacher Attendance for {admin_sel_month} ({admin_sel_week}) successfully saved!")
+                    if st.button(f"💾 Save Teacher Attendance for {admin_tc_day} ({admin_tc_week})", type="primary", key="save_tc_slot_btn"):
+                        save_teacher_attendance_slot(admin_tc_month, admin_tc_week, admin_tc_day, edited_tc_slot_df)
+                        st.success(f"Teacher Attendance for {admin_tc_month} - {admin_tc_week} - {admin_tc_day} saved!")
                         st.rerun()
 
                 # REGULAR FILE UPLOADER FOR OTHER PARAMETERS
