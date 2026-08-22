@@ -1,7 +1,12 @@
 import streamlit as st
 import pandas as pd
 import os
-import pypdfium2 as pdfium
+
+try:
+    import pypdfium2 as pdfium
+    PDFIUM_AVAILABLE = True
+except ImportError:
+    PDFIUM_AVAILABLE = False
 
 st.set_page_config(page_title="ABIC STEM Lab Portal", page_icon="🔬", layout="wide")
 
@@ -13,52 +18,53 @@ os.makedirs(DATA_DIR, exist_ok=True)
 STUDENT_ATTENDANCE_FILE = os.path.join(DATA_DIR, "student_attendance.csv")
 TEACHER_ATTENDANCE_FILE = os.path.join(DATA_DIR, "teacher_attendance.csv")
 
-# ----------------- ATTENDANCE INITIALIZATION & STORAGE -----------------
-def init_student_attendance():
-    if not os.path.exists(STUDENT_ATTENDANCE_FILE):
-        classes = ["VI (A, B, C, D)", "VII (A, B, C, D)", "VIII (A, B, C, D)", "IX (A to H)"]
-        structure = {
-            "Class & Section": classes,
-            "Total Registered Students": [""] * len(classes),
-            "Total Working Days": [""] * len(classes),
-            "Sessions Planned": [""] * len(classes),
-            "Sessions Conducted": [""] * len(classes),
-            "Total Present Count": [""] * len(classes),
-            "Total Absent Count": [""] * len(classes),
-            "Average Attendance %": [""] * len(classes),
-            "Remarks": [""] * len(classes)
-        }
-        pd.DataFrame(structure).to_csv(STUDENT_ATTENDANCE_FILE, index=False)
+# ----------------- ATTENDANCE INITIALIZATION (BLANK TEMPLATES) -----------------
+def reset_student_attendance():
+    classes = ["VI (A, B, C, D)", "VII (A, B, C, D)", "VIII (A, B, C, D)", "IX (A to H)"]
+    structure = {
+        "Class & Section": classes,
+        "Total Registered Students": ["" for _ in classes],
+        "Total Working Days": ["" for _ in classes],
+        "Sessions Planned": ["" for _ in classes],
+        "Sessions Conducted": ["" for _ in classes],
+        "Total Present Count": ["" for _ in classes],
+        "Total Absent Count": ["" for _ in classes],
+        "Average Attendance %": ["" for _ in classes],
+        "Remarks": ["" for _ in classes]
+    }
+    pd.DataFrame(structure).to_csv(STUDENT_ATTENDANCE_FILE, index=False)
 
-def init_teacher_attendance():
-    if not os.path.exists(TEACHER_ATTENDANCE_FILE):
-        teachers = [
-            "Mrs. Manju Bala Jindal",
-            "Mrs. Dev Jyoti Choudhary",
-            "Mrs. Monika Mishra",
-            "Mr. Shiv Narayan Singh",
-            "Mr. Shashank Verma",
-            "Mr. Shashank Shekhar Tiwari",
-            "Dr. Rakesh Singh",
-            "Mr. Chandra Mohan Singh",
-            "Mr. Harendra Dwivedi",
-            "Mr. Praveen Kumar"
-        ]
-        structure = {
-            "S.No.": list(range(1, len(teachers) + 1)),
-            "Teacher Name": teachers,
-            "Class & Section Taught": [""] * len(teachers),
-            "Period / Time Slot": [""] * len(teachers),
-            "Lab Activity / Topic Covered": [""] * len(teachers),
-            "Total Present Students": [""] * len(teachers),
-            "In-Time": [""] * len(teachers),
-            "Out-Time": [""] * len(teachers),
-            "Teacher Signature": [""] * len(teachers)
-        }
-        pd.DataFrame(structure).to_csv(TEACHER_ATTENDANCE_FILE, index=False)
+def reset_teacher_attendance():
+    teachers = [
+        "Mrs. Manju Bala Jindal",
+        "Mrs. Dev Jyoti Choudhary",
+        "Mrs. Monika Mishra",
+        "Mr. Shiv Narayan Singh",
+        "Mr. Shashank Verma",
+        "Mr. Shashank Shekhar Tiwari",
+        "Dr. Rakesh Singh",
+        "Mr. Chandra Mohan Singh",
+        "Mr. Harendra Dwivedi",
+        "Mr. Praveen Kumar"
+    ]
+    structure = {
+        "S.No.": list(range(1, len(teachers) + 1)),
+        "Teacher Name": teachers,
+        "Class & Section Taught": ["" for _ in teachers],
+        "Period / Time Slot": ["" for _ in teachers],
+        "Lab Activity / Topic Covered": ["" for _ in teachers],
+        "Total Present Students": ["" for _ in teachers],
+        "In-Time": ["" for _ in teachers],
+        "Out-Time": ["" for _ in teachers],
+        "Teacher Signature": ["" for _ in teachers]
+    }
+    pd.DataFrame(structure).to_csv(TEACHER_ATTENDANCE_FILE, index=False)
 
-init_student_attendance()
-init_teacher_attendance()
+if not os.path.exists(STUDENT_ATTENDANCE_FILE):
+    reset_student_attendance()
+
+if not os.path.exists(TEACHER_ATTENDANCE_FILE):
+    reset_teacher_attendance()
 
 def get_student_attendance_df():
     return pd.read_csv(STUDENT_ATTENDANCE_FILE, dtype=str).fillna("")
@@ -83,31 +89,24 @@ def render_file_preview(file_path, file_name, unique_key):
 
     elif ext == ".pdf":
         st.markdown(f"📄 **PDF Document:** {file_name}")
-        try:
-            pdf = pdfium.PdfDocument(file_path)
-            total_pages = len(pdf)
-            for page_num in range(total_pages):
-                page = pdf[page_num]
-                image = page.render(scale=2).to_pil()
-                st.image(image, caption=f"Page {page_num + 1} of {total_pages}", use_container_width=True)
-            
-            with open(file_path, "rb") as f:
-                st.download_button(
-                    label=f"📥 Download Original PDF ({file_name})",
-                    data=f.read(),
-                    file_name=file_name,
-                    mime="application/pdf",
-                    key=f"dl_pdf_{unique_key}"
-                )
-        except Exception as e:
-            with open(file_path, "rb") as f:
-                st.download_button(
-                    label=f"📥 Open / Download PDF ({file_name})",
-                    data=f.read(),
-                    file_name=file_name,
-                    mime="application/pdf",
-                    key=f"dl_pdf_fallback_{unique_key}"
-                )
+        if PDFIUM_AVAILABLE:
+            try:
+                pdf = pdfium.PdfDocument(file_path)
+                for page_num in range(len(pdf)):
+                    page = pdf[page_num]
+                    image = page.render(scale=2).to_pil()
+                    st.image(image, caption=f"Page {page_num + 1} of {len(pdf)}", use_container_width=True)
+            except Exception:
+                pass
+        
+        with open(file_path, "rb") as f:
+            st.download_button(
+                label=f"📥 Download / Open PDF ({file_name})",
+                data=f.read(),
+                file_name=file_name,
+                mime="application/pdf",
+                key=f"dl_pdf_{unique_key}"
+            )
 
     elif ext in [".mp4", ".mov", ".avi"]:
         st.video(file_path)
@@ -144,9 +143,9 @@ def render_student_excel():
         except Exception as e:
             st.error(f"Error reading {found_file}: {e}")
     else:
-        st.info("ℹ️ LMS STUDENT DATA.xlsx file project folder me place karein live batch data display karne ke liye.")
+        st.info("ℹ️ LMS STUDENT DATA.xlsx file project folder me rakhein.")
 
-# ----------------- CORE EMBEDDED MASTER DATA -----------------
+# ----------------- EMBEDDED MASTER DATA -----------------
 BUILTIN_RECORDS = {
     1: {
         "title": "STEM Lab Profile",
@@ -413,20 +412,20 @@ BUILTIN_RECORDS = {
         "title": "Annual STEM Plan",
         "render": lambda: st.markdown("""
         ### 📅 Annual STEM Academic Roadmap (2026-27)
-        * **Quarter 1 (Apr - Jul):** Fundamentals of Circuits, Electronic Components, Basic Sensor Interfacing (LDR, Touch, Rain Sensors).
-        * **Quarter 2 (Aug - Oct):** Arduino Microcontroller Programming, Display Systems (16x2 LCD, 7-Segment), STEM SPARK Project Ideation.
-        * **Quarter 3 (Nov - Jan):** Robotics, Motor Drivers (DPDT/BO Motors), 3D Design & Bambu Lab 3D Printing Prototyping.
-        * **Quarter 4 (Feb - Mar):** Capstone Project Exhibitions, Annual Lab Safety Audits, Student Portfolios & Year-end Assessments.
+        * **Quarter 1 (Apr - Jul):** Fundamentals of Circuits, Electronic Components, Basic Sensor Interfacing.
+        * **Quarter 2 (Aug - Oct):** Arduino Microcontroller Programming, Display Systems, STEM SPARK Ideation.
+        * **Quarter 3 (Nov - Jan):** Robotics, Motor Drivers, 3D Design & 3D Printing Prototyping.
+        * **Quarter 4 (Feb - Mar):** Capstone Project Exhibitions, Annual Lab Safety Audits, Student Portfolios.
         """)
     },
     6: {
         "title": "Class-wise Timetable",
         "render": lambda: st.markdown("""
         ### ⏰ Weekly STEM Lab Schedule
-        * **Class VI:** Tuesday & Thursday (Period 4 - Hands-on Science & Sensors)
-        * **Class VII:** Monday & Wednesday (Period 5 - Circuits & Basic Electronics)
-        * **Class VIII:** Wednesday & Friday (Period 6 - Arduino Programming & Microcontrollers)
-        * **Class IX:** Saturday (Period 2 to 4 - Advanced Robotics, Prototyping & Project Development)
+        * **Class VI:** Tuesday & Thursday (Period 4)
+        * **Class VII:** Monday & Wednesday (Period 5)
+        * **Class VIII:** Wednesday & Friday (Period 6)
+        * **Class IX:** Saturday (Period 2 to 4)
         """)
     },
     8: {
@@ -452,91 +451,70 @@ BUILTIN_RECORDS = {
         "render": lambda: st.markdown("""
         ### 📦 Verified STEM Lab Inventory
         * **Supplier / Source:** ScienceUtsav & ABPS Kit
-        * **Status:** 100% Items Verified & Operational
-        * **Hardware Summary:**
-          * **Controllers:** Arduino UNO DIP Microcontrollers, Custom Expansion Shields.
-          * **Sensors:** DHT11 Temperature & Humidity, Rain, Vibration, Ultrasonic Distance, MQ2 Smoke, Flame, Moisture, Hall Effect, LDR, Touch Sensors.
-          * **Actuators:** BO Motors 60 RPM, SG90 Micro Servo Motors, 3-6V Mini Submersible DC Water Pumps.
-          * **Displays & Output:** 16x2 I2C LCD, 7-Segment, WS2812B RGB Addressable Strips, 1W Color LED Modules, Buzzers.
-          * **Fabrication & Power:** Bambu Lab A1 Mini 3D Printer, Dual 18650 Li-Ion Rechargeable Battery Units, 5V DC Adapters.
+        * **Controllers:** Arduino UNO DIP Microcontrollers, Custom Expansion Shields.
+        * **Sensors:** DHT11 Temp/Humidity, Rain, Vibration, Ultrasonic, MQ2 Gas, Flame, Moisture, LDR, Touch.
+        * **Actuators & 3D:** BO Motors, SG90 Servos, Water Pumps, Bambu Lab A1 Mini 3D Printer.
         """)
     },
     12: {
         "title": "Equipment Details",
         "render": lambda: st.markdown("""
-        ### 🔬 Technical Equipment Details & Interfacing
-        * **Microcontroller Platform:** Arduino Uno (ATmega328P DIP), 16 MHz Clock, 5V Operating Voltage.
-        * **Sensor Interfacing:** Standard 3-Pin / 4-Pin RMC locking connectors with custom breakout shields.
-        * **3D Prototyping Unit:** Bambu Lab A1 Mini High-Precision FDM 3D Printer for structural brackets and chassis components.
-        * **Power Management:** Dual 18650 2000mAh Li-ion battery holders with integrated on/off rock-switches and 2.1mm DC barrel jacks.
-        """)
-    },
+        ### 🔬 Technical Equipment Details
+        * **Microcontroller:** Arduino Uno (ATmega328P DIP), 16 MHz Clock, 5V.
+        * **Connectors:** 3-Pin / 4-Pin RMC locking connectors.
+        * **Prototyping:** Bambu Lab A1 Mini FDM 3D Printer.
+    """)},
     16: {
         "title": "Lab Safety Rules",
         "render": lambda: st.markdown("""
         ### ⚠️ Mandatory STEM Lab Safety Rules
-        1. **Supervised Access:** No student is permitted inside the laboratory without the presence of the SPOC / Subject Teacher.
-        2. **Power Safety:** Never short circuit battery terminals; verify circuit polarity before turning on 5V DC adapters or Li-Ion power packs.
-        3. **Component Handling:** Handle microcontrollers, 3D printer nozzles, and sensor breakout boards with clean, dry hands.
-        4. **Zero Food / Liquid Zone:** Strict ban on water bottles and food near workbench power supplies.
-        5. **Emergency Response:** In the event of smoke, overheating components, or loose wiring, turn off the main bench switch and report immediately.
-        """)
-    },
+        1. Entry permitted only under teacher/instructor supervision.
+        2. Never short circuit battery terminals; verify circuit polarity before turning on power.
+        3. Zero food and liquid zone near equipment workbenches.
+        4. In case of smoke or loose wiring, immediately switch off main bench supply.
+    """)},
     17: {
         "title": "Safety Checklist",
         "render": lambda: st.markdown("""
         ### ✅ Laboratory Periodic Safety Audit Checklist
-        * [x] **Fire Safety:** CO2 Fire Extinguisher inspected and positioned at entrance.
-        * [x] **First Aid:** Fully-stocked medical kit with burn treatment and antiseptic accessible.
-        * [x] **Power Infrastructure:** Surge protectors and MCB circuit breakers tested.
-        * [x] **Chemical / Soldering Safety:** Dedicated fume extraction and safety goggles in stock.
-        * [x] **Tool Storage:** Screwdrivers, wire strippers, and cutters organized in labeled toolboxes.
-        """)
-    },
+        * [x] **Fire Safety:** CO2 Fire Extinguisher inspected at lab entrance.
+        * [x] **First Aid:** Fully-stocked medical kit accessible.
+        * [x] **Power Infrastructure:** Surge protectors and MCB circuit breakers active.
+        * [x] **Tool Storage:** Screwdrivers, strippers, and cutters organized in labeled toolboxes.
+    """)},
     18: {
         "title": "STEM Activities",
         "render": lambda: st.markdown("""
         ### 💡 Core Laboratory Activity Modules
-        1. **Automatic Smart Street Light:** Light dependent resistor (LDR) with transistor switching and LED load.
-        2. **Smart Fire & Smoke Alert System:** MQ2 Gas sensor and Flame sensor interfacing with active piezoelectric buzzer.
-        3. **Obstacle Avoidance Robot:** Ultrasonic HC-SR04 sensor coupled with SG90 servo and dual BO motor chassis.
-        4. **Weather Monitoring Station:** DHT11 Temperature/Humidity sensor broadcasting to I2C 16x2 LCD screen.
-        5. **Automated Plant Watering System:** Soil moisture probe linked with mini submersible DC pump.
-        """)
-    },
+        1. Automatic Smart Street Light (LDR + Transistor)
+        2. Smart Fire & Smoke Alert System (MQ2 + Flame Sensor)
+        3. Obstacle Avoidance Robot (Ultrasonic + Servo + BO Motors)
+        4. Weather Monitoring Station (DHT11 + 16x2 LCD)
+        5. Automated Plant Watering System (Soil Moisture Probe + DC Pump)
+    """)},
     28: {
         "title": "Assessment Rubrics",
         "render": lambda: st.markdown("""
-        ### 📊 Student STEM Assessment Framework (100 Points)
-        * **Conceptual Understanding & Problem Definition:** 20%
-        * **Hardware Circuit Assembly & Breadboarding:** 20%
-        * **Coding Logic / Firmware Implementation:** 20%
-        * **Creativity, Troubleshooting & Prototyping Quality:** 20%
-        * **Documentation, Team Collaboration & Presentation:** 20%
-        """)
-    },
+        ### 📊 Student STEM Assessment Framework
+        * **Problem Definition:** 20% | **Circuit Assembly:** 20% | **Coding Logic:** 20% | **Prototyping:** 20% | **Presentation:** 20%
+    """)},
     36: {
         "title": "Teacher Training Records",
         "render": lambda: st.markdown("""
         ### 🧑‍🏫 STEM Capacity Building & Teacher Training
-        * **Program:** Experiential STEM Pedagogy & Microcontroller Interfacing
-        * **Conducted by:** ScienceUtsav Technical Team & School STEM Coordinator
-        * **Modules Covered:** Embedded C / Block Coding, 3D Slicing & Printing, IoT Sensor Integrations, Design Thinking in Science Curriculum.
-        """)
-    },
+        * **Conducted by:** ScienceUtsav Technical Team & STEM SPOC
+        * **Topics:** Arduino Programming, 3D Design/Printing, Sensor Interfacing & Pedagogy.
+    """)},
     47: {
         "title": "Annual Report",
         "render": lambda: st.markdown("""
         ### 📑 Annual STEM Innovation Lab Report (2026-27 Executive Summary)
-        * **Student Engagement:** Over 400+ students from Classes VI to IX actively attended hands-on lab sessions.
-        * **Hardware Status:** 100% ScienceUtsav and ABPS toolkits fully operational and maintained.
-        * **Project Milestones:** 15+ student working prototypes developed across Smart Automation, Agriculture, and Robotics.
-        * **Safety Compliance:** Zero incidents recorded; 100% compliance with laboratory guidelines.
-        """)
-    }
+        * Over 400+ students actively trained from Classes VI to IX.
+        * 15+ student working prototypes completed.
+        * 100% equipment verified and active.
+    """)}
 }
 
-# Full 50 STEM Record categories
 CATEGORIES = {
     "1. Administration & Planning": [
         (1, "STEM Lab Profile", ["pdf", "docx"]),
@@ -634,7 +612,7 @@ if access_mode == "Admin Workspace":
 
                 with st.expander(f"**#{sno}. {title}**", expanded=False):
                     uploaded_files = st.file_uploader(
-                        f"Upload extra/replacement files for #{sno} ({', '.join(formats)})",
+                        f"Upload files for #{sno} ({', '.join(formats)})",
                         type=formats,
                         accept_multiple_files=True,
                         key=f"upload_{sno}"
@@ -659,26 +637,38 @@ if access_mode == "Admin Workspace":
 
         with admin_tabs[1]:
             st.subheader("📝 Live Editor: Parameter #9 Student Attendance")
-            st.caption("Table cells me values type karein aur Save par click karein.")
+            st.caption("Cells me data type karein aur Save karein.")
             
             df_st_att = get_student_attendance_df()
             edited_st_df = st.data_editor(df_st_att, num_rows="dynamic", use_container_width=True, key="editor_student_attendance")
             
-            if st.button("💾 Save Student Attendance Changes", type="primary"):
+            col_save, col_reset = st.columns([2, 2])
+            if col_save.button("💾 Save Student Attendance Changes", type="primary"):
                 edited_st_df.to_csv(STUDENT_ATTENDANCE_FILE, index=False)
-                st.success("Student Attendance data save ho gaya!")
+                st.success("Student Attendance save ho gaya!")
+                st.rerun()
+            
+            if col_reset.button("🔄 Reset to Blank Template (Student)"):
+                reset_student_attendance()
+                st.warning("Table reset ho gayi!")
                 st.rerun()
 
         with admin_tabs[2]:
             st.subheader("🧑‍🏫 Live Editor: Parameter #10 Teacher Attendance")
-            st.caption("Teachers ki lab duty, topics aur timing enter karein aur Save par click karein.")
+            st.caption("Teachers ki lab duty, topics aur timing enter karein.")
             
             df_tc_att = get_teacher_attendance_df()
             edited_tc_df = st.data_editor(df_tc_att, num_rows="dynamic", use_container_width=True, key="editor_teacher_attendance")
             
-            if st.button("💾 Save Teacher Attendance Changes", type="primary"):
+            col_save_t, col_reset_t = st.columns([2, 2])
+            if col_save_t.button("💾 Save Teacher Attendance Changes", type="primary"):
                 edited_tc_df.to_csv(TEACHER_ATTENDANCE_FILE, index=False)
-                st.success("Teacher Attendance data save ho gaya!")
+                st.success("Teacher Attendance save ho gaya!")
+                st.rerun()
+
+            if col_reset_t.button("🔄 Reset to Blank Template (Teacher)"):
+                reset_teacher_attendance()
+                st.warning("Table reset ho gayi!")
                 st.rerun()
 
     else:
@@ -712,7 +702,7 @@ else:
                             render_file_preview(fpath, fname, f"{sno}_{idx}")
                             st.write("")
                     elif not is_builtin:
-                        st.info("No external document uploaded yet for this section.")
+                        st.info("No document uploaded yet for this section.")
 
     with tab2:
         total = 50
@@ -727,7 +717,7 @@ else:
 
                 if sno in BUILTIN_RECORDS or file_count > 0:
                     completed += 1
-                    status = "✅ Verified / Completed"
+                    status = "✅ Active / Verified"
                 else:
                     status = "⏳ Pending Upload"
 
@@ -740,5 +730,5 @@ else:
 
         col1, col2 = st.columns(2)
         col1.metric("Total Parameters", total)
-        col2.metric("Completed / Pre-Loaded", f"{completed} / {total}")
+        col2.metric("Completed / Active", f"{completed} / {total}")
         st.dataframe(summary_rows, use_container_width=True)
