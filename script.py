@@ -13,7 +13,7 @@ os.makedirs(DATA_DIR, exist_ok=True)
 STUDENT_ATTENDANCE_FILE = os.path.join(DATA_DIR, "student_attendance.csv")
 TEACHER_ATTENDANCE_FILE = os.path.join(DATA_DIR, "teacher_attendance.csv")
 
-# ----------------- ATTENDANCE DATA MANAGERS (EXACT STRUCTURE ONLY) -----------------
+# ----------------- ATTENDANCE INITIALIZATION & STORAGE -----------------
 def init_student_attendance():
     if not os.path.exists(STUDENT_ATTENDANCE_FILE):
         classes = ["VI (A, B, C, D)", "VII (A, B, C, D)", "VIII (A, B, C, D)", "IX (A to H)"]
@@ -146,7 +146,7 @@ def render_student_excel():
     else:
         st.info("ℹ️ LMS STUDENT DATA.xlsx file project folder me place karein live batch data display karne ke liye.")
 
-# ----------------- COMPREHENSIVE EMBEDDED MASTER DATA -----------------
+# ----------------- CORE EMBEDDED MASTER DATA -----------------
 BUILTIN_RECORDS = {
     1: {
         "title": "STEM Lab Profile",
@@ -632,12 +632,7 @@ if access_mode == "Admin Workspace":
                 record_dir = os.path.join(UPLOAD_DIR, folder_name)
                 os.makedirs(record_dir, exist_ok=True)
 
-                is_builtin = sno in BUILTIN_RECORDS
-
                 with st.expander(f"**#{sno}. {title}**", expanded=False):
-                    if is_builtin:
-                        st.success("✅ Pre-loaded system record active.")
-                    
                     uploaded_files = st.file_uploader(
                         f"Upload extra/replacement files for #{sno} ({', '.join(formats)})",
                         type=formats,
@@ -664,7 +659,7 @@ if access_mode == "Admin Workspace":
 
         with admin_tabs[1]:
             st.subheader("📝 Live Editor: Parameter #9 Student Attendance")
-            st.info("Table ke cells me value enter ya edit karein aur Save par click karein.")
+            st.caption("Table cells me values type karein aur Save par click karein.")
             
             df_st_att = get_student_attendance_df()
             edited_st_df = st.data_editor(df_st_att, num_rows="dynamic", use_container_width=True, key="editor_student_attendance")
@@ -676,7 +671,7 @@ if access_mode == "Admin Workspace":
 
         with admin_tabs[2]:
             st.subheader("🧑‍🏫 Live Editor: Parameter #10 Teacher Attendance")
-            st.info("Table ke cells me teacher activity aur attendance enter karein aur Save par click karein.")
+            st.caption("Teachers ki lab duty, topics aur timing enter karein aur Save par click karein.")
             
             df_tc_att = get_teacher_attendance_df()
             edited_tc_df = st.data_editor(df_tc_att, num_rows="dynamic", use_container_width=True, key="editor_teacher_attendance")
