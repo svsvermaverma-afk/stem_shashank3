@@ -27,13 +27,6 @@ MONTHS = ["April", "May", "June", "July", "August", "September", "October", "Nov
 WEEKS = ["Week 1", "Week 2", "Week 3", "Week 4", "Week 5"]
 DAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"]
 
-# ----------------- SESSION STATE FOR SINGLE-EXPAND INTERFACE -----------------
-if "active_sno_viewer" not in st.session_state:
-    st.session_state.active_sno_viewer = 1  # Parameter 1 is open by default
-
-if "active_sno_admin" not in st.session_state:
-    st.session_state.active_sno_admin = None
-
 # ----------------- CURRENT REAL-TIME MONTH & WEEK -----------------
 def get_current_indices():
     now = datetime.now()
@@ -138,13 +131,13 @@ def sync_data_from_google_sheet():
 
         try:
             dt = pd.to_datetime(raw_date, errors="coerce")
-            month_name = dt.strftime("%B") if pd.notnull(dt) else "August"
+            month_name = dt.strftime("%B") if pd.notnull(dt) else "April"
             week_num = min(5, ((dt.day - 1) // 7) + 1) if pd.notnull(dt) else 1
             week_name = f"Week {week_num}"
             if not raw_day and pd.notnull(dt):
                 raw_day = dt.strftime("%A")
         except Exception:
-            month_name = "August"
+            month_name = "April"
             week_name = "Week 1"
 
         st_match_idx = df_st_all[
@@ -857,9 +850,9 @@ if access_mode == "Admin Workspace":
                 st.rerun()
 
         st.divider()
-        st.subheader("📁 Manage All Parameters (Single-Open Mode)")
+        st.subheader("📁 All Parameters (Upload & Edit)")
 
-        # ACCORDION EXPANDER FOR ADMIN (ONE OPEN AT A TIME)
+        # ALL 50 PARAMETERS DISPLAYED TOGETHER
         for section_name, items in CATEGORIES.items():
             st.markdown(f"#### 📑 {section_name}")
             for sno, title in items:
@@ -867,107 +860,95 @@ if access_mode == "Admin Workspace":
                 record_dir = os.path.join(UPLOAD_DIR, folder_name)
                 os.makedirs(record_dir, exist_ok=True)
 
-                is_active = (st.session_state.active_sno_admin == sno)
-
-                with st.expander(f"⚙️ #{sno}. {title}", expanded=is_active):
-                    if not is_active:
-                        if st.button(f"👉 Open / Focus #{sno}", key=f"focus_adm_{sno}"):
-                            st.session_state.active_sno_admin = sno
+                with st.expander(f"⚙️ #{sno}. {title}"):
+                    if sno == 9:
+                        st.markdown("##### 📝 Edit Student Attendance (Month & Week-wise)")
+                        cur_m_idx, cur_w_idx = get_current_indices()
+                        col_adm_st_m, col_adm_st_w = st.columns(2)
+                        admin_st_month = col_adm_st_m.selectbox("Select Month (Student):", MONTHS, index=cur_m_idx, key=f"admin_st_month_{sno}")
+                        admin_st_week = col_adm_st_w.selectbox("Select Week (Student):", WEEKS, index=cur_w_idx, key=f"admin_st_week_{sno}")
+                        
+                        st.caption(f"Editing Student Attendance: **{admin_st_month} | {admin_st_week}**")
+                        current_st_slot_df = get_student_attendance_for_slot(admin_st_month, admin_st_week)
+                        editor_st_slot_key = f"admin_st_editor_{admin_st_month}_{admin_st_week}"
+                        
+                        student_column_config = {
+                            "Date": st.column_config.TextColumn("Date (DD/MM/YYYY)"),
+                            "Day": st.column_config.SelectboxColumn("Day", options=DAYS, required=False)
+                        }
+                        
+                        edited_st_slot_df = st.data_editor(
+                            current_st_slot_df,
+                            column_config=student_column_config,
+                            num_rows="dynamic",
+                            use_container_width=True,
+                            key=editor_st_slot_key
+                        )
+                        
+                        if st.button(f"💾 Save Student Attendance for {admin_st_month} ({admin_st_week})", type="primary", key=f"save_st_slot_btn_{sno}"):
+                            save_student_attendance_slot(admin_st_month, admin_st_week, edited_st_slot_df)
+                            st.success(f"Student Attendance for {admin_st_month} - {admin_st_week} saved!")
                             st.rerun()
+
+                    elif sno == 10:
+                        st.markdown("##### 🧑‍🏫 Edit Teacher Attendance (Month & Week-wise)")
+                        cur_m_idx, cur_w_idx = get_current_indices()
+                        col_adm_tc_m, col_adm_tc_w = st.columns(2)
+                        admin_tc_month = col_adm_tc_m.selectbox("Select Month (Teacher):", MONTHS, index=cur_m_idx, key=f"admin_tc_month_{sno}")
+                        admin_tc_week = col_adm_tc_w.selectbox("Select Week (Teacher):", WEEKS, index=cur_w_idx, key=f"admin_tc_week_{sno}")
+                        
+                        st.caption(f"Editing Teacher Attendance: **{admin_tc_month} | {admin_tc_week}**")
+                        current_tc_slot_df = get_teacher_attendance_for_slot(admin_tc_month, admin_tc_week)
+                        editor_tc_slot_key = f"admin_tc_editor_{admin_tc_month}_{admin_tc_week}"
+                        
+                        teacher_column_config = {
+                            "Date": st.column_config.TextColumn("Date (DD/MM/YYYY)"),
+                            "Day": st.column_config.SelectboxColumn("Day", options=DAYS, required=False)
+                        }
+                        
+                        edited_tc_slot_df = st.data_editor(
+                            current_tc_slot_df,
+                            column_config=teacher_column_config,
+                            num_rows="dynamic",
+                            use_container_width=True,
+                            key=editor_tc_slot_key
+                        )
+                        
+                        if st.button(f"💾 Save Teacher Attendance for {admin_tc_month} ({admin_tc_week})", type="primary", key=f"save_tc_slot_btn_{sno}"):
+                            save_teacher_attendance_slot(admin_tc_month, admin_tc_week, edited_tc_slot_df)
+                            st.success(f"Teacher Attendance for {admin_tc_month} - {admin_tc_week} saved!")
+                            st.rerun()
+
                     else:
-                        if st.button(f"✖️ Close #{sno}", key=f"close_adm_{sno}"):
-                            st.session_state.active_sno_admin = None
+                        uploaded_files = st.file_uploader(
+                            f"Upload files for #{sno} (All Formats Allowed)",
+                            type=None,
+                            accept_multiple_files=True,
+                            key=f"upload_{sno}"
+                        )
+
+                        if uploaded_files:
+                            for f in uploaded_files:
+                                with open(os.path.join(record_dir, f.name), "wb") as buffer:
+                                    buffer.write(f.getbuffer())
+                            st.success(f"Saved {len(uploaded_files)} file(s).")
                             st.rerun()
 
-                    if is_active or True:
-                        if sno == 9:
-                            st.markdown("##### 📝 Edit Student Attendance (Month & Week-wise)")
-                            cur_m_idx, cur_w_idx = get_current_indices()
-                            col_adm_st_m, col_adm_st_w = st.columns(2)
-                            admin_st_month = col_adm_st_m.selectbox("Select Month (Student):", MONTHS, index=cur_m_idx, key=f"admin_st_month_{sno}")
-                            admin_st_week = col_adm_st_w.selectbox("Select Week (Student):", WEEKS, index=cur_w_idx, key=f"admin_st_week_{sno}")
-                            
-                            st.caption(f"Editing Student Attendance: **{admin_st_month} | {admin_st_week}**")
-                            current_st_slot_df = get_student_attendance_for_slot(admin_st_month, admin_st_week)
-                            editor_st_slot_key = f"admin_st_editor_{admin_st_month}_{admin_st_week}"
-                            
-                            student_column_config = {
-                                "Date": st.column_config.TextColumn("Date (DD/MM/YYYY)"),
-                                "Day": st.column_config.SelectboxColumn("Day", options=DAYS, required=False)
-                            }
-                            
-                            edited_st_slot_df = st.data_editor(
-                                current_st_slot_df,
-                                column_config=student_column_config,
-                                num_rows="dynamic",
-                                use_container_width=True,
-                                key=editor_st_slot_key
-                            )
-                            
-                            if st.button(f"💾 Save Student Attendance for {admin_st_month} ({admin_st_week})", type="primary", key=f"save_st_slot_btn_{sno}"):
-                                save_student_attendance_slot(admin_st_month, admin_st_week, edited_st_slot_df)
-                                st.success(f"Student Attendance for {admin_st_month} - {admin_st_week} saved!")
-                                st.rerun()
-
-                        elif sno == 10:
-                            st.markdown("##### 🧑‍🏫 Edit Teacher Attendance (Month & Week-wise)")
-                            cur_m_idx, cur_w_idx = get_current_indices()
-                            col_adm_tc_m, col_adm_tc_w = st.columns(2)
-                            admin_tc_month = col_adm_tc_m.selectbox("Select Month (Teacher):", MONTHS, index=cur_m_idx, key=f"admin_tc_month_{sno}")
-                            admin_tc_week = col_adm_tc_w.selectbox("Select Week (Teacher):", WEEKS, index=cur_w_idx, key=f"admin_tc_week_{sno}")
-                            
-                            st.caption(f"Editing Teacher Attendance: **{admin_tc_month} | {admin_tc_week}**")
-                            current_tc_slot_df = get_teacher_attendance_for_slot(admin_tc_month, admin_tc_week)
-                            editor_tc_slot_key = f"admin_tc_editor_{admin_tc_month}_{admin_tc_week}"
-                            
-                            teacher_column_config = {
-                                "Date": st.column_config.TextColumn("Date (DD/MM/YYYY)"),
-                                "Day": st.column_config.SelectboxColumn("Day", options=DAYS, required=False)
-                            }
-                            
-                            edited_tc_slot_df = st.data_editor(
-                                current_tc_slot_df,
-                                column_config=teacher_column_config,
-                                num_rows="dynamic",
-                                use_container_width=True,
-                                key=editor_tc_slot_key
-                            )
-                            
-                            if st.button(f"💾 Save Teacher Attendance for {admin_tc_month} ({admin_tc_week})", type="primary", key=f"save_tc_slot_btn_{sno}"):
-                                save_teacher_attendance_slot(admin_tc_month, admin_tc_week, edited_tc_slot_df)
-                                st.success(f"Teacher Attendance for {admin_tc_month} - {admin_tc_week} saved!")
-                                st.rerun()
-
-                        else:
-                            uploaded_files = st.file_uploader(
-                                f"Upload files for #{sno} (All Formats Allowed)",
-                                type=None,
-                                accept_multiple_files=True,
-                                key=f"upload_{sno}"
-                            )
-
-                            if uploaded_files:
-                                for f in uploaded_files:
-                                    with open(os.path.join(record_dir, f.name), "wb") as buffer:
-                                        buffer.write(f.getbuffer())
-                                st.success(f"Saved {len(uploaded_files)} file(s).")
-                                st.rerun()
-
-                            existing_files = os.listdir(record_dir)
-                            if existing_files:
-                                st.markdown("**Manage Uploaded Files:**")
-                                for fname in existing_files:
-                                    col_a, col_b = st.columns([5, 1])
-                                    col_a.text(f"📄 {fname}")
-                                    if col_b.button("Delete", key=f"del_{sno}_{fname}"):
-                                        os.remove(os.path.join(record_dir, fname))
-                                        st.rerun()
+                        existing_files = os.listdir(record_dir)
+                        if existing_files:
+                            st.markdown("**Manage Uploaded Files:**")
+                            for fname in existing_files:
+                                col_a, col_b = st.columns([5, 1])
+                                col_a.text(f"📄 {fname}")
+                                if col_b.button("Delete", key=f"del_{sno}_{fname}"):
+                                    os.remove(os.path.join(record_dir, fname))
+                                    st.rerun()
 
     else:
         st.title("🔒 Restricted Access")
         st.info("Enter admin password in the sidebar to access Admin Workspace.")
 
-# ----------------- PUBLIC VIEWER (ALL 50 PARAMETERS WITH AUTO-ACCORDION CLOSE) -----------------
+# ----------------- PUBLIC VIEWER (ALL 50 PARAMETERS DISPLAYED TOGETHER) -----------------
 else:
     render_cover_photo()
     render_principal_message()
@@ -977,7 +958,7 @@ else:
     tab1, tab2 = st.tabs(["📁 Explore All 50 Parameters", "📊 Repository Status"])
 
     with tab1:
-        # ALL 6 CATEGORIES VISIBLE ON ONE SCREEN WITH MUTUAL EXCLUSION ACCORDION
+        # ALL 6 CATEGORIES AND 50 PARAMETERS SHOWN DIRECTLY ON SCREEN
         for section_name, items in CATEGORIES.items():
             st.subheader(f"📑 {section_name}")
             for sno, title in items:
@@ -986,18 +967,7 @@ else:
                 files = os.listdir(record_dir) if os.path.exists(record_dir) else []
                 is_builtin = sno in BUILTIN_RECORDS
 
-                is_active = (st.session_state.active_sno_viewer == sno)
-
-                with st.expander(f"#{sno}. {title}", expanded=is_active):
-                    if not is_active:
-                        if st.button(f"👁️ Focus / Keep Open #{sno}", key=f"focus_view_{sno}"):
-                            st.session_state.active_sno_viewer = sno
-                            st.rerun()
-                    else:
-                        if st.button(f"✖️ Close #{sno}", key=f"close_view_{sno}"):
-                            st.session_state.active_sno_viewer = None
-                            st.rerun()
-
+                with st.expander(f"#{sno}. {title}"):
                     if is_builtin:
                         BUILTIN_RECORDS[sno]["render"]()
                     
