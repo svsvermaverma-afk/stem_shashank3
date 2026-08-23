@@ -3,6 +3,7 @@ import pandas as pd
 import os
 import re
 from datetime import datetime
+import streamlit.components.v1 as components
 
 try:
     import pypdfium2 as pdfium
@@ -67,6 +68,7 @@ TEACHER_ATTENDANCE_FILE = os.path.join(DATA_DIR, "teacher_attendance.csv")
 PRINCIPAL_MSG_FILE = os.path.join(DATA_DIR, "principal_message.txt")
 SHEET_CONFIG_FILE = os.path.join(DATA_DIR, "gsheet_url.txt")
 FORM_CONFIG_FILE = os.path.join(DATA_DIR, "gform_url.txt")
+SCIENCEUTSAV_CONFIG_FILE = os.path.join(DATA_DIR, "scienceutsav_url.txt")
 
 MONTHS = ["April", "May", "June", "July", "August", "September", "October", "November", "December", "January", "February", "March"]
 WEEKS = ["Week 1", "Week 2", "Week 3", "Week 4", "Week 5"]
@@ -74,7 +76,7 @@ DAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"]
 
 # ----------------- SESSION STATE FOR ACCORDION -----------------
 if "active_sno_viewer" not in st.session_state:
-    st.session_state.active_sno_viewer = 1  # Parameter 1 open initially
+    st.session_state.active_sno_viewer = 1
 
 if "active_sno_admin" not in st.session_state:
     st.session_state.active_sno_admin = None
@@ -525,6 +527,25 @@ def render_teacher_attendance_viewer():
     st.caption(f"Showing Teacher Attendance for: **{sel_month} | {sel_week}**")
     st.dataframe(df_slot, use_container_width=True, hide_index=True)
 
+# ----------------- SCIENCEUTSAV ASSESSMENT VIEWER (PARAMETER #29) -----------------
+def render_scienceutsav_assessment():
+    st.markdown("### 📊 ScienceUtsav Classroom Assessment & Performance Portal")
+    
+    saved_su_url = get_saved_url(SCIENCEUTSAV_CONFIG_FILE)
+    if not saved_su_url:
+        saved_su_url = "https://report.scienceutsav.com/class/k57a8q5h6mzanqt4vdvn48c1vx8ba0q3/report"
+    
+    col_l1, col_l2 = st.columns([1, 1])
+    col_l1.link_button("🌐 Open ScienceUtsav Portal in New Tab", saved_su_url)
+    
+    st.info("💡 Neeche live dashboard load ho raha hai. Aap upar diye gaye link se bhi direct access kar sakte hain ya Admin panel se downloaded 'Combined PDF' upload kar sakte hain.")
+    
+    components.iframe(
+        saved_su_url,
+        height=750,
+        scrolling=True
+    )
+
 # ----------------- FULL UNTRUNCATED MASTER DATA -----------------
 def render_profile():
     st.markdown("""
@@ -677,8 +698,8 @@ def render_spoc():
     #### 2. STEM Coordinator / SPOC
     * **Name:** Shashank Verma
     * **Designation:** PGT
-    * **Academic Qualification:** M.Sc. (Physics), B.Ed.
-    * **Role:** Physics Teacher / STEM Coordinator / STEM Lab SPOC
+    * **Academic Qualification:** M.Sc., B.Ed.
+    * **Role:** STEM Coordinator / STEM Lab SPOC
 
     #### 3. Major Responsibilities
     The STEM Coordinator / SPOC is responsible for:
@@ -770,6 +791,7 @@ BUILTIN_RECORDS = {
         ### 📊 Student STEM Assessment Framework
         * **Problem Definition:** 20% | **Circuit Assembly:** 20% | **Coding Logic:** 20% | **Prototyping:** 20% | **Presentation:** 20%
     """)},
+    29: {"title": "Student Assessment (ScienceUtsav)", "render": render_scienceutsav_assessment},
     36: {"title": "Teacher Training Records", "render": lambda: st.markdown("""
         ### 🧑‍🏫 STEM Capacity Building & Teacher Training
         * **Conducted by:** ScienceUtsav Technical Team & STEM SPOC
@@ -851,8 +873,8 @@ if access_mode == "Admin Workspace":
         render_principal_message()
         st.title("⚙️ Admin Workspace: Manage Records & Live Attendance")
 
-        # GOOGLE SYNC SETTINGS
-        with st.expander("🔗 **Google Forms & Google Sheets Auto-Sync Settings**", expanded=False):
+        # GOOGLE SYNC & EXTERNAL LINKS SETTINGS
+        with st.expander("🔗 **Google Forms, Sheets & ScienceUtsav Integration**", expanded=False):
             st.markdown("##### 1. Connect Google Sheet (Responses)")
             current_sheet_url = get_saved_url(SHEET_CONFIG_FILE)
             sheet_input = st.text_input("Google Sheet Share Link (Anyone with link = Viewer):", value=current_sheet_url, placeholder="https://docs.google.com/spreadsheets/d/...")
@@ -879,6 +901,16 @@ if access_mode == "Admin Workspace":
             if st.button("💾 Save Form Link"):
                 save_url(FORM_CONFIG_FILE, form_input)
                 st.success("Google Form link saved!")
+
+            st.divider()
+            st.markdown("##### 3. ScienceUtsav Classroom Report Link")
+            current_su_url = get_saved_url(SCIENCEUTSAV_CONFIG_FILE)
+            if not current_su_url:
+                current_su_url = "https://report.scienceutsav.com/class/k57a8q5h6mzanqt4vdvn48c1vx8ba0q3/report"
+            su_input = st.text_input("ScienceUtsav Class Report URL:", value=current_su_url)
+            if st.button("💾 Save ScienceUtsav Link"):
+                save_url(SCIENCEUTSAV_CONFIG_FILE, su_input)
+                st.success("ScienceUtsav URL saved!")
 
         # COVER PHOTO & PRINCIPAL MESSAGE MANAGEMENT
         with st.expander("🖼️ **Update Cover Photo & Principal Message**", expanded=False):
