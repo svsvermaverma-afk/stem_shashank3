@@ -677,8 +677,8 @@ def render_spoc():
     #### 2. STEM Coordinator / SPOC
     * **Name:** Shashank Verma
     * **Designation:** PGT
-    * **Academic Qualification:** M.Sc., B.Ed.
-    * **Role:** STEM Coordinator / STEM Lab SPOC
+    * **Academic Qualification:** M.Sc. (Physics), B.Ed.
+    * **Role:** Physics Teacher / STEM Coordinator / STEM Lab SPOC
 
     #### 3. Major Responsibilities
     The STEM Coordinator / SPOC is responsible for:
