@@ -473,52 +473,230 @@ def render_teacher_attendance_viewer():
     st.caption(f"Showing Teacher Attendance for: **{sel_month} | {sel_week}**")
     st.dataframe(df_slot, use_container_width=True, hide_index=True)
 
-# ----------------- EMBEDDED MASTER DATA FUNCTIONS -----------------
+# ----------------- COMPLETE EMBEDDED MASTER DATA -----------------
 def render_profile():
     st.markdown("""
     ### 🏫 STEM LAB PROFILE
+
     * **School Name:** Aditya Birla Intermediate College, Renukoot
     * **Academic Session:** 2026-27
     * **STEM Lab:** School STEM Innovation & Learning Laboratory
     * **STEM Coordinator / SPOC:** Shashank Verma
+
     ---
+
     #### 1. Introduction
-    The STEM Lab of Aditya Birla Intermediate College, Renukoot is a dedicated space for promoting Science, Technology, Engineering and Mathematics (STEM) learning through hands-on activities, experimentation, problem-solving, innovation and project-based learning.
+    The STEM Lab of Aditya Birla Intermediate College, Renukoot is a dedicated space for promoting Science, Technology, Engineering and Mathematics (STEM) learning through hands-on activities, experimentation, problem-solving, innovation and project-based learning. The laboratory provides students with opportunities to connect classroom concepts with real-life situations and develop practical skills through designing, making, testing and improving solutions.
+
     #### 2. Classes Covered
-    The STEM Lab activities are primarily conducted for: Class VI, VII, VIII, IX.
+    The STEM Lab activities are primarily conducted for:
+    * Class VI
+    * Class VII
+    * Class VIII
+    * Class IX
+
+    *Activities may also be organized for other classes as required under school programmes, competitions and special projects.*
+
+    #### 3. Major Objectives
+    1. To develop scientific thinking and curiosity among students.
+    2. To promote hands-on and experiential learning.
+    3. To develop problem-solving and critical-thinking skills.
+    4. To encourage students to identify real-life problems and develop solutions.
+    5. To promote creativity, innovation and design thinking.
+    6. To provide exposure to technology, electronics, coding, robotics and prototyping.
+    7. To encourage teamwork and collaborative learning.
+    8. To develop communication, presentation and documentation skills.
+    9. To connect STEM concepts with real-life applications.
+    10. To encourage participation in STEM competitions and innovation programmes.
+
+    #### 4. Major Areas of STEM Learning
+    * Science Experiments
+    * Mathematics Applications
+    * Electronics
+    * Arduino and Microcontrollers
+    * Robotics
+    * Sensors and Actuators
+    * Coding and Computational Thinking
+    * IoT and Smart Systems
+    * Design Thinking
+    * 3D/Prototype Development
+    * Environmental Innovation
+    * E-waste Management
+    * Problem Identification and Solution Development
+
+    #### 5. Teaching-Learning Approach
+    The STEM Lab follows an activity-oriented approach based on:
+    > **Problem → Explore → Imagine Design → Build → Test → Improve → Present**
+
+    Students are encouraged to work individually as well as in teams.
+
+    #### 6. Major Activities
+    The STEM Lab may conduct:
+    * Hands-on STEM activities
+    * Experiments and demonstrations
+    * Design challenges
+    * Innovation challenges
+    * Project development
+    * Prototype development
+    * Robotics and electronics activities
+    * Coding activities
+    * STEM competitions
+    * Workshops and training programmes
+    * Exhibition and project presentations
+
+    #### 7. Documentation
+    The following records are maintained digitally:
+    * Student records
+    * Attendance
+    * Inventory
+    * Activity reports
+    * Lesson/session plans
+    * Project reports
+    * Assessment records
+    * Training records
+    * Competition records
+    * Photographs and videos
+    * Circulars and official communication
+    * Monthly and annual reports
+
+    #### 8. Expected Learning Outcomes
+    Students participating in STEM Lab activities are expected to develop:
+    * Observation skills
+    * Scientific reasoning
+    * Problem-solving ability
+    * Creativity
+    * Computational thinking
+    * Design and prototyping skills
+    * Teamwork
+    * Communication skills
+    * Presentation skills
+    * Innovation mindset
+
+    #### 9. Evidence of STEM Lab Activities
+    Evidence is maintained through:
+    * Activity reports
+    * Student worksheets
+    * Project reports
+    * Photographs
+    * Videos
+    * Assessment records
+    * Certificates
+    * Competition results
+    * Student presentations
     """)
 
 def render_guidelines():
     st.markdown("""
     ### 📋 STEM LAB OBJECTIVES & GUIDELINES
+
     * **School:** Aditya Birla Intermediate College, Renukoot
     * **Academic Session:** 2026-27
     * **STEM Coordinator / SPOC:** Shashank Verma
+
     ---
+
     #### A. Objectives of the STEM Lab
-    1. **Experiential Learning:** Hands-on projects & experiments.
-    2. **Problem Solving:** Develop appropriate real-life solutions.
-    3. **Innovation:** Design & prototype new ideas.
-    4. **Scientific Temper:** Evidence-based logical reasoning.
-    5. **Technology Skills:** Coding, electronics, sensors, robotics.
+
+    1. **Experiential Learning:** To provide students with opportunities to learn through practical activities, experiments, and hands-on projects.
+    2. **Problem Solving:** To encourage students to identify real-life problems, analyse them, and develop appropriate solutions.
+    3. **Innovation:** To promote the ability of students to develop new ideas, designs, and prototypes.
+    4. **Scientific Temper:** To develop the habits of observation, questioning, experimentation, evidence-based reasoning, and drawing logical conclusions.
+    5. **Technology Skills:** To introduce students to coding, electronics, sensors, microcontrollers, robotics, and digital tools.
+    6. **Collaboration:** To promote teamwork, peer learning, and collaborative problem solving.
+    7. **Communication:** To provide students with opportunities to effectively explain and present their ideas, experiments, and projects.
+
     ---
+
     #### B. STEM Lab Guidelines
-    1. Entry permitted only under teacher supervision.
-    2. Electrical safety must be strictly observed.
-    3. All tools & sensor kits must be returned to designated storage boxes after use.
+
+    ##### 1. General Rules
+    * Students shall enter the STEM Lab only with the permission of the teacher/instructor.
+    * Students shall use equipment only as instructed and for the designated activity.
+    * Discipline and silence shall be maintained inside the lab.
+    * No equipment shall be removed from the lab without permission.
+    * After completing an activity, all materials shall be returned to their designated places.
+
+    ##### 2. Safety Guidelines
+    * Electrical equipment shall be handled carefully.
+    * Damaged wires or equipment shall not be used.
+    * Power supplies shall not be connected or disconnected without permission.
+    * Water and electrical equipment shall be kept away from each other.
+    * Any problem or malfunction in equipment shall be immediately reported to the teacher.
+    * Running, pushing, or any form of unsafe behaviour inside the lab is strictly prohibited.
+    * In case of an emergency, students shall follow the instructions of the teacher/instructor.
+
+    ##### 3. Equipment Handling
+    * Arduino boards, sensors, motors, and electronic components shall be handled carefully.
+    * Components shall be stored in their designated boxes/containers after use.
+    * Tools shall be used only for their intended purpose.
+    * The condition of equipment shall be checked after every experiment/activity.
+    * Any damaged equipment shall be reported and recorded in the Inventory/Maintenance Record.
+
+    ##### 4. Student Responsibilities
+    Students shall:
+    * Follow all instructions given by the teacher/instructor.
+    * Keep their workstation clean and organised.
+    * Cooperate with other members of their team.
+    * Record observations made during experiments and activities.
+    * Properly document their projects and work.
+
+    ##### 5. Documentation Guidelines
+    For every major STEM activity/project, the following evidence should be maintained:
+    > **Activity Name → Date → Class → Participants → Objective → Materials → Procedure → Outcome → Assessment → Photographs**
+
+    ##### 6. Digital Record Management
+    * STEM Lab records shall be systematically maintained in the designated Google Drive/School Digital Storage.
+    * Important documents and records shall be backed up regularly to prevent data loss.
+
+    ##### 7. Review
+    * STEM Lab activities and records shall be reviewed periodically by the STEM Coordinator/SPOC to ensure proper implementation, documentation, safety, and record maintenance.
     """)
 
 def render_spoc():
     st.markdown("""
     ### 👤 STEM LAB COORDINATOR / SPOC DETAILS
-    * **School Name:** Aditya Birla Intermediate College, Renukoot
-    * **Academic Session:** 2026-27
+
+    **Academic Session:** 2026-27
+
     ---
+
+    #### 1. School Details
+    * **School Name:** Aditya Birla Intermediate College, Renukoot
+    * **Location:** Renukoot, Sonbhadra, Uttar Pradesh
+
+    #### 2. STEM Coordinator / SPOC
     * **Name:** Shashank Verma
     * **Designation:** PGT
     * **Academic Qualification:** M.Sc., B.Ed.
     * **Role:** STEM Coordinator / STEM Lab SPOC
-    * **Official Email:** `shashank.verma@adityabirlaschools.in`
+
+    #### 3. Major Responsibilities
+    The STEM Coordinator / SPOC is responsible for:
+    1. Planning and coordinating STEM Lab activities.
+    2. Preparing the annual and monthly STEM activity plan.
+    3. Coordinating STEM Lab sessions for designated classes.
+    4. Maintaining student participation and attendance records.
+    5. Maintaining the STEM Lab inventory and equipment records.
+    6. Coordinating maintenance and safe use of equipment.
+    7. Supporting teachers in conducting STEM activities.
+    8. Coordinating student projects and prototypes.
+    9. Encouraging participation in STEM competitions and innovation programmes.
+    10. Coordinating STEM SPARK and other STEM-related programmes.
+    11. Maintaining activity photographs, videos and reports.
+    12. Maintaining training and workshop records.
+    13. Preparing monthly, quarterly and annual STEM Lab reports.
+    14. Coordinating communication with school administration and programme authorities.
+    15. Promoting a safe, innovative and collaborative learning environment in the STEM Lab.
+
+    #### 4. Key Focus Areas
+    * Experiential Learning | Project-Based Learning | Design Thinking | Innovation | Robotics | Electronics | Coding | Prototyping | Problem Solving | STEM Competitions
+
+    #### 5. Record Maintenance
+    The Coordinator/SPOC will ensure systematic maintenance of:
+    * Lab Inventory | Attendance | Activity Records | Project Records | Assessment Records | Training Records | Competition Records | Safety Records | Circulars and Communication | Photo/Video Documentation | Monthly and Annual Reports
+
+    #### 6. Contact Details
+    * **Official School Email:** `shashank.verma@adityabirlaschools.in`
     * **Official Contact Number:** `9826594665`
     """)
 
@@ -629,7 +807,7 @@ CATEGORIES = {
 def get_folder_name(sno, title):
     return f"{sno:02d}_{title.replace(' ', '_').replace('/', '_')}"
 
-# ----------------- SIDEBAR NAVIGATION (LEFT ALIGNED) -----------------
+# ----------------- SIDEBAR NAVIGATION -----------------
 st.sidebar.title("🔬 ABIC STEM Portal")
 st.sidebar.caption("Aditya Birla Intermediate College, Renukoot")
 access_mode = st.sidebar.radio("Navigation Mode", ["Public Viewer", "Admin Workspace"])
@@ -713,7 +891,7 @@ if access_mode == "Admin Workspace":
                 st.success("Principal Message successfully saved!")
                 st.rerun()
 
-        # FAST LEFT-ALIGNED ADMIN SELECTOR (NO REFRESH LAG)
+        # FAST LEFT-ALIGNED ADMIN SELECTOR
         selected_section = st.selectbox("Select Category to Manage", list(CATEGORIES.keys()))
         items = CATEGORIES[selected_section]
         
@@ -797,7 +975,7 @@ if access_mode == "Admin Workspace":
             if uploaded_files:
                 for f in uploaded_files:
                     with open(os.path.join(record_dir, f.name), "wb") as buffer:
-                        buffer.write(f.getbuffer())
+                                buffer.write(f.getbuffer())
                 st.success(f"Saved {len(uploaded_files)} file(s).")
                 st.rerun()
 
@@ -815,7 +993,7 @@ if access_mode == "Admin Workspace":
         st.title("🔒 Restricted Access")
         st.info("Enter admin password in the sidebar to access Admin Workspace.")
 
-# ----------------- PUBLIC VIEWER (INSTANT LEFT-ALIGNED NAVIGATION) -----------------
+# ----------------- PUBLIC VIEWER -----------------
 else:
     render_cover_photo()
     render_principal_message()
