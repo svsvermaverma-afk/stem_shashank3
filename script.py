@@ -12,13 +12,13 @@ except ImportError:
 
 st.set_page_config(page_title="ABIC STEM Lab Portal", page_icon="🔬", layout="wide")
 
-# ----------------- STRICT LEFT ALIGNMENT CSS -----------------
+# ----------------- STRICT INTERNAL BUTTON LEFT ALIGNMENT CSS -----------------
 st.markdown("""
 <style>
-/* Force all buttons, markdown, and text to strict left align */
-div.stButton > button {
-    text-align: left !important;
+/* Target Streamlit button and all internal text/markdown wrappers */
+div[data-testid="stButton"] button {
     justify-content: flex-start !important;
+    text-align: left !important;
     align-items: center !important;
     display: flex !important;
     width: 100% !important;
@@ -26,25 +26,33 @@ div.stButton > button {
     font-size: 15px !important;
     font-weight: 500 !important;
     border-radius: 6px !important;
-    border: 1px solid #e0e0e0 !important;
-    background-color: #fafafa !important;
-    color: #1a1a1a !important;
-    margin-bottom: 4px !important;
+    border: 1px solid #d0d7de !important;
+    background-color: #f6f8fa !important;
+    color: #1f2328 !important;
+    margin-bottom: 2px !important;
 }
 
-div.stButton > button:hover {
-    background-color: #f0f4f8 !important;
-    border-color: #0066cc !important;
-    color: #0066cc !important;
-}
-
-div.stButton > button:focus {
-    box-shadow: none !important;
-}
-
-/* Ensure headings & text remain left aligned */
-h1, h2, h3, h4, h5, h6, p, div, span {
+div[data-testid="stButton"] button div,
+div[data-testid="stButton"] button p,
+div[data-testid="stButton"] button span,
+div[data-testid="stButton"] button div[data-testid="stMarkdownContainer"] {
     text-align: left !important;
+    justify-content: flex-start !important;
+    align-items: center !important;
+    display: flex !important;
+    width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+}
+
+div[data-testid="stButton"] button:hover {
+    background-color: #eaeef2 !important;
+    border-color: #0969da !important;
+    color: #0969da !important;
+}
+
+div[data-testid="stButton"] button:focus {
+    box-shadow: none !important;
 }
 </style>
 """, unsafe_allow_html=True)
