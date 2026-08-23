@@ -132,7 +132,7 @@ def fetch_google_sheet_data(sheet_url):
             if not match:
                 return None, "Invalid Google Sheet link. Ensure it has '/d/SHEET_ID/'."
             sheet_id = match.group(1)
-            csv_url = f"[https://docs.google.com/spreadsheets/d/](https://docs.google.com/spreadsheets/d/){sheet_id}/export?format=csv"
+            csv_url = f"https://docs.google.com/spreadsheets/d/{sheet_id}/export?format=csv"
             
         df = pd.read_csv(csv_url, dtype=str).fillna("")
         return df, None
@@ -470,6 +470,39 @@ def get_existing_files_for_parameter(sno, title):
                     all_files.append((full_path, f))
     return all_files
 
+# ----------------- ATTENDANCE VIEWER FUNCTIONS (DEFINED BEFORE USAGE) -----------------
+def render_student_attendance_viewer():
+    st.markdown("### 📊 Section-wise Student STEM Attendance Record")
+    gform_link = get_saved_url(FORM_CONFIG_FILE)
+    if gform_link:
+        st.link_button("📝 Open Teacher Daily STEM Entry Form", gform_link)
+        st.write("")
+
+    cur_m_idx, cur_w_idx = get_current_indices()
+    c1, c2 = st.columns(2)
+    sel_month = c1.selectbox("Select Month (Student):", MONTHS, index=cur_m_idx, key="view_st_month")
+    sel_week = c2.selectbox("Select Week (Student):", WEEKS, index=cur_w_idx, key="view_st_week")
+    
+    df_slot = get_student_attendance_for_slot(sel_month, sel_week)
+    st.caption(f"Showing Student Attendance for: **{sel_month} | {sel_week}**")
+    st.dataframe(df_slot, use_container_width=True, hide_index=True)
+
+def render_teacher_attendance_viewer():
+    st.markdown("### 🧑‍🏫 STEM Teacher Lab Duty & Activity Attendance")
+    gform_link = get_saved_url(FORM_CONFIG_FILE)
+    if gform_link:
+        st.link_button("📝 Open Teacher Daily STEM Entry Form", gform_link)
+        st.write("")
+
+    cur_m_idx, cur_w_idx = get_current_indices()
+    c1, c2 = st.columns(2)
+    sel_month = c1.selectbox("Select Month (Teacher):", MONTHS, index=cur_m_idx, key="view_tc_month")
+    sel_week = c2.selectbox("Select Week (Teacher):", WEEKS, index=cur_w_idx, key="view_tc_week")
+    
+    df_slot = get_teacher_attendance_for_slot(sel_month, sel_week)
+    st.caption(f"Showing Teacher Attendance for: **{sel_month} | {sel_week}**")
+    st.dataframe(df_slot, use_container_width=True, hide_index=True)
+
 # ----------------- STUDENT EXCEL VIEWER -----------------
 def render_student_excel():
     possible_paths = [
@@ -517,7 +550,7 @@ def render_scienceutsav_assessment():
     
     saved_su_url = get_saved_url(SCIENCEUTSAV_CONFIG_FILE)
     if not saved_su_url:
-        saved_su_url = "[https://report.scienceutsav.com/class/k57a8q5h6mzanqt4vdvn48c1vx8ba0q3/report](https://report.scienceutsav.com/class/k57a8q5h6mzanqt4vdvn48c1vx8ba0q3/report)"
+        saved_su_url = "https://report.scienceutsav.com/class/k57a8q5h6mzanqt4vdvn48c1vx8ba0q3/report"
     
     col_l1, col_l2 = st.columns([1, 1])
     col_l1.link_button("🌐 Open ScienceUtsav Portal in New Tab", saved_su_url)
@@ -801,12 +834,12 @@ def render_lesson_plans():
         
         st.markdown("##### 📦 Teaching Aids & Resources")
         st.write(f"• **Hardware:** {plan_data[4]}")
-        st.write(f"• **Digital Resource:** ScienceUtsav LMS ([report.scienceutsav.com/lms](https://report.scienceutsav.com/lms)) | Arduino Reference")
+        st.write(f"• **Digital Resource:** ScienceUtsav LMS (report.scienceutsav.com/lms) | Arduino Reference")
         
         st.markdown("##### 📊 Periodic Assessment")
         st.write(f"• **Criteria:** {plan_data[5]}")
 
-# ----------------- 100% FULL UNTRUNCATED MASTER DATA (NO DATA LOSS) -----------------
+# ----------------- 100% FULL UNTRUNCATED MASTER DATA -----------------
 def render_profile():
     st.markdown("""
     ### 🏫 STEM LAB PROFILE
@@ -1080,7 +1113,7 @@ if access_mode == "Admin Workspace":
         with st.expander("🔗 **Google Forms, Sheets & ScienceUtsav Integration**", expanded=False):
             st.markdown("##### 1. Connect Google Sheet (Responses)")
             current_sheet_url = get_saved_url(SHEET_CONFIG_FILE)
-            sheet_input = st.text_input("Google Sheet Share Link (Anyone with link = Viewer):", value=current_sheet_url, placeholder="[https://docs.google.com/spreadsheets/d/](https://docs.google.com/spreadsheets/d/)...")
+            sheet_input = st.text_input("Google Sheet Share Link (Anyone with link = Viewer):", value=current_sheet_url, placeholder="https://docs.google.com/spreadsheets/d/...")
             
             c_save_s, c_sync = st.columns(2)
             if c_save_s.button("💾 Save Sheet Link"):
@@ -1100,7 +1133,7 @@ if access_mode == "Admin Workspace":
             st.divider()
             st.markdown("##### 2. Connect Google Form (Teacher Link)")
             current_form_url = get_saved_url(FORM_CONFIG_FILE)
-            form_input = st.text_input("Google Form Link (For Teachers to Fill):", value=current_form_url, placeholder="[https://forms.gle/](https://forms.gle/)...")
+            form_input = st.text_input("Google Form Link (For Teachers to Fill):", value=current_form_url, placeholder="https://forms.gle/...")
             if st.button("💾 Save Form Link"):
                 save_url(FORM_CONFIG_FILE, form_input)
                 st.success("Google Form link saved!")
@@ -1109,7 +1142,7 @@ if access_mode == "Admin Workspace":
             st.markdown("##### 3. ScienceUtsav Classroom Report Link")
             current_su_url = get_saved_url(SCIENCEUTSAV_CONFIG_FILE)
             if not current_su_url:
-                current_su_url = "[https://report.scienceutsav.com/class/k57a8q5h6mzanqt4vdvn48c1vx8ba0q3/report](https://report.scienceutsav.com/class/k57a8q5h6mzanqt4vdvn48c1vx8ba0q3/report)"
+                current_su_url = "https://report.scienceutsav.com/class/k57a8q5h6mzanqt4vdvn48c1vx8ba0q3/report"
             su_input = st.text_input("ScienceUtsav Class Report URL:", value=current_su_url)
             if st.button("💾 Save ScienceUtsav Link"):
                 save_url(SCIENCEUTSAV_CONFIG_FILE, su_input)
