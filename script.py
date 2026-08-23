@@ -2,6 +2,7 @@ import streamlit as st
 import pandas as pd
 import os
 import re
+from datetime import datetime
 
 try:
     import pypdfium2 as pdfium
@@ -26,6 +27,17 @@ MONTHS = ["April", "May", "June", "July", "August", "September", "October", "Nov
 WEEKS = ["Week 1", "Week 2", "Week 3", "Week 4", "Week 5"]
 DAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"]
 
+# ----------------- CURRENT REAL-TIME MONTH & WEEK HELPERS -----------------
+def get_current_indices():
+    now = datetime.now()
+    cur_month_name = now.strftime("%B")
+    cur_week_num = min(5, ((now.day - 1) // 7) + 1)
+    cur_week_name = f"Week {cur_week_num}"
+
+    month_idx = MONTHS.index(cur_month_name) if cur_month_name in MONTHS else 0
+    week_idx = WEEKS.index(cur_week_name) if cur_week_name in WEEKS else 0
+    return month_idx, week_idx
+
 SECTIONS_LIST = [
     "Class VI - Section A", "Class VI - Section B", "Class VI - Section C", "Class VI - Section D",
     "Class VII - Section A", "Class VII - Section B", "Class VII - Section C", "Class VII - Section D",
@@ -47,7 +59,7 @@ TEACHERS_LIST = [
     "Mr. Praveen Kumar"
 ]
 
-# ----------------- GOOGLE SHEET / FORM URL HELPERS -----------------
+# ----------------- GOOGLE SHEET & URL HELPERS -----------------
 def get_saved_url(file_path):
     if os.path.exists(file_path):
         with open(file_path, "r", encoding="utf-8") as f:
@@ -59,13 +71,16 @@ def save_url(file_path, url):
         f.write(url.strip())
 
 def fetch_google_sheet_data(sheet_url):
-    """Converts a standard Google Sheet sharing URL into direct CSV export link and reads into Pandas."""
     try:
-        match = re.search(r"/d/([a-zA-Z0-9-_]+)", sheet_url)
-        if not match:
-            return None, "Invalid Google Sheet link. Ensure it has '/d/SHEET_ID/'."
-        sheet_id = match.group(1)
-        csv_url = f"https://docs.google.com/spreadsheets/d/{sheet_id}/export?format=csv"
+        if "pub?output=csv" in sheet_url or "pubhtml" in sheet_url:
+            csv_url = sheet_url.replace("pubhtml", "pub?output=csv")
+        else:
+            match = re.search(r"/d/([a-zA-Z0-9-_]+)", sheet_url)
+            if not match:
+                return None, "Invalid Google Sheet link. Ensure it has '/d/SHEET_ID/'."
+            sheet_id = match.group(1)
+            csv_url = f"https://docs.google.com/spreadsheets/d/{sheet_id}/export?format=csv"
+            
         df = pd.read_csv(csv_url, dtype=str).fillna("")
         return df, None
     except Exception as e:
@@ -74,13 +89,12 @@ def fetch_google_sheet_data(sheet_url):
 def sync_data_from_google_sheet():
     sheet_url = get_saved_url(SHEET_CONFIG_FILE)
     if not sheet_url:
-        return False, "Google Sheet URL not configured in Admin Settings."
+        return False, "Google Sheet URL not configured."
 
     df_raw, err = fetch_google_sheet_data(sheet_url)
     if err or df_raw is None or df_raw.empty:
         return False, err if err else "Google Sheet is empty."
 
-    # Column name normalizer
     def find_col(keywords):
         for col in df_raw.columns:
             if any(k.lower() in str(col).lower() for k in keywords):
@@ -99,7 +113,6 @@ def sync_data_from_google_sheet():
     col_in = find_col(["in-time", "in time", "intime"])
     col_out = find_col(["out-time", "out time", "outtime"])
 
-    # Load local storage
     df_st_all = get_student_attendance_all()
     df_tc_all = get_teacher_attendance_all()
 
@@ -116,19 +129,17 @@ def sync_data_from_google_sheet():
         raw_in = str(row[col_in]) if col_in else ""
         raw_out = str(row[col_out]) if col_out else ""
 
-        # Auto-compute Month and Week
         try:
             dt = pd.to_datetime(raw_date, errors="coerce")
-            month_name = dt.strftime("%B") if pd.notnull(dt) else "April"
+            month_name = dt.strftime("%B") if pd.notnull(dt) else "August"
             week_num = min(5, ((dt.day - 1) // 7) + 1) if pd.notnull(dt) else 1
             week_name = f"Week {week_num}"
             if not raw_day and pd.notnull(dt):
                 raw_day = dt.strftime("%A")
         except Exception:
-            month_name = "April"
+            month_name = "August"
             week_name = "Week 1"
 
-        # Update Student attendance record
         st_match_idx = df_st_all[
             (df_st_all["Month"] == month_name) & 
             (df_st_all["Week"] == week_name) & 
@@ -154,7 +165,6 @@ def sync_data_from_google_sheet():
         else:
             df_st_all = pd.concat([df_st_all, pd.DataFrame([new_st_row])], ignore_index=True)
 
-        # Update Teacher attendance record
         tc_match_idx = df_tc_all[
             (df_tc_all["Month"] == month_name) & 
             (df_tc_all["Week"] == week_name) & 
@@ -431,7 +441,7 @@ def render_student_excel():
         st.warning("⚠️ `LMS STUDENT DATA.xlsx` file nahi mili.")
         st.info("Aap ise Admin Workspace me **#8. Student List** me upload karein ya project folder me paste karein.")
 
-# ----------------- ATTENDANCE VIEWER FUNCTIONS -----------------
+# ----------------- ATTENDANCE VIEWER FUNCTIONS (AUTO-CURRENT SELECTION) -----------------
 def render_student_attendance_viewer():
     st.markdown("### 📊 Section-wise Student STEM Attendance Record")
     gform_link = get_saved_url(FORM_CONFIG_FILE)
@@ -439,9 +449,10 @@ def render_student_attendance_viewer():
         st.link_button("📝 Open Teacher Daily STEM Entry Form", gform_link)
         st.write("")
 
+    cur_m_idx, cur_w_idx = get_current_indices()
     c1, c2 = st.columns(2)
-    sel_month = c1.selectbox("Select Month (Student):", MONTHS, key="view_st_month")
-    sel_week = c2.selectbox("Select Week (Student):", WEEKS, key="view_st_week")
+    sel_month = c1.selectbox("Select Month (Student):", MONTHS, index=cur_m_idx, key="view_st_month")
+    sel_week = c2.selectbox("Select Week (Student):", WEEKS, index=cur_w_idx, key="view_st_week")
     
     df_slot = get_student_attendance_for_slot(sel_month, sel_week)
     st.caption(f"Showing Student Attendance for: **{sel_month} | {sel_week}**")
@@ -454,9 +465,10 @@ def render_teacher_attendance_viewer():
         st.link_button("📝 Open Teacher Daily STEM Entry Form", gform_link)
         st.write("")
 
+    cur_m_idx, cur_w_idx = get_current_indices()
     c1, c2 = st.columns(2)
-    sel_month = c1.selectbox("Select Month (Teacher):", MONTHS, key="view_tc_month")
-    sel_week = c2.selectbox("Select Week (Teacher):", WEEKS, key="view_tc_week")
+    sel_month = c1.selectbox("Select Month (Teacher):", MONTHS, index=cur_m_idx, key="view_tc_month")
+    sel_week = c2.selectbox("Select Week (Teacher):", WEEKS, index=cur_w_idx, key="view_tc_week")
     
     df_slot = get_teacher_attendance_for_slot(sel_month, sel_week)
     st.caption(f"Showing Teacher Attendance for: **{sel_month} | {sel_week}**")
@@ -550,8 +562,8 @@ if access_mode == "Admin Workspace":
         render_principal_message()
         st.title("⚙️ Admin Workspace: Manage Records & Live Attendance")
 
-        # ----------------- GOOGLE FORM & GOOGLE SHEET SYNC MANAGER -----------------
-        with st.expander("🔗 **Google Forms & Google Sheets Auto-Sync Settings**", expanded=True):
+        # GOOGLE SYNC SETTINGS
+        with st.expander("🔗 **Google Forms & Google Sheets Auto-Sync Settings**", expanded=False):
             st.markdown("##### 1. Connect Google Sheet (Responses)")
             current_sheet_url = get_saved_url(SHEET_CONFIG_FILE)
             sheet_input = st.text_input("Google Sheet Share Link (Anyone with link = Viewer):", value=current_sheet_url, placeholder="https://docs.google.com/spreadsheets/d/...")
@@ -612,9 +624,10 @@ if access_mode == "Admin Workspace":
             with st.expander(f"**#{sno}. {title}**", expanded=False):
                 if sno == 9:
                     st.markdown("#### 📝 Edit Student Attendance (Month & Week-wise)")
+                    cur_m_idx, cur_w_idx = get_current_indices()
                     col_adm_st_m, col_adm_st_w = st.columns(2)
-                    admin_st_month = col_adm_st_m.selectbox("Select Month (Student):", MONTHS, key="admin_st_month")
-                    admin_st_week = col_adm_st_w.selectbox("Select Week (Student):", WEEKS, key="admin_st_week")
+                    admin_st_month = col_adm_st_m.selectbox("Select Month (Student):", MONTHS, index=cur_m_idx, key="admin_st_month")
+                    admin_st_week = col_adm_st_w.selectbox("Select Week (Student):", WEEKS, index=cur_w_idx, key="admin_st_week")
                     
                     st.caption(f"Editing Student Attendance: **{admin_st_month} | {admin_st_week}**")
                     current_st_slot_df = get_student_attendance_for_slot(admin_st_month, admin_st_week)
@@ -640,9 +653,10 @@ if access_mode == "Admin Workspace":
 
                 elif sno == 10:
                     st.markdown("#### 🧑‍🏫 Edit Teacher Attendance (Month & Week-wise)")
+                    cur_m_idx, cur_w_idx = get_current_indices()
                     col_adm_tc_m, col_adm_tc_w = st.columns(2)
-                    admin_tc_month = col_adm_tc_m.selectbox("Select Month (Teacher):", MONTHS, key="admin_tc_month")
-                    admin_tc_week = col_adm_tc_w.selectbox("Select Week (Teacher):", WEEKS, key="admin_tc_week")
+                    admin_tc_month = col_adm_tc_m.selectbox("Select Month (Teacher):", MONTHS, index=cur_m_idx, key="admin_tc_month")
+                    admin_tc_week = col_adm_tc_w.selectbox("Select Week (Teacher):", WEEKS, index=cur_w_idx, key="admin_tc_week")
                     
                     st.caption(f"Editing Teacher Attendance: **{admin_tc_month} | {admin_tc_week}**")
                     current_tc_slot_df = get_teacher_attendance_for_slot(admin_tc_month, admin_tc_week)
