@@ -531,13 +531,11 @@ def render_profile():
     Students are encouraged to work individually as well as in teams.
 
     #### 6. Major Activities
-    The STEM Lab may conduct:
+    The STEM Lab conducts:
     * Hands-on STEM activities
     * Experiments and demonstrations
-    * Design challenges
-    * Innovation challenges
-    * Project development
-    * Prototype development
+    * Design challenges & Innovation challenges
+    * Project & Prototype development
     * Robotics and electronics activities
     * Coding activities
     * STEM competitions
@@ -546,43 +544,10 @@ def render_profile():
 
     #### 7. Documentation
     The following records are maintained digitally:
-    * Student records
-    * Attendance
-    * Inventory
-    * Activity reports
-    * Lesson/session plans
-    * Project reports
-    * Assessment records
-    * Training records
-    * Competition records
-    * Photographs and videos
-    * Circulars and official communication
-    * Monthly and annual reports
+    * Student records | Attendance | Inventory | Activity reports | Lesson plans | Project reports | Assessment records | Training records | Competition records | Photographs and videos | Official circulars | Monthly and annual reports.
 
     #### 8. Expected Learning Outcomes
-    Students participating in STEM Lab activities are expected to develop:
-    * Observation skills
-    * Scientific reasoning
-    * Problem-solving ability
-    * Creativity
-    * Computational thinking
-    * Design and prototyping skills
-    * Teamwork
-    * Communication skills
-    * Presentation skills
-    * Innovation mindset
-
-    #### 9. Evidence of STEM Lab Activities
-    Evidence is maintained through:
-    * Activity reports
-    * Student worksheets
-    * Project reports
-    * Photographs
-    * Videos
-    * Assessment records
-    * Certificates
-    * Competition results
-    * Student presentations
+    Students participating in STEM Lab activities are expected to develop observation skills, scientific reasoning, problem-solving ability, creativity, computational thinking, design and prototyping skills, teamwork, and innovation mindset.
     """)
 
 def render_guidelines():
@@ -643,13 +608,6 @@ def render_guidelines():
     ##### 5. Documentation Guidelines
     For every major STEM activity/project, the following evidence should be maintained:
     > **Activity Name → Date → Class → Participants → Objective → Materials → Procedure → Outcome → Assessment → Photographs**
-
-    ##### 6. Digital Record Management
-    * STEM Lab records shall be systematically maintained in the designated Google Drive/School Digital Storage.
-    * Important documents and records shall be backed up regularly to prevent data loss.
-
-    ##### 7. Review
-    * STEM Lab activities and records shall be reviewed periodically by the STEM Coordinator/SPOC to ensure proper implementation, documentation, safety, and record maintenance.
     """)
 
 def render_spoc():
@@ -891,147 +849,138 @@ if access_mode == "Admin Workspace":
                 st.success("Principal Message successfully saved!")
                 st.rerun()
 
-        # FAST LEFT-ALIGNED ADMIN SELECTOR
-        selected_section = st.selectbox("Select Category to Manage", list(CATEGORIES.keys()))
-        items = CATEGORIES[selected_section]
-        
-        param_options = {f"#{sno}. {title}": (sno, title) for sno, title in items}
-        selected_param_label = st.selectbox("Select Parameter to Edit / Upload:", list(param_options.keys()))
-        sno, title = param_options[selected_param_label]
-        
         st.divider()
-        st.markdown(f"### ⚙️ Managing: #{sno}. {title}")
+        st.subheader("📁 All Parameters (Upload & Edit)")
 
-        folder_name = get_folder_name(sno, title)
-        record_dir = os.path.join(UPLOAD_DIR, folder_name)
-        os.makedirs(record_dir, exist_ok=True)
+        # ALL 50 PARAMETERS DISPLAYED TOGETHER
+        for section_name, items in CATEGORIES.items():
+            st.markdown(f"#### 📑 {section_name}")
+            for sno, title in items:
+                folder_name = get_folder_name(sno, title)
+                record_dir = os.path.join(UPLOAD_DIR, folder_name)
+                os.makedirs(record_dir, exist_ok=True)
 
-        if sno == 9:
-            st.markdown("#### 📝 Edit Student Attendance (Month & Week-wise)")
-            cur_m_idx, cur_w_idx = get_current_indices()
-            col_adm_st_m, col_adm_st_w = st.columns(2)
-            admin_st_month = col_adm_st_m.selectbox("Select Month (Student):", MONTHS, index=cur_m_idx, key="admin_st_month")
-            admin_st_week = col_adm_st_w.selectbox("Select Week (Student):", WEEKS, index=cur_w_idx, key="admin_st_week")
-            
-            st.caption(f"Editing Student Attendance: **{admin_st_month} | {admin_st_week}**")
-            current_st_slot_df = get_student_attendance_for_slot(admin_st_month, admin_st_week)
-            editor_st_slot_key = f"admin_st_editor_{admin_st_month}_{admin_st_week}"
-            
-            student_column_config = {
-                "Date": st.column_config.TextColumn("Date (DD/MM/YYYY)"),
-                "Day": st.column_config.SelectboxColumn("Day", options=DAYS, required=False)
-            }
-            
-            edited_st_slot_df = st.data_editor(
-                current_st_slot_df,
-                column_config=student_column_config,
-                num_rows="dynamic",
-                use_container_width=True,
-                key=editor_st_slot_key
-            )
-            
-            if st.button(f"💾 Save Student Attendance for {admin_st_month} ({admin_st_week})", type="primary", key="save_st_slot_btn"):
-                save_student_attendance_slot(admin_st_month, admin_st_week, edited_st_slot_df)
-                st.success(f"Student Attendance for {admin_st_month} - {admin_st_week} saved!")
-                st.rerun()
+                with st.expander(f"⚙️ #{sno}. {title}"):
+                    if sno == 9:
+                        st.markdown("##### 📝 Edit Student Attendance (Month & Week-wise)")
+                        cur_m_idx, cur_w_idx = get_current_indices()
+                        col_adm_st_m, col_adm_st_w = st.columns(2)
+                        admin_st_month = col_adm_st_m.selectbox("Select Month (Student):", MONTHS, index=cur_m_idx, key=f"admin_st_month_{sno}")
+                        admin_st_week = col_adm_st_w.selectbox("Select Week (Student):", WEEKS, index=cur_w_idx, key=f"admin_st_week_{sno}")
+                        
+                        st.caption(f"Editing Student Attendance: **{admin_st_month} | {admin_st_week}**")
+                        current_st_slot_df = get_student_attendance_for_slot(admin_st_month, admin_st_week)
+                        editor_st_slot_key = f"admin_st_editor_{admin_st_month}_{admin_st_week}"
+                        
+                        student_column_config = {
+                            "Date": st.column_config.TextColumn("Date (DD/MM/YYYY)"),
+                            "Day": st.column_config.SelectboxColumn("Day", options=DAYS, required=False)
+                        }
+                        
+                        edited_st_slot_df = st.data_editor(
+                            current_st_slot_df,
+                            column_config=student_column_config,
+                            num_rows="dynamic",
+                            use_container_width=True,
+                            key=editor_st_slot_key
+                        )
+                        
+                        if st.button(f"💾 Save Student Attendance for {admin_st_month} ({admin_st_week})", type="primary", key=f"save_st_slot_btn_{sno}"):
+                            save_student_attendance_slot(admin_st_month, admin_st_week, edited_st_slot_df)
+                            st.success(f"Student Attendance for {admin_st_month} - {admin_st_week} saved!")
+                            st.rerun()
 
-        elif sno == 10:
-            st.markdown("#### 🧑‍🏫 Edit Teacher Attendance (Month & Week-wise)")
-            cur_m_idx, cur_w_idx = get_current_indices()
-            col_adm_tc_m, col_adm_tc_w = st.columns(2)
-            admin_tc_month = col_adm_tc_m.selectbox("Select Month (Teacher):", MONTHS, index=cur_m_idx, key="admin_tc_month")
-            admin_tc_week = col_adm_tc_w.selectbox("Select Week (Teacher):", WEEKS, index=cur_w_idx, key="admin_tc_week")
-            
-            st.caption(f"Editing Teacher Attendance: **{admin_tc_month} | {admin_tc_week}**")
-            current_tc_slot_df = get_teacher_attendance_for_slot(admin_tc_month, admin_tc_week)
-            editor_tc_slot_key = f"admin_tc_editor_{admin_tc_month}_{admin_tc_week}"
-            
-            teacher_column_config = {
-                "Date": st.column_config.TextColumn("Date (DD/MM/YYYY)"),
-                "Day": st.column_config.SelectboxColumn("Day", options=DAYS, required=False)
-            }
-            
-            edited_tc_slot_df = st.data_editor(
-                current_tc_slot_df,
-                column_config=teacher_column_config,
-                num_rows="dynamic",
-                use_container_width=True,
-                key=editor_tc_slot_key
-            )
-            
-            if st.button(f"💾 Save Teacher Attendance for {admin_tc_month} ({admin_tc_week})", type="primary", key="save_tc_slot_btn"):
-                save_teacher_attendance_slot(admin_tc_month, admin_tc_week, edited_tc_slot_df)
-                st.success(f"Teacher Attendance for {admin_tc_month} - {admin_tc_week} saved!")
-                st.rerun()
+                    elif sno == 10:
+                        st.markdown("##### 🧑‍🏫 Edit Teacher Attendance (Month & Week-wise)")
+                        cur_m_idx, cur_w_idx = get_current_indices()
+                        col_adm_tc_m, col_adm_tc_w = st.columns(2)
+                        admin_tc_month = col_adm_tc_m.selectbox("Select Month (Teacher):", MONTHS, index=cur_m_idx, key=f"admin_tc_month_{sno}")
+                        admin_tc_week = col_adm_tc_w.selectbox("Select Week (Teacher):", WEEKS, index=cur_w_idx, key=f"admin_tc_week_{sno}")
+                        
+                        st.caption(f"Editing Teacher Attendance: **{admin_tc_month} | {admin_tc_week}**")
+                        current_tc_slot_df = get_teacher_attendance_for_slot(admin_tc_month, admin_tc_week)
+                        editor_tc_slot_key = f"admin_tc_editor_{admin_tc_month}_{admin_tc_week}"
+                        
+                        teacher_column_config = {
+                            "Date": st.column_config.TextColumn("Date (DD/MM/YYYY)"),
+                            "Day": st.column_config.SelectboxColumn("Day", options=DAYS, required=False)
+                        }
+                        
+                        edited_tc_slot_df = st.data_editor(
+                            current_tc_slot_df,
+                            column_config=teacher_column_config,
+                            num_rows="dynamic",
+                            use_container_width=True,
+                            key=editor_tc_slot_key
+                        )
+                        
+                        if st.button(f"💾 Save Teacher Attendance for {admin_tc_month} ({admin_tc_week})", type="primary", key=f"save_tc_slot_btn_{sno}"):
+                            save_teacher_attendance_slot(admin_tc_month, admin_tc_week, edited_tc_slot_df)
+                            st.success(f"Teacher Attendance for {admin_tc_month} - {admin_tc_week} saved!")
+                            st.rerun()
 
-        else:
-            uploaded_files = st.file_uploader(
-                f"Upload files for #{sno} (All Formats Allowed)",
-                type=None,
-                accept_multiple_files=True,
-                key=f"upload_{sno}"
-            )
+                    else:
+                        uploaded_files = st.file_uploader(
+                            f"Upload files for #{sno} (All Formats Allowed)",
+                            type=None,
+                            accept_multiple_files=True,
+                            key=f"upload_{sno}"
+                        )
 
-            if uploaded_files:
-                for f in uploaded_files:
-                    with open(os.path.join(record_dir, f.name), "wb") as buffer:
-                                buffer.write(f.getbuffer())
-                st.success(f"Saved {len(uploaded_files)} file(s).")
-                st.rerun()
+                        if uploaded_files:
+                            for f in uploaded_files:
+                                with open(os.path.join(record_dir, f.name), "wb") as buffer:
+                                    buffer.write(f.getbuffer())
+                            st.success(f"Saved {len(uploaded_files)} file(s).")
+                            st.rerun()
 
-            existing_files = os.listdir(record_dir)
-            if existing_files:
-                st.markdown("**Manage Uploaded Files:**")
-                for fname in existing_files:
-                    col_a, col_b = st.columns([5, 1])
-                    col_a.text(f"📄 {fname}")
-                    if col_b.button("Delete", key=f"del_{sno}_{fname}"):
-                        os.remove(os.path.join(record_dir, fname))
-                        st.rerun()
+                        existing_files = os.listdir(record_dir)
+                        if existing_files:
+                            st.markdown("**Manage Uploaded Files:**")
+                            for fname in existing_files:
+                                col_a, col_b = st.columns([5, 1])
+                                col_a.text(f"📄 {fname}")
+                                if col_b.button("Delete", key=f"del_{sno}_{fname}"):
+                                    os.remove(os.path.join(record_dir, fname))
+                                    st.rerun()
 
     else:
         st.title("🔒 Restricted Access")
         st.info("Enter admin password in the sidebar to access Admin Workspace.")
 
-# ----------------- PUBLIC VIEWER -----------------
+# ----------------- PUBLIC VIEWER (ALL 50 PARAMETERS DISPLAYED TOGETHER) -----------------
 else:
     render_cover_photo()
     render_principal_message()
     st.title("🔬 STEM Innovation & Learning Laboratory")
     st.caption("Aditya Birla Intermediate College, Renukoot | Academic Session 2026-27")
 
-    tab1, tab2 = st.tabs(["📁 Explore Records", "📊 Repository Status"])
+    tab1, tab2 = st.tabs(["📁 Explore All 50 Parameters", "📊 Repository Status"])
 
     with tab1:
-        c_cat, c_param = st.columns([1, 2])
-        selected_pub_cat = c_cat.selectbox("📑 Select Category:", list(CATEGORIES.keys()))
-        
-        cat_items = CATEGORIES[selected_pub_cat]
-        pub_options = {f"#{sno}. {title}": (sno, title) for sno, title in cat_items}
-        selected_pub_label = c_param.selectbox("🔍 Select Parameter to View:", list(pub_options.keys()))
-        
-        sel_sno, sel_title = pub_options[selected_pub_label]
-        
-        st.divider()
-        st.subheader(f"📌 #{sel_sno}. {sel_title}")
-        
-        is_builtin = sel_sno in BUILTIN_RECORDS
-        if is_builtin:
-            BUILTIN_RECORDS[sel_sno]["render"]()
+        # ALL 6 CATEGORIES AND 50 PARAMETERS SHOWN DIRECTLY ON SCREEN
+        for section_name, items in CATEGORIES.items():
+            st.subheader(f"📑 {section_name}")
+            for sno, title in items:
+                folder_name = get_folder_name(sno, title)
+                record_dir = os.path.join(UPLOAD_DIR, folder_name)
+                files = os.listdir(record_dir) if os.path.exists(record_dir) else []
+                is_builtin = sno in BUILTIN_RECORDS
 
-        folder_name = get_folder_name(sel_sno, sel_title)
-        record_dir = os.path.join(UPLOAD_DIR, folder_name)
-        files = os.listdir(record_dir) if os.path.exists(record_dir) else []
-
-        if files:
-            st.markdown("---")
-            st.markdown("##### 📁 Uploaded Documents & Files:")
-            for idx, fname in enumerate(files):
-                fpath = os.path.join(record_dir, fname)
-                render_file_preview(fpath, fname, f"{sel_sno}_{idx}")
-                st.write("")
-        elif not is_builtin:
-            st.info("No document uploaded yet for this section.")
+                with st.expander(f"#{sno}. {title}"):
+                    if is_builtin:
+                        BUILTIN_RECORDS[sno]["render"]()
+                    
+                    if files:
+                        st.markdown("---")
+                        st.markdown("##### 📁 Uploaded Documents & Files:")
+                        for idx, fname in enumerate(files):
+                            fpath = os.path.join(record_dir, fname)
+                            render_file_preview(fpath, fname, f"{sno}_{idx}")
+                            st.write("")
+                    elif not is_builtin:
+                        st.info("No document uploaded yet for this section.")
+            st.write("")
 
     with tab2:
         total = 50
