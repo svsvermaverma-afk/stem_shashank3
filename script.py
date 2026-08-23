@@ -65,14 +65,28 @@ os.makedirs(DATA_DIR, exist_ok=True)
 
 STUDENT_ATTENDANCE_FILE = os.path.join(DATA_DIR, "student_attendance.csv")
 TEACHER_ATTENDANCE_FILE = os.path.join(DATA_DIR, "teacher_attendance.csv")
+SAFETY_CHECKLIST_FILE = os.path.join(DATA_DIR, "safety_checklist.csv")
 PRINCIPAL_MSG_FILE = os.path.join(DATA_DIR, "principal_message.txt")
 SHEET_CONFIG_FILE = os.path.join(DATA_DIR, "gsheet_url.txt")
 FORM_CONFIG_FILE = os.path.join(DATA_DIR, "gform_url.txt")
 SCIENCEUTSAV_CONFIG_FILE = os.path.join(DATA_DIR, "scienceutsav_url.txt")
 
+ADMIN_PASS = "stem@admin123"
+
 MONTHS = ["April", "May", "June", "July", "August", "September", "October", "November", "December", "January", "February", "March"]
 WEEKS = ["Week 1", "Week 2", "Week 3", "Week 4", "Week 5"]
 DAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"]
+
+DEFAULT_SAFETY_POINTS = [
+    "Master MCB cutoff switch & bench power surge protectors fully operational",
+    "CO2 Fire Extinguisher inspected, tagged, and unobstructed at main entrance",
+    "First Aid Medical Kit fully stocked (burn cream, bandages, antiseptic, eye-wash)",
+    "Wiring hygiene verified (No naked 220V/5V short circuits or loose joints)",
+    "3D Printer (Bambu Lab A1 Mini) bed clean & thermal ventilation clear",
+    "Chemicals / Solvents / Glue guns stored safely in labeled cabinets",
+    "Anti-trip cable routing maintained across all student walkways",
+    "Emergency contact numbers displayed clearly near the entrance"
+]
 
 SECTIONS_LIST = [
     "Class VI - Section A", "Class VI - Section B", "Class VI - Section C", "Class VI - Section D",
@@ -88,7 +102,7 @@ TEACHERS_LIST = [
     "Dr. Rakesh Singh", "Mr. Chandra Mohan Singh", "Mr. Harendra Dwivedi", "Mr. Praveen Kumar"
 ]
 
-# ----------------- 49 MASTER CATEGORIES (DEFINED AT TOP) -----------------
+# ----------------- 49 MASTER CATEGORIES -----------------
 CATEGORIES = {
     "1. Administration & Planning": [
         (1, "STEM Lab Profile"), (2, "Lab Objectives & Guidelines"), (3, "Coordinator / SPOC Details"),
@@ -200,7 +214,7 @@ def save_principal_message(msg):
 def render_principal_message():
     st.info(get_principal_message())
 
-# ----------------- ATTENDANCE MANAGEMENT -----------------
+# ----------------- ATTENDANCE & SAFETY INITIALIZATION -----------------
 def init_student_attendance():
     if not os.path.exists(STUDENT_ATTENDANCE_FILE):
         structure = {
@@ -219,8 +233,17 @@ def init_teacher_attendance():
         }
         pd.DataFrame(structure).to_csv(TEACHER_ATTENDANCE_FILE, index=False)
 
+def init_safety_checklist():
+    if not os.path.exists(SAFETY_CHECKLIST_FILE):
+        structure = {
+            "Month": [], "Week": [], "Date": [], "S.No.": [],
+            "Safety Parameter / Check Item": [], "Status": [], "Remarks": []
+        }
+        pd.DataFrame(structure).to_csv(SAFETY_CHECKLIST_FILE, index=False)
+
 init_student_attendance()
 init_teacher_attendance()
+init_safety_checklist()
 
 def get_student_attendance_all():
     try:
@@ -280,6 +303,39 @@ def save_teacher_attendance_slot(month, week, edited_df):
     df_remaining = df_all[~((df_all["Month"] == str(month)) & (df_all["Week"] == str(week)))] if not df_all.empty else pd.DataFrame()
     pd.concat([df_remaining, edited_df], ignore_index=True).to_csv(TEACHER_ATTENDANCE_FILE, index=False)
 
+def get_safety_checklist_all():
+    try:
+        return pd.read_csv(SAFETY_CHECKLIST_FILE, dtype=str).fillna("")
+    except Exception:
+        init_safety_checklist()
+        return pd.read_csv(SAFETY_CHECKLIST_FILE, dtype=str).fillna("")
+
+def get_safety_checklist_for_slot(month, week):
+    df_all = get_safety_checklist_all()
+    if not df_all.empty and {"Month", "Week", "Safety Parameter / Check Item"}.issubset(set(df_all.columns)):
+        filtered = df_all[(df_all["Month"] == str(month)) & (df_all["Week"] == str(week))]
+        if not filtered.empty:
+            df_slot = filtered.drop(columns=[c for c in ["Month", "Week"] if c in filtered.columns]).copy()
+            df_slot["Status"] = df_slot["Status"].apply(lambda x: True if str(x).lower() in ["true", "1", "yes", "passed"] else False)
+            return df_slot
+
+    return pd.DataFrame({
+        "Date": [datetime.now().strftime("%Y-%m-%d") for _ in DEFAULT_SAFETY_POINTS],
+        "S.No.": list(range(1, len(DEFAULT_SAFETY_POINTS) + 1)),
+        "Safety Parameter / Check Item": DEFAULT_SAFETY_POINTS,
+        "Status": [False for _ in DEFAULT_SAFETY_POINTS],
+        "Remarks": ["All OK / Verified" for _ in DEFAULT_SAFETY_POINTS]
+    })
+
+def save_safety_checklist_slot(month, week, edited_df):
+    df_all = get_safety_checklist_all()
+    edited_df = edited_df.copy()
+    edited_df["Month"] = str(month)
+    edited_df["Week"] = str(week)
+    edited_df["Status"] = edited_df["Status"].apply(lambda x: "Passed" if x is True else "Failed")
+    df_remaining = df_all[~((df_all["Month"] == str(month)) & (df_all["Week"] == str(week)))] if not df_all.empty else pd.DataFrame()
+    pd.concat([df_remaining, edited_df], ignore_index=True).to_csv(SAFETY_CHECKLIST_FILE, index=False)
+
 def sync_data_from_google_sheet():
     sheet_url = get_saved_url(SHEET_CONFIG_FILE)
     if not sheet_url:
@@ -309,6 +365,8 @@ def sync_data_from_google_sheet():
     df_st_all = get_student_attendance_all()
     df_tc_all = get_teacher_attendance_all()
 
+    now = datetime.now()
+
     for _, row in df_raw.iterrows():
         raw_date = str(row[col_date]) if col_date else ""
         raw_day = str(row[col_day]) if col_day else ""
@@ -324,13 +382,13 @@ def sync_data_from_google_sheet():
 
         try:
             dt = pd.to_datetime(raw_date, errors="coerce")
-            month_name = dt.strftime("%B") if pd.notnull(dt) else "August"
-            week_num = min(5, ((dt.day - 1) // 7) + 1) if pd.notnull(dt) else 1
+            month_name = dt.strftime("%B") if pd.notnull(dt) else now.strftime("%B")
+            week_num = min(5, ((dt.day - 1) // 7) + 1) if pd.notnull(dt) else min(5, ((now.day - 1) // 7) + 1)
             week_name = f"Week {week_num}"
             if not raw_day and pd.notnull(dt):
                 raw_day = dt.strftime("%A")
         except Exception:
-            month_name = "August"
+            month_name = now.strftime("%B")
             week_name = "Week 1"
 
         st_match_idx = df_st_all[(df_st_all["Month"] == month_name) & (df_st_all["Week"] == week_name) & (df_st_all["Class & Section"] == raw_class)].index
@@ -436,6 +494,22 @@ def render_teacher_attendance_viewer():
     st.caption(f"Showing Teacher Attendance for: **{sel_month} | {sel_week}**")
     st.dataframe(df_slot, use_container_width=True, hide_index=True)
 
+def render_safety_checklist_viewer():
+    st.markdown("### 🛡️ Weekly STEM Lab Safety Audit Checklist")
+    cur_m_idx, cur_w_idx = get_current_indices()
+    c1, c2 = st.columns(2)
+    sel_month = c1.selectbox("Select Month (Safety Audit):", MONTHS, index=cur_m_idx, key="view_safe_month")
+    sel_week = c2.selectbox("Select Week (Safety Audit):", WEEKS, index=cur_w_idx, key="view_safe_week")
+    
+    df_slot = get_safety_checklist_for_slot(sel_month, sel_week)
+    st.caption(f"Showing Lab Safety Inspection for: **{sel_month} | {sel_week}**")
+
+    display_df = df_slot.copy()
+    display_df["Inspection Status"] = display_df["Status"].apply(lambda x: "✅ Passed / Safe" if x is True else "❌ Not Checked / Unsafe")
+    display_df = display_df.drop(columns=["Status"])
+    
+    st.dataframe(display_df, use_container_width=True, hide_index=True)
+
 def render_student_excel():
     possible_paths = [
         "LMS STUDENT DATA.xlsx", "LMS STUDENT DATA.xls", "LMS STUDENT DATA.csv",
@@ -479,7 +553,7 @@ def render_scienceutsav_assessment():
         saved_su_url = "https://report.scienceutsav.com/class/k57a8q5h6mzanqt4vdvn48c1vx8ba0q3/report"
     col_l1, col_l2 = st.columns([1, 1])
     col_l1.link_button("🌐 Open ScienceUtsav Portal in New Tab", saved_su_url)
-    st.info("💡 Neeche live dashboard load ho raha hai. Aap upar diye gaye link se bhi direct access kar sakte hain ya Admin panel se downloaded 'Combined PDF' upload kar sakte hain.")
+    st.info("💡 Live dashboard loading below. Aap direct access kar sakte hain ya Admin panel se downloaded PDF upload kar sakte hain.")
     components.iframe(saved_su_url, height=750, scrolling=True)
 
 # ----------------- ANNUAL INNOVATION ROADMAP DATA -----------------
@@ -601,7 +675,7 @@ LESSON_PLANS_DB = {
     ]
 }
 
-# ----------------- MASTER CONTENT ROUTER (ZERO TRUNCATION) -----------------
+# ----------------- MASTER CONTENT ROUTER -----------------
 def render_master_content(sno, title):
     if title == "STEM Lab Profile" or sno == 1:
         st.markdown("""
@@ -615,16 +689,13 @@ def render_master_content(sno, title):
         ---
 
         #### 1. Introduction
-        The STEM Lab of Aditya Birla Intermediate College, Renukoot is a dedicated space for promoting Science, Technology, Engineering and Mathematics (STEM) learning through hands-on activities, experimentation, problem-solving, innovation and project-based learning. The laboratory provides students with opportunities to connect classroom concepts with real-life situations and develop practical skills through designing, making, testing and improving solutions.
+        The STEM Lab of Aditya Birla Intermediate College, Renukoot is a dedicated space for promoting Science, Technology, Engineering and Mathematics (STEM) learning through hands-on activities, experimentation, problem-solving, innovation and project-based learning.
 
         #### 2. Classes Covered
-        The STEM Lab activities are primarily conducted for:
         * **Class VI** (Beginner Tier)
         * **Class VII** (Intermediate Tier)
         * **Class VIII** (Advanced Tier)
         * **Class IX** (Expert Capstone Tier)
-
-        *Activities may also be organized for other classes as required under school programmes, competitions and special projects.*
 
         #### 3. Major Objectives
         1. To develop scientific thinking and curiosity among students.
@@ -637,31 +708,6 @@ def render_master_content(sno, title):
         8. To develop communication, presentation and documentation skills.
         9. To connect STEM concepts with real-life applications.
         10. To encourage participation in STEM competitions and innovation programmes (Erehwon, STEM SPARK, VVM).
-
-        #### 4. Major Areas of STEM Learning
-        * **Science Experiments:** Physics, Chemistry & Biology inquiry setups.
-        * **Mathematics Applications:** Data plotting, statistics & logic graphs.
-        * **Electronics & Sensors:** Resistors, capacitors, LDR, DHT11, MQ2, Touch, Ultrasonic, IR, Hall.
-        * **Microcontrollers & Robotics:** Arduino Uno R3, Breakout Shields, Motor Drivers, SG90 Servos, BO Motors.
-        * **Coding & Computational Thinking:** C++ embedded programming, non-blocking state engines, algorithms.
-        * **IoT & Smart Systems:** Sensor fusion, digital telemetry, automated controls.
-        * **3D Prototyping & Design Thinking:** Bambu Lab A1 Mini 3D printer, CAD modeling, enclosure packaging.
-        * **Environmental Innovation & E-waste:** Upcycling phone parts, clean water solutions, smart farming.
-
-        #### 5. Teaching-Learning Approach
-        The STEM Lab strictly follows an inquiry and maker-oriented engineering cycle:
-        > **Problem Identification → Explore Science → Imagine Design → Build Prototype → Test Hardware → Code & Improve → Present to Jury**
-
-        #### 6. Documentation System
-        The following records are maintained digitally in the school portal:
-        * 49-Parameter Master Repository
-        * Class & Section-wise Student & Teacher Attendance CSVs
-        * 56 Structured Master Lesson Plans[cite: 1]
-        * Real-time ScienceUtsav Assessment LMS Linkage
-        * Complete Lab Inventory and Safety Audit Records
-
-        #### 7. Expected Learning Outcomes
-        Students are trained to achieve modular prototyping hygiene, logical problem decomposition, code debugging, 3D casing assembly, team leadership, and empirical test documentation.
         """)
         return True
 
@@ -676,27 +722,19 @@ def render_master_content(sno, title):
         ---
 
         #### A. Objectives of the STEM Lab
-        1. **Experiential Learning:** To provide students with direct hands-on modular kits, sensors, and microcontrollers.
-        2. **Problem Solving:** To identify school campus and community pain points and design functional engineering solutions.
-        3. **Innovation:** To build functional proof-of-concepts, alpha prototypes, and capstone demonstration models.
-        4. **Scientific Temper:** To encourage hypothesis testing, sensor data calibration, and empirical trial logging.
-        5. **Technology Mastery:** To develop coding proficiency in Arduino IDE, serial telemetry, and 3D printing design.
+        1. **Experiential Learning:** Hands-on modular kits, sensors, and microcontrollers.
+        2. **Problem Solving:** Identify community pain points and design functional solutions.
+        3. **Innovation:** Build functional proof-of-concepts and capstone models.
+        4. **Scientific Temper:** Hypothesis testing and empirical trial logging.
+        5. **Technology Mastery:** Coding in Arduino IDE, telemetry, and 3D printing.
 
         ---
 
         #### B. STEM Lab Safety & Handling Guidelines
-        1. **Supervision:** Students may enter and work in the lab only in the presence of the STEM Teacher or SPOC.
-        2. **Electrical Safety:**
-           * Verify battery/power polarity before connecting headers to the Breakout Shield.
-           * Short-circuiting battery terminals or connecting 5V directly to Ground without a load is strictly prohibited.
-           * Water, beverages, and food items are 100% prohibited on equipment workbenches.
-        3. **Tool & Shield Maintenance:**
-           * Always use 3-pin RMC ribbon cables with correct G-V-S pinout (Ground=Black, VCC=Red, Signal=Yellow).
-           * Never force microcontroller pins; report bent pins or loose solder joints immediately.
-           * Return all sensor modules, tools, multimeters, and jumpers to designated labeled bins after every period.
-        4. **Emergency Protocol:**
-           * In the event of smoke, burning smell, or electrical sparking, immediately hit the master bench power cutoff switch.
-           * CO2 Fire Extinguisher and First Aid Medical Kit are stationed at the main entrance door.
+        1. **Supervision:** Students may enter and work in the lab only in the presence of faculty.
+        2. **Electrical Safety:** Verify battery polarity before connecting to Breakout Shield.
+        3. **Tool & Shield Maintenance:** Always use 3-pin RMC ribbon cables with correct G-V-S pinout.
+        4. **Emergency Protocol:** In case of emergency, use the master bench power cutoff switch immediately.
         """)
         return True
 
@@ -719,14 +757,6 @@ def render_master_content(sno, title):
         * **Official Role:** STEM Coordinator / School STEM SPOC
         * **Official School Email:** `shashank.verma@adityabirlaschools.in`
         * **Official Contact Number:** `9826594665`
-
-        #### 3. Core Responsibilities
-        1. Structuring and enforcing the 14-session Annual STEM Roadmap and 56 Master Lesson Plans across Classes 6–9[cite: 1].
-        2. Managing digital data synchronization with Google Sheets, Google Forms, and ScienceUtsav LMS.
-        3. Coordinating weekly lab timetables, section-wise student attendance, and teacher duty allocations.
-        4. Overseeing equipment safety, tool inventories, Bambu Lab 3D printer maintenance, and component procurement.
-        5. Mentoring 25+ student innovation teams for the National Erehwon Competition, STEM SPARK, and VVM.
-        6. Preparing monthly, quarterly, and annual STEM laboratory progress reports for school management.
         """)
         return True
 
@@ -747,10 +777,10 @@ def render_master_content(sno, title):
     elif title == "Session / Lesson Plans" or sno == 6:
         st.markdown("""
         ### 📖 ANNUAL STEM LAB & ROBOTICS MASTER LESSON PLANS (JULY 2026 – JANUARY 2027)
-        * **Platform:** ScienceUtsav LMS (Robo Scientist Level 2: Sensational Sensors)[cite: 1]
-        * **Hardware Kit:** Arduino Uno R3 + Sensor Breakout Shield (3-Pin G-V-S Plug-and-Play)[cite: 1]
-        * **Innovation Track:** Erehwon National Competition (25+ Teams across Classes 6–9)[cite: 1]
-        * **Scope:** 56 Detailed Session Plans (14 Sessions / Class)[cite: 1]
+        * **Platform:** ScienceUtsav LMS (Robo Scientist Level 2: Sensational Sensors)
+        * **Hardware Kit:** Arduino Uno R3 + Sensor Breakout Shield (3-Pin G-V-S Plug-and-Play)
+        * **Innovation Track:** Erehwon National Competition (25+ Teams across Classes 6–9)
+        * **Scope:** 56 Detailed Session Plans (14 Sessions / Class)
         ---
         """)
         col_c, col_s = st.columns([1, 2])
@@ -765,8 +795,8 @@ def render_master_content(sno, title):
         col_l, col_r = st.columns(2)
         with col_l:
             st.markdown("##### 🎯 Learning Objectives & Outcomes")
-            st.info(f"**Objectives:** Master the working principles of {plan_data[1]} on Arduino Uno with 3-pin Breakout Shield. Advance team deliverables on the Erehwon Track.")
-            st.success(f"**Expected Outcome:** Securely wire modules without breadboards, calibrate sensor thresholds via Serial Monitor, and fulfill designated team roles.")
+            st.info(f"**Objectives:** Master the working principles of {plan_data[1]} on Arduino Uno with 3-pin Breakout Shield.")
+            st.success(f"**Expected Outcome:** Securely wire modules without breadboards and calibrate sensor thresholds via Serial Monitor.")
             st.markdown("##### 🛠️ Hands-on Experimental Activity")
             st.warning(f"**Activity:** {plan_data[2]}")
         with col_r:
@@ -774,7 +804,7 @@ def render_master_content(sno, title):
             st.code(plan_data[3], language="text")
             st.markdown("##### 📦 Teaching Aids & Resources")
             st.write(f"• **Hardware:** {plan_data[4]}")
-            st.write(f"• **Digital Resource:** ScienceUtsav LMS (report.scienceutsav.com/lms) | Arduino Reference")
+            st.write(f"• **Digital Resource:** ScienceUtsav LMS (report.scienceutsav.com/lms)")
             st.markdown("##### 📊 Periodic Assessment")
             st.write(f"• **Criteria:** {plan_data[5]}")
         return True
@@ -796,8 +826,8 @@ def render_master_content(sno, title):
         ### 📦 Verified STEM Lab Inventory (ScienceUtsav & ABPS Kit)
         * **Microcontrollers:** 25x Arduino Uno R3 (ATmega328P DIP), 25x Sensor Breakout Shields V5.0 (3-Pin G-V-S).
         * **Sensor Modules:** LDR Light, DHT11 Temp/Humidity, MQ2 Smoke/Gas, Flame, Soil Moisture, Ultrasonic HC-SR04, IR Obstacle, Hall Effect A3144, Tilt SW-520D, TTP223 Touch, Sound Mic.
-        * **Actuators & Displays:** SG90 Micro Servos (0°-180°), BO Geared Motors + Wheels, 5V Relays, 16x2 I2C Character LCDs, 7-Segment Displays, Active/Passive Buzzers, RGB LEDs.
-        * **3D & Prototyping:** Bambu Lab A1 Mini 3D Printer (PLA Filament), 5V DC Bench Power Adapters, Battery Cases, 3-Pin / 4-Pin RMC Ribbon Jumpers.
+        * **Actuators & Displays:** SG90 Micro Servos, BO Geared Motors, 5V Relays, 16x2 I2C LCDs, 7-Segment Displays, Buzzers, RGB LEDs.
+        * **3D & Prototyping:** Bambu Lab A1 Mini 3D Printer (PLA Filament), 5V DC Bench Power Adapters, Battery Cases, 3-Pin / 4-Pin Jumpers.
         """)
         return True
 
@@ -814,20 +844,14 @@ def render_master_content(sno, title):
         st.markdown("""
         ### ⚠️ Mandatory STEM Lab Safety Protocol
         1. Always inspect wiring for short-circuits before plugging the USB / 5V DC barrel jack into the Arduino Uno.
-        2. Never draw high current for servos or motors directly from Uno 5V pin; always utilize the shield's dedicated external power terminal block.
-        3. Soldering and hot glue work must be performed at designated thermal workstations wearing protective safety glasses.
+        2. Never draw high current for servos or motors directly from Uno 5V pin; use the shield external power terminal block.
+        3. Soldering and hot glue work must be performed at designated thermal workstations.
         4. Any component malfunction or heating issue must be immediately reported to the SPOC.
         """)
         return True
 
     elif title == "Safety Checklist" or sno == 16:
-        st.markdown("""
-        ### ✅ Periodic Laboratory Safety Audit Checklist
-        * [x] **Power Breakers:** Master MCB cutoff switch and bench surge protectors fully operational.
-        * [x] **Fire Suppression:** CO2 Fire Extinguisher inspected, tagged, and unobstructed at main entrance.
-        * [x] **First Aid Medical Kit:** Stocked with burn cream, antiseptic, bandages, and eye-wash solution.
-        * [x] **Cable Hygiene:** Anti-trip cable routing and color-coded modular storage boxes labeled.
-        """)
+        render_safety_checklist_viewer()
         return True
 
     elif title == "STEM Activities" or sno == 17:
@@ -844,11 +868,11 @@ def render_master_content(sno, title):
     elif title == "Assessment Rubrics" or sno == 27:
         st.markdown("""
         ### 📊 Student STEM Assessment Rubric (100 Marks Distribution)
-        * **Problem Identification & Research (20 Marks):** Campus problem statement clarity and engineering logbook documentation.
-        * **Circuit Assembly & Hardware Hygiene (20 Marks):** Modular shield wiring, secure pin mapping, and power stability.
-        * **Firmware Coding Logic (20 Marks):** Non-blocking millis() loops, conditional thresholds, and bug-free syntax.
-        * **Enclosure & Packaging (20 Marks):** Mechanical chassis stability, 3D printed / cardboard casing, and cable looming.
-        * **Oral Defense & Live Demonstration (20 Marks):** 3-minute pitch, prototype autonomy, and jury Q&A handling.
+        * **Problem Identification & Research (20 Marks):** Campus problem statement clarity and logbook documentation.
+        * **Circuit Assembly & Hardware Hygiene (20 Marks):** Modular shield wiring and power stability.
+        * **Firmware Coding Logic (20 Marks):** Non-blocking loops and bug-free syntax.
+        * **Enclosure & Packaging (20 Marks):** Mechanical chassis stability and cable looming.
+        * **Oral Defense & Live Demonstration (20 Marks):** 3-minute pitch and jury Q&A handling.
         """)
         return True
 
@@ -860,7 +884,7 @@ def render_master_content(sno, title):
         st.markdown("""
         ### 🧑‍🏫 Teacher STEM Capacity Building & Training Record
         * **Conducted By:** ScienceUtsav Technical Expert Team & ABIC STEM Coordinator.
-        * **Core Modules Covered:** Sensor Breakout Shield Architecture, Modular C++ Embedded Coding, Bambu Lab 3D Slicing & Printing, Student Mentorship Pedagogy.
+        * **Core Modules Covered:** Sensor Breakout Shield Architecture, C++ Embedded Coding, Bambu Lab 3D Printing.
         * **Participating Faculty:** 10 Designated Science & STEM Faculty Members.
         """)
         return True
@@ -869,7 +893,7 @@ def render_master_content(sno, title):
         st.markdown("""
         ### 📑 Annual STEM Innovation Lab Report (2026-27 Executive Summary)
         * Over 400+ students from Classes VI to IX actively enrolled in weekly hands-on maker curricula.
-        * 56 structured lesson plans executed across sensor and robotics modules[cite: 1].
+        * 56 structured lesson plans executed across sensor and robotics modules.
         * 25+ student teams successfully completed Alpha working prototypes for the National Erehwon Innovation Competition.
         * 100% equipment audit verified with zero electrical safety incidents.
         """)
@@ -888,8 +912,8 @@ if access_mode == "Admin Workspace":
     if not st.session_state["is_admin_logged_in"]:
         st.sidebar.subheader("Admin Login")
         password_input = st.sidebar.text_input("Enter Admin Password", type="password", key="login_pass_input")
-        if password_input == "stem@admin123" or st.sidebar.button("Login", type="primary"):
-            if password_input == "stem@admin123":
+        if password_input == ADMIN_PASS or st.sidebar.button("Login", type="primary"):
+            if password_input == ADMIN_PASS:
                 st.session_state["is_admin_logged_in"] = True
                 st.rerun()
             else:
@@ -997,6 +1021,36 @@ if access_mode == "Admin Workspace":
                         if st.button(f"💾 Save Teacher Attendance ({admin_tc_month})", type="primary", key=f"btn_tc_s_{sno}"):
                             save_teacher_attendance_slot(admin_tc_month, admin_tc_week, edited_tc_slot_df)
                             st.success("Saved!")
+                            st.rerun()
+                    elif title == "Safety Checklist":
+                        cur_m_idx, cur_w_idx = get_current_indices()
+                        c_m, c_w = st.columns(2)
+                        admin_safe_month = c_m.selectbox("Select Month:", MONTHS, index=cur_m_idx, key=f"adm_sf_m_{sno}")
+                        admin_safe_week = c_w.selectbox("Select Week:", WEEKS, index=cur_w_idx, key=f"adm_sf_w_{sno}")
+                        current_safe_df = get_safety_checklist_for_slot(admin_safe_month, admin_safe_week)
+                        
+                        st.markdown("Tick check the safety points and update remarks below:")
+                        edited_safe_df = st.data_editor(
+                            current_safe_df,
+                            column_config={
+                                "Status": st.column_config.CheckboxColumn(
+                                    "Pass / Checked?",
+                                    help="Tick this if the safety standard is verified.",
+                                    default=False
+                                ),
+                                "Safety Parameter / Check Item": st.column_config.TextColumn(
+                                    "Safety Checklist Item",
+                                    disabled=True
+                                ),
+                                "S.No.": st.column_config.NumberColumn("S.No.", disabled=True)
+                            },
+                            num_rows="dynamic",
+                            use_container_width=True,
+                            key=f"adm_ed_sf_{sno}"
+                        )
+                        if st.button(f"💾 Save Safety Checklist ({admin_safe_month} - {admin_safe_week})", type="primary", key=f"btn_sf_s_{sno}"):
+                            save_safety_checklist_slot(admin_safe_month, admin_safe_week, edited_safe_df)
+                            st.success(f"Safety checklist for {admin_safe_month} ({admin_safe_week}) saved!")
                             st.rerun()
                     else:
                         uploaded_files = st.file_uploader(f"Upload files for #{sno} ({title})", type=None, accept_multiple_files=True, key=f"upload_{sno}")
