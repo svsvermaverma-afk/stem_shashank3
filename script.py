@@ -77,15 +77,49 @@ MONTHS = ["April", "May", "June", "July", "August", "September", "October", "Nov
 WEEKS = ["Week 1", "Week 2", "Week 3", "Week 4", "Week 5"]
 DAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"]
 
+# EXACT SAFETY POINTS BASED ON STEM LAB SAFETY RULES POSTER
 DEFAULT_SAFETY_POINTS = [
-    "Master MCB cutoff switch & bench power surge protectors fully operational",
-    "CO2 Fire Extinguisher inspected, tagged, and unobstructed at main entrance",
-    "First Aid Medical Kit fully stocked (burn cream, bandages, antiseptic, eye-wash)",
-    "Wiring hygiene verified (No naked 220V/5V short circuits or loose joints)",
-    "3D Printer (Bambu Lab A1 Mini) bed clean & thermal ventilation clear",
-    "Chemicals / Solvents / Glue guns stored safely in labeled cabinets",
-    "Anti-trip cable routing maintained across all student walkways",
-    "Emergency contact numbers displayed clearly near the entrance"
+    "[1. General] Enter the lab only with permission",
+    "[1. General] Follow all instructions of the teacher",
+    "[1. General] Maintain discipline and silence",
+    "[1. General] Do not run, push or shout",
+    "[1. General] Keep your workstation clean and organized",
+    "[1. General] Do not bring food or drinks",
+    "[1. General] Do not remove any equipment from the lab",
+    "[2. Electrical] Handle electrical equipment carefully",
+    "[2. Electrical] Do not use damaged wires or equipment",
+    "[2. Electrical] Switch off power before making connections",
+    "[2. Electrical] Do not connect to power source without teacher supervision",
+    "[2. Electrical] Keep water away from electrical equipment",
+    "[2. Electrical] Report any sparking, unusual heating or fault immediately",
+    "[2. Electrical] Do not touch exposed connections",
+    "[3. Robotics] Handle boards, sensors and components carefully",
+    "[3. Robotics] Check connections before switching on",
+    "[3. Robotics] Use correct voltage and power supply",
+    "[3. Robotics] Do not force components into connectors",
+    "[3. Robotics] Operate motors and moving parts only under supervision",
+    "[3. Robotics] Keep loose wires away from moving parts",
+    "[3. Robotics] Switch off power after completing the activity",
+    "[4. Tools] Use tools only for their intended purpose",
+    "[4. Tools] Handle tools carefully; do not leave sharp tools unattended",
+    "[4. Tools] Return all tools to their place after use",
+    "[4. Tools] Report damaged or missing tools immediately",
+    "[4. Tools] Use tools under teacher supervision",
+    "[5. 3D Printer] Operate 3D printer only under supervision",
+    "[5. 3D Printer] Do not touch hot nozzle or heated bed",
+    "[5. 3D Printer] Keep hands and objects away from moving parts",
+    "[5. 3D Printer] Do not repair or modify the printer",
+    "[5. 3D Printer] Switch off the printer when not in use; report any malfunction immediately",
+    "[6. Battery] Use only specified batteries and chargers",
+    "[6. Battery] Do not short-circuit batteries",
+    "[6. Battery] Do not use damaged, swollen or leaking batteries",
+    "[6. Battery] Follow proper charging procedure; do not leave batteries connected unnecessarily",
+    "[6. Battery] Store batteries in designated place",
+    "[7. Emergency] Stay calm during an emergency & inform teacher immediately",
+    "[7. Emergency] Switch off power if safe to do so; do not try to handle electrical faults",
+    "[7. Emergency] Follow school emergency & evacuation procedures; do not re-enter until permitted",
+    "[Student Responsibility] Follow all safety instructions & work responsibly/cooperatively",
+    "[Student Responsibility] Handle equipment with care, report damage immediately & keep lab clean/safe"
 ]
 
 SECTIONS_LIST = [
@@ -324,7 +358,7 @@ def get_safety_checklist_for_slot(month, week):
         "S.No.": list(range(1, len(DEFAULT_SAFETY_POINTS) + 1)),
         "Safety Parameter / Check Item": DEFAULT_SAFETY_POINTS,
         "Status": [False for _ in DEFAULT_SAFETY_POINTS],
-        "Remarks": ["All OK / Verified" for _ in DEFAULT_SAFETY_POINTS]
+        "Remarks": ["Verified Compliant" for _ in DEFAULT_SAFETY_POINTS]
     })
 
 def save_safety_checklist_slot(month, week, edited_df):
@@ -496,6 +530,7 @@ def render_teacher_attendance_viewer():
 
 def render_safety_checklist_viewer():
     st.markdown("### 🛡️ Weekly STEM Lab Safety Audit Checklist")
+    st.caption("Standardized as per ABIC STEM Lab Safety Protocol: Be Safe • Be Responsible • Be Innovative")
     cur_m_idx, cur_w_idx = get_current_indices()
     c1, c2 = st.columns(2)
     sel_month = c1.selectbox("Select Month (Safety Audit):", MONTHS, index=cur_m_idx, key="view_safe_month")
@@ -505,7 +540,7 @@ def render_safety_checklist_viewer():
     st.caption(f"Showing Lab Safety Inspection for: **{sel_month} | {sel_week}**")
 
     display_df = df_slot.copy()
-    display_df["Inspection Status"] = display_df["Status"].apply(lambda x: "✅ Passed / Safe" if x is True else "❌ Not Checked / Unsafe")
+    display_df["Inspection Status"] = display_df["Status"].apply(lambda x: "✅ Passed / Compliant" if x is True else "❌ Not Verified / Attention Needed")
     display_df = display_df.drop(columns=["Status"])
     
     st.dataframe(display_df, use_container_width=True, hide_index=True)
@@ -553,7 +588,7 @@ def render_scienceutsav_assessment():
         saved_su_url = "https://report.scienceutsav.com/class/k57a8q5h6mzanqt4vdvn48c1vx8ba0q3/report"
     col_l1, col_l2 = st.columns([1, 1])
     col_l1.link_button("🌐 Open ScienceUtsav Portal in New Tab", saved_su_url)
-    st.info("💡 Live dashboard loading below. Aap direct access kar sakte hain ya Admin panel se downloaded PDF upload kar sakte hain.")
+    st.info("💡 Live dashboard loading below. Direct access kar sakte hain ya Admin panel se downloaded PDF upload kar sakte hain.")
     components.iframe(saved_su_url, height=750, scrolling=True)
 
 # ----------------- ANNUAL INNOVATION ROADMAP DATA -----------------
@@ -689,13 +724,16 @@ def render_master_content(sno, title):
         ---
 
         #### 1. Introduction
-        The STEM Lab of Aditya Birla Intermediate College, Renukoot is a dedicated space for promoting Science, Technology, Engineering and Mathematics (STEM) learning through hands-on activities, experimentation, problem-solving, innovation and project-based learning.
+        The STEM Lab of Aditya Birla Intermediate College, Renukoot is a dedicated space for promoting Science, Technology, Engineering and Mathematics (STEM) learning through hands-on activities, experimentation, problem-solving, innovation and project-based learning. The laboratory provides students with opportunities to connect classroom concepts with real-life situations and develop practical skills through designing, making, testing and improving solutions.
 
         #### 2. Classes Covered
+        The STEM Lab activities are primarily conducted for:
         * **Class VI** (Beginner Tier)
         * **Class VII** (Intermediate Tier)
         * **Class VIII** (Advanced Tier)
         * **Class IX** (Expert Capstone Tier)
+
+        *Activities may also be organized for other classes as required under school programmes, competitions and special projects.*
 
         #### 3. Major Objectives
         1. To develop scientific thinking and curiosity among students.
@@ -708,6 +746,31 @@ def render_master_content(sno, title):
         8. To develop communication, presentation and documentation skills.
         9. To connect STEM concepts with real-life applications.
         10. To encourage participation in STEM competitions and innovation programmes (Erehwon, STEM SPARK, VVM).
+
+        #### 4. Major Areas of STEM Learning
+        * **Science Experiments:** Physics, Chemistry & Biology inquiry setups.
+        * **Mathematics Applications:** Data plotting, statistics & logic graphs.
+        * **Electronics & Sensors:** Resistors, capacitors, LDR, DHT11, MQ2, Touch, Ultrasonic, IR, Hall.
+        * **Microcontrollers & Robotics:** Arduino Uno R3, Breakout Shields, Motor Drivers, SG90 Servos, BO Motors.
+        * **Coding & Computational Thinking:** C++ embedded programming, non-blocking state engines, algorithms.
+        * **IoT & Smart Systems:** Sensor fusion, digital telemetry, automated controls.
+        * **3D Prototyping & Design Thinking:** Bambu Lab A1 Mini 3D printer, CAD modeling, enclosure packaging.
+        * **Environmental Innovation & E-waste:** Upcycling phone parts, clean water solutions, smart farming.
+
+        #### 5. Teaching-Learning Approach
+        The STEM Lab strictly follows an inquiry and maker-oriented engineering cycle:
+        > **Problem Identification → Explore Science → Imagine Design → Build Prototype → Test Hardware → Code & Improve → Present to Jury**
+
+        #### 6. Documentation System
+        The following records are maintained digitally in the school portal:
+        * 49-Parameter Master Repository
+        * Class & Section-wise Student & Teacher Attendance CSVs
+        * 56 Structured Master Lesson Plans
+        * Real-time ScienceUtsav Assessment LMS Linkage
+        * Complete Lab Inventory and Safety Audit Records
+
+        #### 7. Expected Learning Outcomes
+        Students are trained to achieve modular prototyping hygiene, logical problem decomposition, code debugging, 3D casing assembly, team leadership, and empirical test documentation.
         """)
         return True
 
@@ -722,19 +785,27 @@ def render_master_content(sno, title):
         ---
 
         #### A. Objectives of the STEM Lab
-        1. **Experiential Learning:** Hands-on modular kits, sensors, and microcontrollers.
-        2. **Problem Solving:** Identify community pain points and design functional solutions.
-        3. **Innovation:** Build functional proof-of-concepts and capstone models.
-        4. **Scientific Temper:** Hypothesis testing and empirical trial logging.
-        5. **Technology Mastery:** Coding in Arduino IDE, telemetry, and 3D printing.
+        1. **Experiential Learning:** To provide students with direct hands-on modular kits, sensors, and microcontrollers.
+        2. **Problem Solving:** To identify school campus and community pain points and design functional engineering solutions.
+        3. **Innovation:** To build functional proof-of-concepts, alpha prototypes, and capstone demonstration models.
+        4. **Scientific Temper:** To encourage hypothesis testing, sensor data calibration, and empirical trial logging.
+        5. **Technology Mastery:** To develop coding proficiency in Arduino IDE, serial telemetry, and 3D printing design.
 
         ---
 
         #### B. STEM Lab Safety & Handling Guidelines
-        1. **Supervision:** Students may enter and work in the lab only in the presence of faculty.
-        2. **Electrical Safety:** Verify battery polarity before connecting to Breakout Shield.
-        3. **Tool & Shield Maintenance:** Always use 3-pin RMC ribbon cables with correct G-V-S pinout.
-        4. **Emergency Protocol:** In case of emergency, use the master bench power cutoff switch immediately.
+        1. **Supervision:** Students may enter and work in the lab only in the presence of the STEM Teacher or SPOC.
+        2. **Electrical Safety:**
+           * Verify battery/power polarity before connecting headers to the Breakout Shield.
+           * Short-circuiting battery terminals or connecting 5V directly to Ground without a load is strictly prohibited.
+           * Water, beverages, and food items are 100% prohibited on equipment workbenches.
+        3. **Tool & Shield Maintenance:**
+           * Always use 3-pin RMC ribbon cables with correct G-V-S pinout (Ground=Black, VCC=Red, Signal=Yellow).
+           * Never force microcontroller pins; report bent pins or loose solder joints immediately.
+           * Return all sensor modules, tools, multimeters, and jumpers to designated labeled bins after every period.
+        4. **Emergency Protocol:**
+           * In the event of smoke, burning smell, or electrical sparking, immediately hit the master bench power cutoff switch.
+           * CO2 Fire Extinguisher and First Aid Medical Kit are stationed at the main entrance door.
         """)
         return True
 
@@ -757,6 +828,14 @@ def render_master_content(sno, title):
         * **Official Role:** STEM Coordinator / School STEM SPOC
         * **Official School Email:** `shashank.verma@adityabirlaschools.in`
         * **Official Contact Number:** `9826594665`
+
+        #### 3. Core Responsibilities
+        1. Structuring and enforcing the 14-session Annual STEM Roadmap and 56 Master Lesson Plans across Classes 6–9.
+        2. Managing digital data synchronization with Google Sheets, Google Forms, and ScienceUtsav LMS.
+        3. Coordinating weekly lab timetables, section-wise student attendance, and teacher duty allocations.
+        4. Overseeing equipment safety, tool inventories, Bambu Lab 3D printer maintenance, and component procurement.
+        5. Mentoring 25+ student innovation teams for the National Erehwon Competition, STEM SPARK, and VVM.
+        6. Preparing monthly, quarterly, and annual STEM laboratory progress reports for school management.
         """)
         return True
 
@@ -795,8 +874,8 @@ def render_master_content(sno, title):
         col_l, col_r = st.columns(2)
         with col_l:
             st.markdown("##### 🎯 Learning Objectives & Outcomes")
-            st.info(f"**Objectives:** Master the working principles of {plan_data[1]} on Arduino Uno with 3-pin Breakout Shield.")
-            st.success(f"**Expected Outcome:** Securely wire modules without breadboards and calibrate sensor thresholds via Serial Monitor.")
+            st.info(f"**Objectives:** Master the working principles of {plan_data[1]} on Arduino Uno with 3-pin Breakout Shield. Advance team deliverables on the Erehwon Track.")
+            st.success(f"**Expected Outcome:** Securely wire modules without breadboards, calibrate sensor thresholds via Serial Monitor, and fulfill designated team roles.")
             st.markdown("##### 🛠️ Hands-on Experimental Activity")
             st.warning(f"**Activity:** {plan_data[2]}")
         with col_r:
@@ -804,7 +883,7 @@ def render_master_content(sno, title):
             st.code(plan_data[3], language="text")
             st.markdown("##### 📦 Teaching Aids & Resources")
             st.write(f"• **Hardware:** {plan_data[4]}")
-            st.write(f"• **Digital Resource:** ScienceUtsav LMS (report.scienceutsav.com/lms)")
+            st.write(f"• **Digital Resource:** ScienceUtsav LMS (report.scienceutsav.com/lms) | Arduino Reference")
             st.markdown("##### 📊 Periodic Assessment")
             st.write(f"• **Criteria:** {plan_data[5]}")
         return True
@@ -826,8 +905,8 @@ def render_master_content(sno, title):
         ### 📦 Verified STEM Lab Inventory (ScienceUtsav & ABPS Kit)
         * **Microcontrollers:** 25x Arduino Uno R3 (ATmega328P DIP), 25x Sensor Breakout Shields V5.0 (3-Pin G-V-S).
         * **Sensor Modules:** LDR Light, DHT11 Temp/Humidity, MQ2 Smoke/Gas, Flame, Soil Moisture, Ultrasonic HC-SR04, IR Obstacle, Hall Effect A3144, Tilt SW-520D, TTP223 Touch, Sound Mic.
-        * **Actuators & Displays:** SG90 Micro Servos, BO Geared Motors, 5V Relays, 16x2 I2C LCDs, 7-Segment Displays, Buzzers, RGB LEDs.
-        * **3D & Prototyping:** Bambu Lab A1 Mini 3D Printer (PLA Filament), 5V DC Bench Power Adapters, Battery Cases, 3-Pin / 4-Pin Jumpers.
+        * **Actuators & Displays:** SG90 Micro Servos (0°-180°), BO Geared Motors + Wheels, 5V Relays, 16x2 I2C Character LCDs, 7-Segment Displays, Active/Passive Buzzers, RGB LEDs.
+        * **3D & Prototyping:** Bambu Lab A1 Mini 3D Printer (PLA Filament), 5V DC Bench Power Adapters, Battery Cases, 3-Pin / 4-Pin RMC Ribbon Jumpers.
         """)
         return True
 
@@ -842,11 +921,78 @@ def render_master_content(sno, title):
 
     elif title == "Lab Safety Rules" or sno == 15:
         st.markdown("""
-        ### ⚠️ Mandatory STEM Lab Safety Protocol
-        1. Always inspect wiring for short-circuits before plugging the USB / 5V DC barrel jack into the Arduino Uno.
-        2. Never draw high current for servos or motors directly from Uno 5V pin; use the shield external power terminal block.
-        3. Soldering and hot glue work must be performed at designated thermal workstations.
-        4. Any component malfunction or heating issue must be immediately reported to the SPOC.
+        ### 🛡️ STEM LAB SAFETY RULES
+        > **BE SAFE • BE RESPONSIBLE • BE INNOVATIVE** | *Aditya Birla Intermediate College, Renukoot*
+
+        ---
+        #### 1. General Rules
+        * Enter the lab only with permission.
+        * Follow all instructions of the teacher.
+        * Maintain discipline and silence.
+        * Do not run, push or shout.
+        * Keep your workstation clean and organized.
+        * Do not bring food or drinks.
+        * Do not remove any equipment from the lab.
+
+        #### 2. Electrical Safety
+        * Handle electrical equipment carefully.
+        * Do not use damaged wires or equipment.
+        * Switch off power before making connections.
+        * Do not connect to power source without teacher supervision.
+        * Keep water away from electrical equipment.
+        * Report any sparking, unusual heating or fault immediately.
+        * Do not touch exposed connections.
+
+        #### 3. Arduino, Sensors & Robotics
+        * Handle boards, sensors and components carefully.
+        * Check connections before switching on.
+        * Use correct voltage and power supply.
+        * Do not force components into connectors.
+        * Operate motors and moving parts only under supervision.
+        * Keep loose wires away from moving parts.
+        * Switch off power after completing the activity.
+
+        #### 4. Tools & Equipment
+        * Use tools only for their intended purpose.
+        * Handle tools carefully.
+        * Do not leave sharp tools unattended.
+        * Return all tools to their place after use.
+        * Report damaged or missing tools immediately.
+        * Use tools under teacher supervision.
+
+        #### 5. 3D Printer Safety
+        * Operate 3D printer only under supervision.
+        * Do not touch hot nozzle or heated bed.
+        * Keep hands and objects away from moving parts.
+        * Do not repair or modify the printer.
+        * Switch off the printer when not in use.
+        * Report any malfunction immediately.
+
+        #### 6. Battery Safety
+        * Use only specified batteries and chargers.
+        * Do not short-circuit batteries.
+        * Do not use damaged, swollen or leaking batteries.
+        * Follow proper charging procedure.
+        * Do not leave batteries connected unnecessarily.
+        * Store batteries in designated place.
+
+        #### 7. Emergency Rules
+        * Stay calm during an emergency.
+        * Inform the teacher immediately.
+        * Switch off power if safe to do so.
+        * Do not try to handle electrical faults.
+        * Follow school's emergency and evacuation procedures.
+        * Do not re-enter the lab until permission is given.
+
+        ---
+        #### 🌟 Student Responsibility
+        * **Follow all safety instructions**
+        * **Work responsibly and cooperatively**
+        * **Handle equipment with care**
+        * **Report any damage immediately**
+        * **Keep the lab clean and safe**
+
+        > *★ A SAFE LAB IS A SMART LAB • YOUR SAFETY, OUR PRIORITY ★*
         """)
         return True
 
@@ -868,11 +1014,11 @@ def render_master_content(sno, title):
     elif title == "Assessment Rubrics" or sno == 27:
         st.markdown("""
         ### 📊 Student STEM Assessment Rubric (100 Marks Distribution)
-        * **Problem Identification & Research (20 Marks):** Campus problem statement clarity and logbook documentation.
-        * **Circuit Assembly & Hardware Hygiene (20 Marks):** Modular shield wiring and power stability.
-        * **Firmware Coding Logic (20 Marks):** Non-blocking loops and bug-free syntax.
-        * **Enclosure & Packaging (20 Marks):** Mechanical chassis stability and cable looming.
-        * **Oral Defense & Live Demonstration (20 Marks):** 3-minute pitch and jury Q&A handling.
+        * **Problem Identification & Research (20 Marks):** Campus problem statement clarity and engineering logbook documentation.
+        * **Circuit Assembly & Hardware Hygiene (20 Marks):** Modular shield wiring, secure pin mapping, and power stability.
+        * **Firmware Coding Logic (20 Marks):** Non-blocking millis() loops, conditional thresholds, and bug-free syntax.
+        * **Enclosure & Packaging (20 Marks):** Mechanical chassis stability, 3D printed / cardboard casing, and cable looming.
+        * **Oral Defense & Live Demonstration (20 Marks):** 3-minute pitch, prototype autonomy, and jury Q&A handling.
         """)
         return True
 
@@ -884,7 +1030,7 @@ def render_master_content(sno, title):
         st.markdown("""
         ### 🧑‍🏫 Teacher STEM Capacity Building & Training Record
         * **Conducted By:** ScienceUtsav Technical Expert Team & ABIC STEM Coordinator.
-        * **Core Modules Covered:** Sensor Breakout Shield Architecture, C++ Embedded Coding, Bambu Lab 3D Printing.
+        * **Core Modules Covered:** Sensor Breakout Shield Architecture, Modular C++ Embedded Coding, Bambu Lab 3D Slicing & Printing, Student Mentorship Pedagogy.
         * **Participating Faculty:** 10 Designated Science & STEM Faculty Members.
         """)
         return True
@@ -1029,13 +1175,13 @@ if access_mode == "Admin Workspace":
                         admin_safe_week = c_w.selectbox("Select Week:", WEEKS, index=cur_w_idx, key=f"adm_sf_w_{sno}")
                         current_safe_df = get_safety_checklist_for_slot(admin_safe_month, admin_safe_week)
                         
-                        st.markdown("Tick check the safety points and update remarks below:")
+                        st.markdown("Tick/verify safety compliance parameters and update remarks:")
                         edited_safe_df = st.data_editor(
                             current_safe_df,
                             column_config={
                                 "Status": st.column_config.CheckboxColumn(
-                                    "Pass / Checked?",
-                                    help="Tick this if the safety standard is verified.",
+                                    "Compliant / Passed?",
+                                    help="Tick to mark this standard checked and verified.",
                                     default=False
                                 ),
                                 "Safety Parameter / Check Item": st.column_config.TextColumn(
