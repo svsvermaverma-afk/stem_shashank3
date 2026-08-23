@@ -22,6 +22,11 @@ MONTHS = ["April", "May", "June", "July", "August", "September", "October", "Nov
 WEEKS = ["Week 1", "Week 2", "Week 3", "Week 4", "Week 5"]
 DAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"]
 
+ALL_FORMATS = [
+    "pdf", "xlsx", "xls", "csv", "docx", "doc", "pptx", "ppt", "txt",
+    "jpg", "jpeg", "png", "webp", "gif", "mp4", "mov", "avi", "mkv", "zip", "rar"
+]
+
 SECTIONS_LIST = [
     "Class VI - Section A", "Class VI - Section B", "Class VI - Section C", "Class VI - Section D",
     "Class VII - Section A", "Class VII - Section B", "Class VII - Section C", "Class VII - Section D",
@@ -42,6 +47,10 @@ TEACHERS_LIST = [
     "Mr. Harendra Dwivedi",
     "Mr. Praveen Kumar"
 ]
+
+# ----------------- SESSION STATE AUTHENTICATION -----------------
+if "is_admin_logged_in" not in st.session_state:
+    st.session_state.is_admin_logged_in = False
 
 # ----------------- ATTENDANCE INITIALIZATION -----------------
 def init_student_attendance():
@@ -197,11 +206,11 @@ def save_teacher_attendance_slot(month, week, edited_df):
         
     df_updated.to_csv(TEACHER_ATTENDANCE_FILE, index=False)
 
-# ----------------- IN-LINE FILE PREVIEW RENDERER -----------------
+# ----------------- UNIVERSAL IN-LINE FILE PREVIEW RENDERER -----------------
 def render_file_preview(file_path, file_name, unique_key):
     ext = os.path.splitext(file_name)[1].lower()
 
-    if ext in [".jpg", ".jpeg", ".png"]:
+    if ext in [".jpg", ".jpeg", ".png", ".webp", ".gif"]:
         st.image(file_path, caption=file_name, use_container_width=True)
 
     elif ext in [".xlsx", ".xls", ".csv"]:
@@ -233,13 +242,13 @@ def render_file_preview(file_path, file_name, unique_key):
                 key=f"dl_pdf_{unique_key}"
             )
 
-    elif ext in [".mp4", ".mov", ".avi"]:
+    elif ext in [".mp4", ".mov", ".avi", ".mkv"]:
         st.video(file_path)
 
     else:
         with open(file_path, "rb") as f:
             st.download_button(
-                label=f"📥 Download {file_name}",
+                label=f"📥 Download File ({file_name})",
                 data=f.read(),
                 file_name=file_name,
                 key=f"dl_doc_{unique_key}"
@@ -625,66 +634,66 @@ BUILTIN_RECORDS = {
 
 CATEGORIES = {
     "1. Administration & Planning": [
-        (1, "STEM Lab Profile", ["pdf", "docx"]),
-        (2, "Lab Objectives & Guidelines", ["pdf"]),
-        (3, "Coordinator / SPOC Details", ["pdf", "docx"]),
-        (4, "Annual STEM Plan", ["xlsx", "xls", "pdf"]),
-        (5, "Monthly Activity Plan", ["xlsx", "xls"]),
-        (6, "Class-wise Timetable", ["xlsx", "xls", "pdf"]),
-        (7, "Session / Lesson Plans", ["pdf", "docx"]),
-        (8, "Student List", ["xlsx", "xls"]),
-        (9, "Student Attendance", ["xlsx", "xls", "csv"]),
-        (10, "Teacher Attendance", ["xlsx", "xls", "csv"]),
+        (1, "STEM Lab Profile"),
+        (2, "Lab Objectives & Guidelines"),
+        (3, "Coordinator / SPOC Details"),
+        (4, "Annual STEM Plan"),
+        (5, "Monthly Activity Plan"),
+        (6, "Class-wise Timetable"),
+        (7, "Session / Lesson Plans"),
+        (8, "Student List"),
+        (9, "Student Attendance"),
+        (10, "Teacher Attendance"),
     ],
     "2. Inventory & Safety": [
-        (11, "Lab Inventory", ["xlsx", "xls", "csv"]),
-        (12, "Equipment Details", ["xlsx", "xls"]),
-        (13, "Equipment Photos", ["jpg", "png", "jpeg"]),
-        (14, "Equipment Purchase Records", ["pdf"]),
-        (15, "Maintenance Records", ["xlsx", "xls", "pdf"]),
-        (16, "Lab Safety Rules", ["pdf"]),
-        (17, "Safety Checklist", ["xlsx", "xls", "pdf"]),
+        (11, "Lab Inventory"),
+        (12, "Equipment Details"),
+        (13, "Equipment Photos"),
+        (14, "Equipment Purchase Records"),
+        (15, "Maintenance Records"),
+        (16, "Lab Safety Rules"),
+        (17, "Safety Checklist"),
     ],
     "3. Activities & Projects": [
-        (18, "STEM Activities", ["pdf", "docx"]),
-        (19, "Activity Worksheets", ["pdf"]),
-        (20, "Activity Photos", ["jpg", "png", "jpeg"]),
-        (21, "Activity Videos", ["mp4", "mov", "avi"]),
-        (22, "Student Projects", ["pdf", "docx"]),
-        (23, "Prototype Details", ["pdf"]),
-        (24, "Problem Statements", ["docx", "xlsx"]),
-        (25, "Innovation Ideas", ["xlsx", "xls"]),
-        (26, "Project Photos", ["jpg", "png", "jpeg"]),
-        (27, "Project Videos", ["mp4", "mov"]),
+        (18, "STEM Activities"),
+        (19, "Activity Worksheets"),
+        (20, "Activity Photos"),
+        (21, "Activity Videos"),
+        (22, "Student Projects"),
+        (23, "Prototype Details"),
+        (24, "Problem Statements"),
+        (25, "Innovation Ideas"),
+        (26, "Project Photos"),
+        (27, "Project Videos"),
     ],
     "4. Assessment & Competitions": [
-        (28, "Assessment Rubrics", ["xlsx", "xls", "pdf"]),
-        (29, "Student Assessment", ["xlsx", "xls"]),
-        (30, "Student Performance", ["xlsx", "xls", "csv"]),
-        (31, "STEM SPARK Registration", ["pdf", "xlsx"]),
-        (32, "STEM SPARK Team Details", ["xlsx", "xls"]),
-        (33, "STEM SPARK Submissions", ["pdf"]),
-        (34, "VVM Records", ["pdf", "xlsx"]),
-        (35, "Other Competitions", ["pdf", "xlsx"]),
+        (28, "Assessment Rubrics"),
+        (29, "Student Assessment"),
+        (30, "Student Performance"),
+        (31, "STEM SPARK Registration"),
+        (32, "STEM SPARK Team Details"),
+        (33, "STEM SPARK Submissions"),
+        (34, "VVM Records"),
+        (35, "Other Competitions"),
     ],
     "5. Training & Communication": [
-        (36, "Teacher Training Records", ["xlsx", "xls", "pdf"]),
-        (37, "Training Certificates", ["pdf", "jpg", "png"]),
-        (38, "Training Attendance", ["xlsx", "xls"]),
-        (39, "Workshop Reports", ["docx", "pdf"]),
-        (40, "Workshop Photos", ["jpg", "png"]),
-        (41, "Government Circulars", ["pdf"]),
-        (42, "School Circulars", ["pdf"]),
-        (43, "Official Emails", ["pdf", "jpg", "png"]),
-        (44, "Meeting Minutes", ["docx", "pdf"]),
+        (36, "Teacher Training Records"),
+        (37, "Training Certificates"),
+        (38, "Training Attendance"),
+        (39, "Workshop Reports"),
+        (40, "Workshop Photos"),
+        (41, "Government Circulars"),
+        (42, "School Circulars"),
+        (43, "Official Emails"),
+        (44, "Meeting Minutes"),
     ],
     "6. Reports & Achievements": [
-        (45, "Monthly Reports", ["pdf"]),
-        (46, "Quarterly Reports", ["pdf"]),
-        (47, "Annual Report", ["pdf"]),
-        (48, "Student Certificates", ["pdf", "jpg", "png"]),
-        (49, "Student Achievements", ["xlsx", "xls", "pdf"]),
-        (50, "STEM Lab Event Photos", ["jpg", "png"]),
+        (45, "Monthly Reports"),
+        (46, "Quarterly Reports"),
+        (47, "Annual Report"),
+        (48, "Student Certificates"),
+        (49, "Student Achievements"),
+        (50, "STEM Lab Event Photos"),
     ]
 }
 
@@ -699,18 +708,33 @@ access_mode = st.sidebar.radio("Navigation Mode", ["Public Viewer", "Admin Works
 # ----------------- ADMIN WORKSPACE -----------------
 if access_mode == "Admin Workspace":
     st.sidebar.markdown("---")
-    st.sidebar.subheader("Admin Login")
-    password = st.sidebar.text_input("Enter Admin Password", type="password")
-
-    if password == "stem@admin123":
+    
+    # Auto-login check
+    if not st.session_state.is_admin_logged_in:
+        st.sidebar.subheader("Admin Login")
+        password_input = st.sidebar.text_input("Enter Admin Password", type="password", key="login_pass_input")
+        
+        # Direct check on input or Button click
+        if password_input == "stem@admin123" or st.sidebar.button("Login", type="primary"):
+            if password_input == "stem@admin123":
+                st.session_state.is_admin_logged_in = True
+                st.rerun()
+            else:
+                st.sidebar.error("Incorrect Password")
+    else:
         st.sidebar.success("Authenticated as SPOC")
+        if st.sidebar.button("🚪 Logout"):
+            st.session_state.is_admin_logged_in = False
+            st.rerun()
+
+    if st.session_state.is_admin_logged_in:
         st.title("⚙️ Admin Workspace: Manage Records & Live Attendance")
 
         selected_section = st.selectbox("Select Category to Manage", list(CATEGORIES.keys()))
         items = CATEGORIES[selected_section]
         st.divider()
 
-        for sno, title, formats in items:
+        for sno, title in items:
             folder_name = get_folder_name(sno, title)
             record_dir = os.path.join(UPLOAD_DIR, folder_name)
             os.makedirs(record_dir, exist_ok=True)
@@ -784,11 +808,11 @@ if access_mode == "Admin Workspace":
                         st.success(f"Teacher Attendance for {admin_tc_month} - {admin_tc_week} saved!")
                         st.rerun()
 
-                # REGULAR FILE UPLOADER FOR OTHER PARAMETERS
+                # UNIVERSAL ALL-FORMAT FILE UPLOADER FOR ALL OTHER PARAMETERS
                 else:
                     uploaded_files = st.file_uploader(
-                        f"Upload files for #{sno} ({', '.join(formats)})",
-                        type=formats,
+                        f"Upload files for #{sno} (All Formats: PDF, Excel, Word, PPT, Images, Videos, ZIP etc.)",
+                        type=None,
                         accept_multiple_files=True,
                         key=f"upload_{sno}"
                     )
@@ -812,7 +836,7 @@ if access_mode == "Admin Workspace":
 
     else:
         st.title("🔒 Restricted Access")
-        st.info("Enter admin password to upload and modify records.")
+        st.info("Enter admin password in the sidebar to access Admin Workspace.")
 
 # ----------------- PUBLIC VIEWER -----------------
 else:
@@ -824,7 +848,7 @@ else:
     with tab1:
         for section_name, items in CATEGORIES.items():
             st.subheader(f"📑 {section_name}")
-            for sno, title, formats in items:
+            for sno, title in items:
                 folder_name = get_folder_name(sno, title)
                 record_dir = os.path.join(UPLOAD_DIR, folder_name)
                 files = os.listdir(record_dir) if os.path.exists(record_dir) else []
@@ -849,7 +873,7 @@ else:
         summary_rows = []
 
         for section_name, items in CATEGORIES.items():
-            for sno, title, formats in items:
+            for sno, title in items:
                 folder_name = get_folder_name(sno, title)
                 record_dir = os.path.join(UPLOAD_DIR, folder_name)
                 file_count = len(os.listdir(record_dir)) if os.path.exists(record_dir) else 0
