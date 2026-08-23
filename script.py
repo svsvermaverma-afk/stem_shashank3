@@ -73,12 +73,12 @@ MONTHS = ["April", "May", "June", "July", "August", "September", "October", "Nov
 WEEKS = ["Week 1", "Week 2", "Week 3", "Week 4", "Week 5"]
 DAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"]
 
-# ----------------- SESSION STATE FOR ACCORDION -----------------
-if "active_sno_viewer" not in st.session_state:
-    st.session_state.active_sno_viewer = 1
+# ----------------- SESSION STATE ACCORDION TRACKERS (FIXED) -----------------
+if "active_viewer_sno" not in st.session_state:
+    st.session_state["active_viewer_sno"] = 1
 
-if "active_sno_admin" not in st.session_state:
-    st.session_state.active_sno_admin = None
+if "active_admin_sno" not in st.session_state:
+    st.session_state["active_admin_sno"] = None
 
 # ----------------- REAL-TIME MONTH & WEEK -----------------
 def get_current_indices():
@@ -682,24 +682,19 @@ def render_annual_plan():
     """)
     
     df_plan = pd.DataFrame(ANNUAL_PLAN_DATA)
-    
     plan_months = ["All Months"] + sorted(list(df_plan["Month"].unique()), key=lambda x: datetime.strptime(x, "%B %Y"))
     class_options = ["All Classes", "Class 6 (Beginner Tier)", "Class 7 (Intermediate Tier)", "Class 8 (Advanced Tier)", "Class 9 (Expert Tier)"]
     
-    # Auto-detect real-time Month
     now_dt = datetime.now()
     cur_month_str = now_dt.strftime("%B %Y")
     default_month_idx = plan_months.index(cur_month_str) if cur_month_str in plan_months else 0
     
-    # FILTER BUTTONS / SELECTORS
     col_m, col_c = st.columns([1, 1])
     selected_plan_month = col_m.selectbox("📅 Filter by Month (Auto-Selected Present Month):", plan_months, index=default_month_idx, key="filter_plan_month")
     selected_plan_class = col_c.selectbox("🎓 Filter by Class:", class_options, key="filter_plan_class")
     
-    # Apply Month Filter
     filtered_df = df_plan if selected_plan_month == "All Months" else df_plan[df_plan["Month"] == selected_plan_month]
     
-    # Apply Class Filter
     if selected_plan_class == "Class 6 (Beginner Tier)":
         display_cols = ["Month", "Session #", "Class 6", "Milestone", "Roles"]
     elif selected_plan_class == "Class 7 (Intermediate Tier)":
@@ -1008,29 +1003,29 @@ access_mode = st.sidebar.radio("Navigation Mode", ["Public Viewer", "Admin Works
 
 # ----------------- SESSION AUTH -----------------
 if "is_admin_logged_in" not in st.session_state:
-    st.session_state.is_admin_logged_in = False
+    st.session_state["is_admin_logged_in"] = False
 
 # ----------------- ADMIN WORKSPACE -----------------
 if access_mode == "Admin Workspace":
     st.sidebar.markdown("---")
     
-    if not st.session_state.is_admin_logged_in:
+    if not st.session_state["is_admin_logged_in"]:
         st.sidebar.subheader("Admin Login")
         password_input = st.sidebar.text_input("Enter Admin Password", type="password", key="login_pass_input")
         
         if password_input == "stem@admin123" or st.sidebar.button("Login", type="primary"):
             if password_input == "stem@admin123":
-                st.session_state.is_admin_logged_in = True
+                st.session_state["is_admin_logged_in"] = True
                 st.rerun()
             else:
                 st.sidebar.error("Incorrect Password")
     else:
         st.sidebar.success("Authenticated as SPOC")
         if st.sidebar.button("🚪 Logout"):
-            st.session_state.is_admin_logged_in = False
+            st.session_state["is_admin_logged_in"] = False
             st.rerun()
 
-    if st.session_state.is_admin_logged_in:
+    if st.session_state["is_admin_logged_in"]:
         render_cover_photo()
         render_principal_message()
         st.title("⚙️ Admin Workspace: Manage Records & Live Attendance")
@@ -1106,11 +1101,11 @@ if access_mode == "Admin Workspace":
                 record_dir = os.path.join(UPLOAD_DIR, folder_name)
                 os.makedirs(record_dir, exist_ok=True)
 
-                is_active = (st.session_state.active_sno_admin == sno)
+                is_active = (st.session_state.get("active_admin_sno") == sno)
                 btn_label = f"▼ #{sno}. {title}" if is_active else f"▶ #{sno}. {title}"
 
                 if st.button(btn_label, key=f"admin_btn_{sno}", use_container_width=True):
-                    st.session_state.active_sno_admin = None if is_active else sno
+                    st.session_state["active_admin_sno"] = None if is_active else sno
                     st.rerun()
 
                 if is_active:
@@ -1221,11 +1216,12 @@ else:
                 files = os.listdir(record_dir) if os.path.exists(record_dir) else []
                 is_builtin = sno in BUILTIN_RECORDS
 
-                is_active = (st.session_state.active_viewer_sno == sno)
+                is_active = (st.session_state.get("active_viewer_sno") == sno)
                 toggle_btn_label = f"▼ #{sno}. {title}" if is_active else f"▶ #{sno}. {title}"
 
+                # Strict left-aligned single-open accordion button
                 if st.button(toggle_btn_label, key=f"viewer_btn_{sno}", use_container_width=True):
-                    st.session_state.active_viewer_sno = None if is_active else sno
+                    st.session_state["active_viewer_sno"] = None if is_active else sno
                     st.rerun()
 
                 if is_active:
