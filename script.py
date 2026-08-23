@@ -132,7 +132,7 @@ def fetch_google_sheet_data(sheet_url):
             if not match:
                 return None, "Invalid Google Sheet link. Ensure it has '/d/SHEET_ID/'."
             sheet_id = match.group(1)
-            csv_url = f"https://docs.google.com/spreadsheets/d/{sheet_id}/export?format=csv"
+            csv_url = f"[https://docs.google.com/spreadsheets/d/](https://docs.google.com/spreadsheets/d/){sheet_id}/export?format=csv"
             
         df = pd.read_csv(csv_url, dtype=str).fillna("")
         return df, None
@@ -517,7 +517,7 @@ def render_scienceutsav_assessment():
     
     saved_su_url = get_saved_url(SCIENCEUTSAV_CONFIG_FILE)
     if not saved_su_url:
-        saved_su_url = "https://report.scienceutsav.com/class/k57a8q5h6mzanqt4vdvn48c1vx8ba0q3/report"
+        saved_su_url = "[https://report.scienceutsav.com/class/k57a8q5h6mzanqt4vdvn48c1vx8ba0q3/report](https://report.scienceutsav.com/class/k57a8q5h6mzanqt4vdvn48c1vx8ba0q3/report)"
     
     col_l1, col_l2 = st.columns([1, 1])
     col_l1.link_button("🌐 Open ScienceUtsav Portal in New Tab", saved_su_url)
@@ -709,7 +709,7 @@ LESSON_PLANS_DB = {
         ("Session 10 (16-30 November 2026)", "System Enclosure & Alpha Prototype Assembly", "Alpha prototype demo: Install automated corridor light/noise monitor inside scale chassis; verify operation.", "1. Packaging Arduino + Shield inside rigid cardboard housing, cable looming.\n2. Milestone 3: Alpha Working Prototype Demonstration.\n3. System reliability check.", "Arduino Uno, Sensor Shield, Full Sensor Setup, Scale Cardboard Chassis.", "Lab Evaluation (10M): Alpha Prototype functioning (5M), Enclosure (3M), Logbook (2M)."),
         ("Session 11 (01-15 December 2026)", "Prototype Stress Testing & Data Logging", "Run 30 test cycles of automatic light/noise trigger; record response latency in QA Test Log.", "1. Reliability testing over 30 cycles, sensor drift check, loose wire inspection.\n2. QA logging and response time measurement.\n3. Failure mode analysis.", "Arduino Uno, Sensor Shield, Assembled Prototype, QA Test Sheets.", "Lab Evaluation (10M): Stress test consistency (4M), QA log (4M), Wiring (2M)."),
         ("Session 12 (16-31 December 2026)", "Presentation Skills & 1-Page Pitch Dossier", "Draft 1-page project brief; prepare slide deck with team photos, problem definition, and bill of materials.", "1. Drafting problem-solution narrative, circuit schematic sketching, slide design.\n2. 1-Page Project Dossier compiling.\n3. Pitch rehearsal.", "PCs, Projector, Engineering Logbooks, Slide templates.", "Lab Evaluation (10M): Project Dossier quality (5M), Slide deck (3M), Pitch trial (2M)."),
-        ("Session 13 (01-15 January 2027)", "Internal School Qualifying Pitch & Demo", "Live demonstration of all 6-7 Class 6 prototypes before school jury; receive feedback for final polishing.", "1. 3-minute live pitch, working hardware demo, answering faculty jury Q&A.\n2. Jury evaluation and live scoring.\n3. Post-pitch feedback implementation.", "Completed Prototypes, Projector, Jury Scorecards.", "Qualifying Pitch Score (10M): Hardware autonomy (4M), Oral defense (4M), Teamwork (2M)."),
+        ("Session 13 (01-15 January 2027)", "Internal Qualifying Pitch & Demo", "Live demonstration of all 6-7 Class 6 prototypes before school jury; receive feedback for final polishing.", "1. 3-minute live pitch, working hardware demo, answering faculty jury Q&A.\n2. Jury evaluation and live scoring.\n3. Post-pitch feedback implementation.", "Completed Prototypes, Projector, Jury Scorecards.", "Qualifying Pitch Score (10M): Hardware autonomy (4M), Oral defense (4M), Teamwork (2M)."),
         ("Session 14 (16-31 January 2027)", "Final Video Shoot & Erehwon Upload", "Record 2-minute project demo video; upload code, schematic, and report to Erehwon competition portal.", "1. Video recording, structured demonstration, uploading files to Erehwon portal.\n2. Final Lab repository archiving.\n3. Milestone 4 National Submission.", "Smartphones/Camera, Clean Demo Setup, Erehwon Portal Access.", "Lab Evaluation (10M): Video demo quality (5M), Portal submission compliance (5M).")
     ],
     "Class 7": [
@@ -797,4 +797,517 @@ def render_lesson_plans():
 
     with col_r:
         st.markdown("##### 📚 Content & Teaching Points")
-        st.markdown(f"```text\n{plan_data[3]}\n
+        st.code(plan_data[3], language="text")
+        
+        st.markdown("##### 📦 Teaching Aids & Resources")
+        st.write(f"• **Hardware:** {plan_data[4]}")
+        st.write(f"• **Digital Resource:** ScienceUtsav LMS ([report.scienceutsav.com/lms](https://report.scienceutsav.com/lms)) | Arduino Reference")
+        
+        st.markdown("##### 📊 Periodic Assessment")
+        st.write(f"• **Criteria:** {plan_data[5]}")
+
+# ----------------- 100% FULL UNTRUNCATED MASTER DATA (NO DATA LOSS) -----------------
+def render_profile():
+    st.markdown("""
+    ### 🏫 STEM LAB PROFILE
+
+    * **School Name:** Aditya Birla Intermediate College, Renukoot
+    * **Academic Session:** 2026-27
+    * **STEM Lab:** School STEM Innovation & Learning Laboratory
+    * **STEM Coordinator / SPOC:** Shashank Verma
+
+    ---
+
+    #### 1. Introduction
+    The STEM Lab of Aditya Birla Intermediate College, Renukoot is a dedicated space for promoting Science, Technology, Engineering and Mathematics (STEM) learning through hands-on activities, experimentation, problem-solving, innovation and project-based learning. The laboratory provides students with opportunities to connect classroom concepts with real-life situations and develop practical skills through designing, making, testing and improving solutions.
+
+    #### 2. Classes Covered
+    The STEM Lab activities are primarily conducted for:
+    * **Class VI** (Beginner Tier)
+    * **Class VII** (Intermediate Tier)
+    * **Class VIII** (Advanced Tier)
+    * **Class IX** (Expert Capstone Tier)
+
+    *Activities may also be organized for other classes as required under school programmes, competitions and special projects.*
+
+    #### 3. Major Objectives
+    1. To develop scientific thinking and curiosity among students.
+    2. To promote hands-on and experiential learning.
+    3. To develop problem-solving and critical-thinking skills.
+    4. To encourage students to identify real-life problems and develop solutions.
+    5. To promote creativity, innovation and design thinking.
+    6. To provide exposure to technology, electronics, coding, robotics and prototyping.
+    7. To encourage teamwork and collaborative learning.
+    8. To develop communication, presentation and documentation skills.
+    9. To connect STEM concepts with real-life applications.
+    10. To encourage participation in STEM competitions and innovation programmes (Erehwon, STEM SPARK, VVM).
+
+    #### 4. Major Areas of STEM Learning
+    * **Science Experiments:** Physics, Chemistry & Biology inquiry setups.
+    * **Mathematics Applications:** Data plotting, statistics & logic graphs.
+    * **Electronics & Sensors:** Resistors, capacitors, LDR, DHT11, MQ2, Touch, Ultrasonic, IR, Hall.
+    * **Microcontrollers & Robotics:** Arduino Uno R3, Breakout Shields, Motor Drivers, SG90 Servos, BO Motors.
+    * **Coding & Computational Thinking:** C++ embedded programming, non-blocking state engines, algorithms.
+    * **IoT & Smart Systems:** Sensor fusion, digital telemetry, automated controls.
+    * **3D Prototyping & Design Thinking:** Bambu Lab A1 Mini 3D printer, CAD modeling, enclosure packaging.
+    * **Environmental Innovation & E-waste:** Upcycling phone parts, clean water solutions, smart farming.
+
+    #### 5. Teaching-Learning Approach
+    The STEM Lab strictly follows an inquiry and maker-oriented engineering cycle:
+    > **Problem Identification → Explore Science → Imagine Design → Build Prototype → Test Hardware → Code & Improve → Present to Jury**
+
+    #### 6. Documentation System
+    The following records are maintained digitally in the school portal:
+    * 50-Parameter Master Repository
+    * Class & Section-wise Student & Teacher Attendance CSVs
+    * 56 Structured Master Lesson Plans
+    * Real-time ScienceUtsav Assessment LMS Linkage
+    * Complete Lab Inventory and Safety Audit Records
+
+    #### 7. Expected Learning Outcomes
+    Students are trained to achieve modular prototyping hygiene, logical problem decomposition, code debugging, 3D casing assembly, team leadership, and empirical test documentation.
+    """)
+
+def render_guidelines():
+    st.markdown("""
+    ### 📋 STEM LAB OBJECTIVES & GUIDELINES
+
+    * **School:** Aditya Birla Intermediate College, Renukoot
+    * **Academic Session:** 2026-27
+    * **STEM Coordinator / SPOC:** Shashank Verma
+
+    ---
+
+    #### A. Objectives of the STEM Lab
+    1. **Experiential Learning:** To provide students with direct hands-on modular kits, sensors, and microcontrollers.
+    2. **Problem Solving:** To identify school campus and community pain points and design functional engineering solutions.
+    3. **Innovation:** To build functional proof-of-concepts, alpha prototypes, and capstone demonstration models.
+    4. **Scientific Temper:** To encourage hypothesis testing, sensor data calibration, and empirical trial logging.
+    5. **Technology Mastery:** To develop coding proficiency in Arduino IDE, serial telemetry, and 3D printing design.
+
+    ---
+
+    #### B. STEM Lab Safety & Handling Guidelines
+    1. **Supervision:** Students may enter and work in the lab only in the presence of the STEM Teacher or SPOC.
+    2. **Electrical Safety:**
+       * Verify battery/power polarity before connecting headers to the Breakout Shield.
+       * Short-circuiting battery terminals or connecting 5V directly to Ground without a load is strictly prohibited.
+       * Water, beverages, and food items are 100% prohibited on equipment workbenches.
+    3. **Tool & Shield Maintenance:**
+       * Always use 3-pin RMC ribbon cables with correct G-V-S pinout (Ground=Black, VCC=Red, Signal=Yellow).
+       * Never force microcontroller pins; report bent pins or loose solder joints immediately.
+       * Return all sensor modules, tools, multimeters, and jumpers to designated labeled bins after every period.
+    4. **Emergency Protocol:**
+       * In the event of smoke, burning smell, or electrical sparking, immediately hit the master bench power cutoff switch.
+       * CO2 Fire Extinguisher and First Aid Medical Kit are stationed at the main entrance door.
+    """)
+
+def render_spoc():
+    st.markdown("""
+    ### 👤 STEM LAB COORDINATOR / SPOC DETAILS
+
+    **Academic Session:** 2026-27
+
+    ---
+
+    #### 1. School Details
+    * **School Name:** Aditya Birla Intermediate College, Renukoot
+    * **Location:** Renukoot, Sonbhadra, Uttar Pradesh (Pin: 231217)
+
+    #### 2. Coordinator Information
+    * **Name:** Shashank Verma
+    * **Designation:** PGT
+    * **Academic Qualification:** M.Sc., B.Ed.
+    * **Official Role:** STEM Coordinator / School STEM SPOC
+    * **Official School Email:** `shashank.verma@adityabirlaschools.in`
+    * **Official Contact Number:** `9826594665`
+
+    #### 3. Core Responsibilities
+    1. Structuring and enforcing the 14-session Annual STEM Roadmap and 56 Master Lesson Plans across Classes 6–9[cite: 1].
+    2. Managing digital data synchronization with Google Sheets, Google Forms, and ScienceUtsav LMS.
+    3. Coordinating weekly lab timetables, section-wise student attendance, and teacher duty allocations.
+    4. Overseeing equipment safety, tool inventories, Bambu Lab 3D printer maintenance, and component procurement.
+    5. Mentoring 25+ student innovation teams for the National Erehwon Competition, STEM SPARK, and VVM.
+    6. Preparing monthly, quarterly, and annual STEM laboratory progress reports for school management.
+    """)
+
+# ----------------- TITLE-BASED DIRECT RESOLUTION (100% RELIABLE) -----------------
+BUILTIN_BY_TITLE = {
+    "STEM Lab Profile": render_profile,
+    "Lab Objectives & Guidelines": render_guidelines,
+    "Coordinator / SPOC Details": render_spoc,
+    "Monthly / Annual STEM Activity Plan": render_annual_plan,
+    "Class-wise Timetable": lambda: st.markdown("""
+        ### ⏰ Weekly STEM Lab Schedule (2026-27)
+        * **Class VI (Sections A, B, C, D):** Tuesday & Thursday (Period 4)
+        * **Class VII (Sections A, B, C, D):** Monday & Wednesday (Period 5)
+        * **Class VIII (Sections A, B, C, D):** Wednesday & Friday (Period 6)
+        * **Class IX (Sections A, B, C, D, E, F, G, H):** Saturday (Period 2 to 4 - 3 Period Capstone Block)
+    """),
+    "Session / Lesson Plans": render_lesson_plans,
+    "Student List": render_student_excel,
+    "Student Attendance": render_student_attendance_viewer,
+    "Teacher Attendance": render_teacher_attendance_viewer,
+    "Lab Inventory": lambda: st.markdown("""
+        ### 📦 Verified STEM Lab Inventory (ScienceUtsav & ABPS Kit)
+        * **Microcontrollers:** 25x Arduino Uno R3 (ATmega328P DIP), 25x Sensor Breakout Shields V5.0 (3-Pin G-V-S).
+        * **Sensor Modules:** LDR Light, DHT11 Temperature/Humidity, MQ2 Smoke/Gas, Flame, Soil Moisture, Ultrasonic HC-SR04, IR Obstacle, Hall Effect A3144, Tilt SW-520D, TTP223 Capacitive Touch, Sound Microphone.
+        * **Actuators & Displays:** SG90 Micro Servos (0°-180°), BO Geared Motors + Wheels, 5V Single Channel Relays, 16x2 I2C Character LCDs, 1-Digit 7-Segment Displays, Active/Passive Buzzers, High-power RGB/Traffic LEDs.
+        * **Prototyping & Power:** Bambu Lab A1 Mini 3D Printer (PLA Filament), 5V DC Bench Power Adapters, 9V/AA Battery Cases, 3-Pin / 4-Pin RMC Ribbon Jumpers.
+    """),
+    "Equipment Details": lambda: st.markdown("""
+        ### 🔬 Technical Hardware Specifications
+        * **Processing Unit:** Arduino Uno R3 (16 MHz Crystal, 5V Logic, 14 Digital I/O, 6 Analog Inputs).
+        * **Shield Architecture:** Dedicated external servo power terminal block, I2C port (A4/A5), UART (TX/RX).
+        * **Rapid Prototyping:** Bambu Lab A1 Mini FDM 3D Printer (0.4mm Nozzle, Auto-bed Leveling, 180x180x180mm Build Volume).
+    """),
+    "Lab Safety Rules": lambda: st.markdown("""
+        ### ⚠️ Mandatory STEM Lab Safety Protocol
+        1. Always inspect wiring for short-circuits before plugging the USB / 5V DC barrel jack into the Arduino Uno.
+        2. Never draw high current for servos or motors directly from Uno 5V pin; always utilize the shield's dedicated external power terminal block.
+        3. Soldering and hot glue work must be performed at designated thermal workstations wearing protective safety glasses.
+        4. Any component malfunction or heating issue must be immediately reported to the SPOC.
+    """),
+    "Safety Checklist": lambda: st.markdown("""
+        ### ✅ Periodic Laboratory Safety Audit Checklist
+        * [x] **Power Breakers:** Master MCB cutoff switch and bench surge protectors fully operational.
+        * [x] **Fire Suppression:** CO2 Fire Extinguisher inspected, tagged, and unobstructed at main entrance.
+        * [x] **First Aid Medical Kit:** Stocked with burn cream, antiseptic, bandages, and eye-wash solution.
+        * [x] **Cable Hygiene:** Anti-trip cable routing and color-coded modular storage boxes labeled.
+    """),
+    "STEM Activities": lambda: st.markdown("""
+        ### 💡 Core Laboratory Project Modules
+        1. Smart Street Lighting with LDR Sensor and Transistor/Relay Switching.
+        2. Acoustic Decibel Warning Station using Sound Sensor, RGB LED, and Buzzer.
+        3. Automated Touchless Boom Barrier Gate with IR Proximity Sensor and SG90 Micro Servo.
+        4. Multi-Factor Laser Optical Tripwire Security System with Capacitive Touch Disarm.
+        5. Smart Agricultural Greenhouse Monitor with Soil Moisture, DHT11, and I2C LCD Readout.
+    """),
+    "Assessment Rubrics": lambda: st.markdown("""
+        ### 📊 Student STEM Assessment Rubric (100 Marks Distribution)
+        * **Problem Identification & Research (20 Marks):** Campus problem statement clarity and engineering logbook documentation.
+        * **Circuit Assembly & Hardware Hygiene (20 Marks):** Modular shield wiring, secure pin mapping, and power stability.
+        * **Firmware Coding Logic (20 Marks):** Non-blocking millis() loops, conditional thresholds, and bug-free syntax.
+        * **Enclosure & Packaging (20 Marks):** Mechanical chassis stability, 3D printed / cardboard casing, and cable looming.
+        * **Oral Defense & Live Demonstration (20 Marks):** 3-minute pitch, prototype autonomy, and jury Q&A handling.
+    """),
+    "Student Assessment": render_scienceutsav_assessment,
+    "Teacher Training Records": lambda: st.markdown("""
+        ### 🧑‍🏫 Teacher STEM Capacity Building & Training Record
+        * **Conducted By:** ScienceUtsav Technical Expert Team & ABIC STEM Coordinator.
+        * **Core Modules Covered:** Sensor Breakout Shield Architecture, Modular C++ Embedded Coding, Bambu Lab 3D Slicing & Printing, Student Mentorship Pedagogy.
+        * **Participating Faculty:** 10 Designated Science & STEM Faculty Members.
+    """),
+    "Annual Report": lambda: st.markdown("""
+        ### 📑 Annual STEM Innovation Lab Report (2026-27 Executive Summary)
+        * Over 400+ students from Classes VI to IX actively enrolled in weekly hands-on maker curricula.
+        * 56 structured lesson plans executed across sensor and robotics modules[cite: 1].
+        * 25+ student teams successfully completed Alpha working prototypes for the National Erehwon Innovation Competition.
+        * 100% equipment audit verified with zero electrical safety incidents.
+    """)
+}
+
+# ----------------- REORGANIZED 49 MASTER CATEGORIES -----------------
+CATEGORIES = {
+    "1. Administration & Planning": [
+        (1, "STEM Lab Profile"), (2, "Lab Objectives & Guidelines"), (3, "Coordinator / SPOC Details"),
+        (4, "Monthly / Annual STEM Activity Plan"), (5, "Class-wise Timetable"),
+        (6, "Session / Lesson Plans"), (7, "Student List"), (8, "Student Attendance"), (9, "Teacher Attendance"),
+    ],
+    "2. Inventory & Safety": [
+        (10, "Lab Inventory"), (11, "Equipment Details"), (12, "Equipment Photos"),
+        (13, "Equipment Purchase Records"), (14, "Maintenance Records"), (15, "Lab Safety Rules"), (16, "Safety Checklist"),
+    ],
+    "3. Activities & Projects": [
+        (17, "STEM Activities"), (18, "Activity Worksheets"), (19, "Activity Photos"),
+        (20, "Activity Videos"), (21, "Student Projects"), (22, "Prototype Details"),
+        (23, "Problem Statements"), (24, "Innovation Ideas"), (25, "Project Photos"), (26, "Project Videos"),
+    ],
+    "4. Assessment & Competitions": [
+        (27, "Assessment Rubrics"), (28, "Student Assessment"), (29, "Student Performance"),
+        (30, "STEM SPARK Registration"), (31, "STEM SPARK Team Details"), (32, "STEM SPARK Submissions"),
+        (33, "VVM Records"), (34, "Other Competitions"),
+    ],
+    "5. Training & Communication": [
+        (35, "Teacher Training Records"), (36, "Training Certificates"), (37, "Training Attendance"),
+        (38, "Workshop Reports"), (39, "Workshop Photos"), (40, "Government Circulars"),
+        (41, "School Circulars"), (42, "Official Emails"), (43, "Meeting Minutes"),
+    ],
+    "6. Reports & Achievements": [
+        (44, "Monthly Reports"), (45, "Quarterly Reports"), (46, "Annual Report"),
+        (47, "Student Certificates"), (48, "Student Achievements"), (49, "STEM Lab Event Photos"),
+    ]
+}
+
+def get_folder_name(sno, title):
+    return f"{sno:02d}_{title.replace(' ', '_').replace('/', '_')}"
+
+# ----------------- SIDEBAR NAVIGATION -----------------
+st.sidebar.title("🔬 ABIC STEM Portal")
+st.sidebar.caption("Aditya Birla Intermediate College, Renukoot")
+access_mode = st.sidebar.radio("Navigation Mode", ["Public Viewer", "Admin Workspace"])
+
+# ----------------- SESSION AUTH -----------------
+if "is_admin_logged_in" not in st.session_state:
+    st.session_state["is_admin_logged_in"] = False
+
+# ----------------- ADMIN WORKSPACE -----------------
+if access_mode == "Admin Workspace":
+    st.sidebar.markdown("---")
+    
+    if not st.session_state["is_admin_logged_in"]:
+        st.sidebar.subheader("Admin Login")
+        password_input = st.sidebar.text_input("Enter Admin Password", type="password", key="login_pass_input")
+        
+        if password_input == "stem@admin123" or st.sidebar.button("Login", type="primary"):
+            if password_input == "stem@admin123":
+                st.session_state["is_admin_logged_in"] = True
+                st.rerun()
+            else:
+                st.sidebar.error("Incorrect Password")
+    else:
+        st.sidebar.success("Authenticated as SPOC")
+        if st.sidebar.button("🚪 Logout"):
+            st.session_state["is_admin_logged_in"] = False
+            st.rerun()
+
+    if st.session_state["is_admin_logged_in"]:
+        render_cover_photo()
+        render_principal_message()
+        st.title("⚙️ Admin Workspace: Manage Records & Live Attendance")
+
+        # GOOGLE SYNC & EXTERNAL LINKS SETTINGS
+        with st.expander("🔗 **Google Forms, Sheets & ScienceUtsav Integration**", expanded=False):
+            st.markdown("##### 1. Connect Google Sheet (Responses)")
+            current_sheet_url = get_saved_url(SHEET_CONFIG_FILE)
+            sheet_input = st.text_input("Google Sheet Share Link (Anyone with link = Viewer):", value=current_sheet_url, placeholder="[https://docs.google.com/spreadsheets/d/](https://docs.google.com/spreadsheets/d/)...")
+            
+            c_save_s, c_sync = st.columns(2)
+            if c_save_s.button("💾 Save Sheet Link"):
+                save_url(SHEET_CONFIG_FILE, sheet_input)
+                st.success("Google Sheet link saved!")
+
+            if c_sync.button("🔄 Sync Now from Google Sheet", type="primary"):
+                if sheet_input:
+                    save_url(SHEET_CONFIG_FILE, sheet_input)
+                success, msg = sync_data_from_google_sheet()
+                if success:
+                    st.success(msg)
+                    st.rerun()
+                else:
+                    st.error(msg)
+
+            st.divider()
+            st.markdown("##### 2. Connect Google Form (Teacher Link)")
+            current_form_url = get_saved_url(FORM_CONFIG_FILE)
+            form_input = st.text_input("Google Form Link (For Teachers to Fill):", value=current_form_url, placeholder="[https://forms.gle/](https://forms.gle/)...")
+            if st.button("💾 Save Form Link"):
+                save_url(FORM_CONFIG_FILE, form_input)
+                st.success("Google Form link saved!")
+
+            st.divider()
+            st.markdown("##### 3. ScienceUtsav Classroom Report Link")
+            current_su_url = get_saved_url(SCIENCEUTSAV_CONFIG_FILE)
+            if not current_su_url:
+                current_su_url = "[https://report.scienceutsav.com/class/k57a8q5h6mzanqt4vdvn48c1vx8ba0q3/report](https://report.scienceutsav.com/class/k57a8q5h6mzanqt4vdvn48c1vx8ba0q3/report)"
+            su_input = st.text_input("ScienceUtsav Class Report URL:", value=current_su_url)
+            if st.button("💾 Save ScienceUtsav Link"):
+                save_url(SCIENCEUTSAV_CONFIG_FILE, su_input)
+                st.success("ScienceUtsav URL saved!")
+
+        # COVER PHOTO & PRINCIPAL MESSAGE MANAGEMENT
+        with st.expander("🖼️ **Update Cover Photo & Principal Message**", expanded=False):
+            st.subheader("1. Update Cover Photo (Banner)")
+            cover_file = st.file_uploader("Upload Cover Photo (JPG/PNG)", type=["jpg", "jpeg", "png", "webp"], key="upload_cover_banner")
+            if cover_file:
+                c_ext = os.path.splitext(cover_file.name)[1].lower()
+                save_cover_path = os.path.join(DATA_DIR, f"cover photo{c_ext}")
+                with open(save_cover_path, "wb") as f:
+                    f.write(cover_file.getbuffer())
+                st.success("Cover Photo successfully updated!")
+                st.rerun()
+            
+            st.divider()
+            st.subheader("2. Edit Principal's Message")
+            current_p_msg = get_principal_message()
+            edited_p_msg = st.text_area("Principal Message Text:", value=current_p_msg, height=120)
+            if st.button("💾 Save Principal's Message", type="primary", key="save_p_msg_btn"):
+                save_principal_message(edited_p_msg)
+                st.success("Principal Message successfully saved!")
+                st.rerun()
+
+        st.divider()
+        st.subheader("📁 Manage All 49 Parameters")
+
+        # LEFT-ALIGNED STRICT ACCORDION IN ADMIN
+        for section_name, items in CATEGORIES.items():
+            st.markdown(f"#### 📑 {section_name}")
+            for sno, title in items:
+                folder_name = get_folder_name(sno, title)
+                record_dir = os.path.join(UPLOAD_DIR, folder_name)
+                os.makedirs(record_dir, exist_ok=True)
+
+                is_active = (st.session_state.get("active_admin_sno") == sno)
+                btn_label = f"▼ #{sno}. {title}" if is_active else f"▶ #{sno}. {title}"
+
+                if st.button(btn_label, key=f"admin_btn_{sno}", use_container_width=True):
+                    st.session_state["active_admin_sno"] = None if is_active else sno
+                    st.rerun()
+
+                if is_active:
+                    st.markdown(f"### ⚙️ Managing: #{sno}. {title}")
+                    if title == "Student Attendance":
+                        st.markdown("#### 📝 Edit Student Attendance (Month & Week-wise)")
+                        cur_m_idx, cur_w_idx = get_current_indices()
+                        col_adm_st_m, col_adm_st_w = st.columns(2)
+                        admin_st_month = col_adm_st_m.selectbox("Select Month (Student):", MONTHS, index=cur_m_idx, key=f"admin_st_month_{sno}")
+                        admin_st_week = col_adm_st_w.selectbox("Select Week (Student):", WEEKS, index=cur_w_idx, key=f"admin_st_week_{sno}")
+                        
+                        st.caption(f"Editing Student Attendance: **{admin_st_month} | {admin_st_week}**")
+                        current_st_slot_df = get_student_attendance_for_slot(admin_st_month, admin_st_week)
+                        editor_st_slot_key = f"admin_st_editor_{admin_st_month}_{admin_st_week}"
+                        
+                        student_column_config = {
+                            "Date": st.column_config.TextColumn("Date (DD/MM/YYYY)"),
+                            "Day": st.column_config.SelectboxColumn("Day", options=DAYS, required=False)
+                        }
+                        
+                        edited_st_slot_df = st.data_editor(
+                            current_st_slot_df,
+                            column_config=student_column_config,
+                            num_rows="dynamic",
+                            use_container_width=True,
+                            key=editor_st_slot_key
+                        )
+                        
+                        if st.button(f"💾 Save Student Attendance for {admin_st_month} ({admin_st_week})", type="primary", key=f"save_st_slot_btn_{sno}"):
+                            save_student_attendance_slot(admin_st_month, admin_st_week, edited_st_slot_df)
+                            st.success(f"Student Attendance for {admin_st_month} - {admin_st_week} saved!")
+                            st.rerun()
+
+                    elif title == "Teacher Attendance":
+                        st.markdown("#### 🧑‍🏫 Edit Teacher Attendance (Month & Week-wise)")
+                        cur_m_idx, cur_w_idx = get_current_indices()
+                        col_adm_tc_m, col_adm_tc_w = st.columns(2)
+                        admin_tc_month = col_adm_tc_m.selectbox("Select Month (Teacher):", MONTHS, index=cur_m_idx, key=f"admin_tc_month_{sno}")
+                        admin_tc_week = col_adm_tc_w.selectbox("Select Week (Teacher):", WEEKS, index=cur_w_idx, key=f"admin_tc_week_{sno}")
+                        
+                        st.caption(f"Editing Teacher Attendance: **{admin_tc_month} | {admin_tc_week}**")
+                        current_tc_slot_df = get_teacher_attendance_for_slot(admin_tc_month, admin_tc_week)
+                        editor_tc_slot_key = f"admin_tc_editor_{admin_tc_month}_{admin_tc_week}"
+                        
+                        teacher_column_config = {
+                            "Date": st.column_config.TextColumn("Date (DD/MM/YYYY)"),
+                            "Day": st.column_config.SelectboxColumn("Day", options=DAYS, required=False)
+                        }
+                        
+                        edited_tc_slot_df = st.data_editor(
+                            current_tc_slot_df,
+                            column_config=teacher_column_config,
+                            num_rows="dynamic",
+                            use_container_width=True,
+                            key=editor_tc_slot_key
+                        )
+                        
+                        if st.button(f"💾 Save Teacher Attendance for {admin_tc_month} ({admin_tc_week})", type="primary", key=f"save_tc_slot_btn_{sno}"):
+                            save_teacher_attendance_slot(admin_tc_month, admin_tc_week, edited_tc_slot_df)
+                            st.success(f"Teacher Attendance for {admin_tc_month} - {admin_tc_week} saved!")
+                            st.rerun()
+
+                    else:
+                        uploaded_files = st.file_uploader(
+                            f"Upload files for #{sno} ({title})",
+                            type=None,
+                            accept_multiple_files=True,
+                            key=f"upload_{sno}"
+                        )
+
+                        if uploaded_files:
+                            for f in uploaded_files:
+                                with open(os.path.join(record_dir, f.name), "wb") as buffer:
+                                    buffer.write(f.getbuffer())
+                            st.success(f"Saved {len(uploaded_files)} file(s).")
+                            st.rerun()
+
+                        existing_file_tuples = get_existing_files_for_parameter(sno, title)
+                        if existing_file_tuples:
+                            st.markdown("**Manage Uploaded Files:**")
+                            for fpath, fname in existing_file_tuples:
+                                col_a, col_b = st.columns([5, 1])
+                                col_a.text(f"📄 {fname}")
+                                if col_b.button("Delete", key=f"del_{sno}_{fname}"):
+                                    if os.path.exists(fpath):
+                                        os.remove(fpath)
+                                    st.rerun()
+                    st.divider()
+
+    else:
+        st.title("🔒 Restricted Access")
+        st.info("Enter admin password in the sidebar to access Admin Workspace.")
+
+# ----------------- PUBLIC VIEWER (STRICT LEFT ALIGNED ACCORDION) -----------------
+else:
+    render_cover_photo()
+    render_principal_message()
+    st.title("🔬 STEM Innovation & Learning Laboratory")
+    st.caption("Aditya Birla Intermediate College, Renukoot | Academic Session 2026-27")
+
+    tab1, tab2 = st.tabs(["📁 Explore Records", "📊 Repository Status"])
+
+    with tab1:
+        for section_name, items in CATEGORIES.items():
+            st.subheader(f"📑 {section_name}")
+            for sno, title in items:
+                has_builtin = title in BUILTIN_BY_TITLE
+                files_found = get_existing_files_for_parameter(sno, title)
+
+                is_active = (st.session_state.get("active_viewer_sno") == sno)
+                toggle_btn_label = f"▼ #{sno}. {title}" if is_active else f"▶ #{sno}. {title}"
+
+                if st.button(toggle_btn_label, key=f"viewer_btn_{sno}", use_container_width=True):
+                    st.session_state["active_viewer_sno"] = None if is_active else sno
+                    st.rerun()
+
+                if is_active:
+                    st.markdown(f"#### 📌 #{sno}. {title}")
+                    if has_builtin:
+                        BUILTIN_BY_TITLE[title]()
+                    
+                    if files_found:
+                        st.markdown("---")
+                        st.markdown("##### 📁 Uploaded Documents & Files:")
+                        for idx, (fpath, fname) in enumerate(files_found):
+                            render_file_preview(fpath, fname, f"{sno}_{idx}")
+                            st.write("")
+                    elif not has_builtin:
+                        st.info("No document uploaded yet for this section.")
+                    st.markdown("---")
+
+    with tab2:
+        total = 49
+        completed = 0
+        summary_rows = []
+
+        for section_name, items in CATEGORIES.items():
+            for sno, title in items:
+                has_builtin = title in BUILTIN_BY_TITLE
+                files_found = get_existing_files_for_parameter(sno, title)
+                file_count = len(files_found)
+
+                if has_builtin or file_count > 0:
+                    completed += 1
+                    status = "✅ Active / Verified"
+                else:
+                    status = "⏳ Pending Upload"
+
+                summary_rows.append({
+                    "Index": sno,
+                    "Parameter Name": title,
+                    "Section": section_name,
+                    "Status": status
+                })
+
+        col1, col2 = st.columns(2)
+        col1.metric("Total Parameters", total)
+        col2.metric("Completed / Active", f"{completed} / {total}")
+        st.dataframe(summary_rows, use_container_width=True)
