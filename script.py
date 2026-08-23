@@ -17,10 +17,16 @@ os.makedirs(DATA_DIR, exist_ok=True)
 
 STUDENT_ATTENDANCE_FILE = os.path.join(DATA_DIR, "student_attendance.csv")
 TEACHER_ATTENDANCE_FILE = os.path.join(DATA_DIR, "teacher_attendance.csv")
+PRINCIPAL_MSG_FILE = os.path.join(DATA_DIR, "principal_message.txt")
 
 MONTHS = ["April", "May", "June", "July", "August", "September", "October", "November", "December", "January", "February", "March"]
 WEEKS = ["Week 1", "Week 2", "Week 3", "Week 4", "Week 5"]
 DAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"]
+
+ALL_FORMATS = [
+    "pdf", "xlsx", "xls", "csv", "docx", "doc", "pptx", "ppt", "txt",
+    "jpg", "jpeg", "png", "webp", "gif", "mp4", "mov", "avi", "mkv", "zip", "rar"
+]
 
 SECTIONS_LIST = [
     "Class VI - Section A", "Class VI - Section B", "Class VI - Section C", "Class VI - Section D",
@@ -43,19 +49,35 @@ TEACHERS_LIST = [
     "Mr. Praveen Kumar"
 ]
 
-# ----------------- COVER PHOTO HANDLER -----------------
+# ----------------- COVER PHOTO & PRINCIPAL MESSAGE -----------------
 def render_cover_photo():
     possible_covers = [
-        os.path.join(DATA_DIR, "cover.jpg"),
-        os.path.join(DATA_DIR, "cover.png"),
-        os.path.join(DATA_DIR, "cover.jpeg"),
-        "cover.jpg",
-        "cover.png",
-        "cover.jpeg"
+        "cover photo.jpg", "cover photo.png", "cover photo.jpeg", "cover photo.webp",
+        os.path.join(DATA_DIR, "cover photo.jpg"),
+        os.path.join(DATA_DIR, "cover photo.png"),
+        os.path.join(DATA_DIR, "cover photo.jpeg"),
+        "cover.jpg", "cover.png", "cover.jpeg"
     ]
     found_cover = next((c for c in possible_covers if os.path.exists(c)), None)
     if found_cover:
         st.image(found_cover, use_container_width=True)
+
+def get_principal_message():
+    if os.path.exists(PRINCIPAL_MSG_FILE):
+        with open(PRINCIPAL_MSG_FILE, "r", encoding="utf-8") as f:
+            return f.read()
+    return """**Principal's Desk:**
+"Our STEM Innovation & Learning Laboratory is dedicated to nurturing scientific curiosity, critical problem-solving skills, and experiential innovation among our students. We encourage all learners to explore technology, build creative models, and lead the technical advancements of tomorrow."
+
+— **Principal, Aditya Birla Intermediate College, Renukoot**"""
+
+def save_principal_message(msg):
+    with open(PRINCIPAL_MSG_FILE, "w", encoding="utf-8") as f:
+        f.write(msg)
+
+def render_principal_message():
+    msg = get_principal_message()
+    st.info(msg)
 
 # ----------------- SESSION STATE AUTHENTICATION -----------------
 if "is_admin_logged_in" not in st.session_state:
@@ -711,17 +733,28 @@ if access_mode == "Admin Workspace":
 
     if st.session_state.is_admin_logged_in:
         render_cover_photo()
+        render_principal_message()
         st.title("⚙️ Admin Workspace: Manage Records & Live Attendance")
 
-        # COVER PHOTO MANAGEMENT IN ADMIN PANEL
-        with st.expander("🖼️ **Update Portal Cover Photo (Banner)**", expanded=False):
-            cover_file = st.file_uploader("Upload Portal Cover Photo (JPG/PNG)", type=["jpg", "jpeg", "png"], key="upload_cover_banner")
+        # COVER PHOTO & PRINCIPAL MESSAGE MANAGEMENT
+        with st.expander("🖼️ **Update Cover Photo & Principal Message**", expanded=False):
+            st.subheader("1. Update Cover Photo (Banner)")
+            cover_file = st.file_uploader("Upload Cover Photo (JPG/PNG)", type=["jpg", "jpeg", "png", "webp"], key="upload_cover_banner")
             if cover_file:
                 c_ext = os.path.splitext(cover_file.name)[1].lower()
-                save_cover_path = os.path.join(DATA_DIR, f"cover{c_ext}")
+                save_cover_path = os.path.join(DATA_DIR, f"cover photo{c_ext}")
                 with open(save_cover_path, "wb") as f:
                     f.write(cover_file.getbuffer())
                 st.success("Cover Photo successfully updated!")
+                st.rerun()
+            
+            st.divider()
+            st.subheader("2. Edit Principal's Message")
+            current_p_msg = get_principal_message()
+            edited_p_msg = st.text_area("Principal Message Text:", value=current_p_msg, height=120)
+            if st.button("💾 Save Principal's Message", type="primary", key="save_p_msg_btn"):
+                save_principal_message(edited_p_msg)
+                st.success("Principal Message successfully saved!")
                 st.rerun()
 
         selected_section = st.selectbox("Select Category to Manage", list(CATEGORIES.keys()))
@@ -824,6 +857,7 @@ if access_mode == "Admin Workspace":
 # ----------------- PUBLIC VIEWER -----------------
 else:
     render_cover_photo()
+    render_principal_message()
     st.title("🔬 STEM Innovation & Learning Laboratory")
     st.caption("Aditya Birla Intermediate College, Renukoot | Academic Session 2026-27")
 
