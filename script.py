@@ -372,7 +372,84 @@ def get_existing_files_for_parameter(sno, title):
                     all_files.append((full_path, f))
     return all_files
 
-# ----------------- 49 MASTER CATEGORIES CONFIGURATION -----------------
+def render_student_attendance_viewer():
+    st.markdown("### 📊 Section-wise Student STEM Attendance Record")
+    gform_link = get_saved_url(FORM_CONFIG_FILE)
+    if gform_link:
+        st.link_button("📝 Open Teacher Daily STEM Entry Form", gform_link)
+        st.write("")
+
+    cur_m_idx, cur_w_idx = get_current_indices()
+    c1, c2 = st.columns(2)
+    sel_month = c1.selectbox("Select Month (Student):", MONTHS, index=cur_m_idx, key="view_st_month")
+    sel_week = c2.selectbox("Select Week (Student):", WEEKS, index=cur_w_idx, key="view_st_week")
+    
+    df_slot = get_student_attendance_for_slot(sel_month, sel_week)
+    st.caption(f"Showing Student Attendance for: **{sel_month} | {sel_week}**")
+    st.dataframe(df_slot, use_container_width=True, hide_index=True)
+
+def render_teacher_attendance_viewer():
+    st.markdown("### 🧑‍🏫 STEM Teacher Lab Duty & Activity Attendance")
+    gform_link = get_saved_url(FORM_CONFIG_FILE)
+    if gform_link:
+        st.link_button("📝 Open Teacher Daily STEM Entry Form", gform_link)
+        st.write("")
+
+    cur_m_idx, cur_w_idx = get_current_indices()
+    c1, c2 = st.columns(2)
+    sel_month = c1.selectbox("Select Month (Teacher):", MONTHS, index=cur_m_idx, key="view_tc_month")
+    sel_week = c2.selectbox("Select Week (Teacher):", WEEKS, index=cur_w_idx, key="view_tc_week")
+    
+    df_slot = get_teacher_attendance_for_slot(sel_month, sel_week)
+    st.caption(f"Showing Teacher Attendance for: **{sel_month} | {sel_week}**")
+    st.dataframe(df_slot, use_container_width=True, hide_index=True)
+
+def render_student_excel():
+    possible_paths = [
+        "LMS STUDENT DATA.xlsx", "LMS STUDENT DATA.xls", "LMS STUDENT DATA.csv",
+        "lms student data.xlsx", "lms student data.xls", "lms student data.csv",
+        os.path.join(DATA_DIR, "LMS STUDENT DATA.xlsx"),
+        os.path.join(DATA_DIR, "lms student data.xlsx"),
+    ]
+    for folder in os.listdir(UPLOAD_DIR):
+        if "student_list" in folder.lower() or "student list" in folder.lower():
+            u_dir = os.path.join(UPLOAD_DIR, folder)
+            if os.path.isdir(u_dir):
+                for f in os.listdir(u_dir):
+                    if f.lower().endswith((".xlsx", ".xls", ".csv")):
+                        possible_paths.append(os.path.join(u_dir, f))
+
+    found_file = next((p for p in possible_paths if os.path.exists(p)), None)
+    if found_file:
+        try:
+            ext = os.path.splitext(found_file)[1].lower()
+            df = pd.read_csv(found_file) if ext == ".csv" else pd.read_excel(found_file)
+            st.markdown("### 👨‍🎓 Registered Student Database (Classes VI – IX)")
+            class_col = next((c for c in df.columns if "class" in str(c).lower()), None)
+            if class_col:
+                unique_classes = ["All Classes"] + sorted([str(x) for x in df[class_col].dropna().unique()])
+                selected_class = st.selectbox("Filter by Class:", unique_classes, key="st_excel_filter")
+                df_display = df[df[class_col].astype(str) == selected_class] if selected_class != "All Classes" else df
+            else:
+                df_display = df
+            st.write(f"**Total Students Displayed:** {len(df_display)}")
+            st.dataframe(df_display, use_container_width=True, hide_index=True)
+        except Exception as e:
+            st.error(f"Error reading {found_file}: {e}")
+    else:
+        st.warning("⚠️ `LMS STUDENT DATA.xlsx` file nahi mili.")
+        st.info("Aap ise Admin Workspace me **Student List** me upload karein ya project folder me paste karein.")
+
+def render_scienceutsav_assessment():
+    st.markdown("### 📊 ScienceUtsav Classroom Assessment & Performance Portal")
+    saved_su_url = get_saved_url(SCIENCEUTSAV_CONFIG_FILE)
+    if not saved_su_url:
+        saved_su_url = "https://report.scienceutsav.com/class/k57a8q5h6mzanqt4vdvn48c1vx8ba0q3/report"
+    col_l1, col_l2 = st.columns([1, 1])
+    col_l1.link_button("🌐 Open ScienceUtsav Portal in New Tab", saved_su_url)
+    st.info("💡 Neeche live dashboard load ho raha hai. Aap upar diye gaye link se bhi direct access kar sakte hain ya Admin panel se downloaded 'Combined PDF' upload kar sakte hain.")
+    components.iframe(saved_su_url, height=750, scrolling=True)
+
 CATEGORIES = {
     "1. Administration & Planning": [
         (1, "STEM Lab Profile"), (2, "Lab Objectives & Guidelines"), (3, "Coordinator / SPOC Details"),
@@ -407,7 +484,6 @@ CATEGORIES = {
 def get_folder_name(sno, title):
     return f"{sno:02d}_{title.replace(' ', '_').replace('/', '_')}"
 
-# ----------------- MASTER CONTENT DISPATCHER (ZERO DATA LOSS) -----------------
 ANNUAL_PLAN_DATA = [
     {"Month": "July 2026", "Session #": "Session 1", "Class 6": "Intro to Robotics & Arduino IDE setup", "Class 7": "Microcontroller Recap & Sensor Safety", "Class 8": "Advanced Programming Architecture", "Class 9": "Multi-Sensor System Architecture & I/O", "Milestone": "Erehwon Phase 1: Team Formation (25+ Teams across Classes 6-9; 5-6 members each). Role allocation & Lab Logbooks initiated.", "Roles": "Team Lead & Problem Scout"},
     {"Month": "July 2026", "Session #": "Session 2", "Class 6": "Digital Pins & LED Blink Logic", "Class 7": "Tilt Switch Basics & Angle Alerts", "Class 8": "7-Segment / LCD Interface Basics", "Class 9": "Data Fusion & Complex Logic Loops", "Milestone": "Problem Discovery: Community, school campus & environmental pain point identification.", "Roles": "Problem Scout & QA Tester"},
@@ -424,6 +500,39 @@ ANNUAL_PLAN_DATA = [
     {"Month": "January 2027", "Session #": "Session 13", "Class 6": "Internal Qualifying Pitch & Demo", "Class 7": "Internal Jury Evaluation & Feedback", "Class 8": "Pre-Competition Mock Presentation", "Class 9": "Grand Internal Capstone Defense", "Milestone": "School-Level Qualifying Round: 3-minute live pitch + 2-minute live hardware demonstration for all 25+ teams.", "Roles": "Pitch Lead & Full Team"},
     {"Month": "January 2027", "Session #": "Session 14", "Class 6": "Video Production & Competition Entry", "Class 7": "Final Video Shoot & Erehwon Upload", "Class 8": "Video Asset Rendering & Submission", "Class 9": "Final Portal Submission & Lab Archive", "Milestone": "MILESTONE 4: Final 2-Minute Demonstration Video Shoot & Official National Submission to Erehwon Competition Portal.", "Roles": "All 5-6 Team Members"}
 ]
+
+def render_annual_plan():
+    st.markdown("""
+    ### 📅 MONTHLY / ANNUAL STEM ACTIVITY PLAN (JULY 2026 – JANUARY 2027)
+    > **Schedule:** 2 Sessions / Month (14 Total Sessions) | **Target:** 25+ Innovation Teams (Classes 6–9 | 5–6 Students Per Team)
+    """)
+    df_plan = pd.DataFrame(ANNUAL_PLAN_DATA)
+    plan_months = ["All Months"] + sorted(list(df_plan["Month"].unique()), key=lambda x: datetime.strptime(x, "%B %Y"))
+    class_options = ["All Classes", "Class 6 (Beginner Tier)", "Class 7 (Intermediate Tier)", "Class 8 (Advanced Tier)", "Class 9 (Expert Tier)"]
+    
+    now_dt = datetime.now()
+    cur_month_str = now_dt.strftime("%B %Y")
+    default_month_idx = plan_months.index(cur_month_str) if cur_month_str in plan_months else 0
+    
+    col_m, col_c = st.columns([1, 1])
+    selected_plan_month = col_m.selectbox("📅 Filter by Month (Auto-Selected Present Month):", plan_months, index=default_month_idx, key="filter_plan_month")
+    selected_plan_class = col_c.selectbox("🎓 Filter by Class:", class_options, key="filter_plan_class")
+    
+    filtered_df = df_plan if selected_plan_month == "All Months" else df_plan[df_plan["Month"] == selected_plan_month]
+    
+    if selected_plan_class == "Class 6 (Beginner Tier)":
+        display_cols = ["Month", "Session #", "Class 6", "Milestone", "Roles"]
+    elif selected_plan_class == "Class 7 (Intermediate Tier)":
+        display_cols = ["Month", "Session #", "Class 7", "Milestone", "Roles"]
+    elif selected_plan_class == "Class 8 (Advanced Tier)":
+        display_cols = ["Month", "Session #", "Class 8", "Milestone", "Roles"]
+    elif selected_plan_class == "Class 9 (Expert Tier)":
+        display_cols = ["Month", "Session #", "Class 9", "Milestone", "Roles"]
+    else:
+        display_cols = ["Month", "Session #", "Class 6", "Class 7", "Class 8", "Class 9", "Milestone", "Roles"]
+
+    st.markdown(f"**Showing Activity Plan for:** `{selected_plan_month}` | `{selected_plan_class}` ({len(filtered_df)} Sessions)")
+    st.dataframe(filtered_df[display_cols], use_container_width=True, hide_index=True)
 
 LESSON_PLANS_DB = {
     "Class 6": [
@@ -493,18 +602,29 @@ LESSON_PLANS_DB = {
 }
 
 def render_master_content(sno, title):
-    if title == "STEM Lab Profile":
+    if title == "STEM Lab Profile" or sno == 1:
         st.markdown("""
         ### 🏫 STEM LAB PROFILE
+
         * **School Name:** Aditya Birla Intermediate College, Renukoot
         * **Academic Session:** 2026-27
         * **STEM Lab:** School STEM Innovation & Learning Laboratory
         * **STEM Coordinator / SPOC:** Shashank Verma
+
         ---
+
         #### 1. Introduction
         The STEM Lab of Aditya Birla Intermediate College, Renukoot is a dedicated space for promoting Science, Technology, Engineering and Mathematics (STEM) learning through hands-on activities, experimentation, problem-solving, innovation and project-based learning. The laboratory provides students with opportunities to connect classroom concepts with real-life situations and develop practical skills through designing, making, testing and improving solutions.
+
         #### 2. Classes Covered
-        The STEM Lab activities are primarily conducted for: Class VI, VII, VIII, IX.
+        The STEM Lab activities are primarily conducted for:
+        * **Class VI** (Beginner Tier)
+        * **Class VII** (Intermediate Tier)
+        * **Class VIII** (Advanced Tier)
+        * **Class IX** (Expert Capstone Tier)
+
+        *Activities may also be organized for other classes as required under school programmes, competitions and special projects.*
+
         #### 3. Major Objectives
         1. To develop scientific thinking and curiosity among students.
         2. To promote hands-on and experiential learning.
@@ -515,52 +635,105 @@ def render_master_content(sno, title):
         7. To encourage teamwork and collaborative learning.
         8. To develop communication, presentation and documentation skills.
         9. To connect STEM concepts with real-life applications.
-        10. To encourage participation in STEM competitions and innovation programmes.
+        10. To encourage participation in STEM competitions and innovation programmes (Erehwon, STEM SPARK, VVM).
+
         #### 4. Major Areas of STEM Learning
-        Science Experiments, Mathematics Applications, Electronics, Arduino & Microcontrollers, Robotics, Sensors & Actuators, Coding & Computational Thinking, IoT & Smart Systems, Design Thinking, 3D Prototyping (Bambu Lab A1 Mini), Environmental Innovation.
+        * **Science Experiments:** Physics, Chemistry & Biology inquiry setups.
+        * **Mathematics Applications:** Data plotting, statistics & logic graphs.
+        * **Electronics & Sensors:** Resistors, capacitors, LDR, DHT11, MQ2, Touch, Ultrasonic, IR, Hall.
+        * **Microcontrollers & Robotics:** Arduino Uno R3, Breakout Shields, Motor Drivers, SG90 Servos, BO Motors.
+        * **Coding & Computational Thinking:** C++ embedded programming, non-blocking state engines, algorithms.
+        * **IoT & Smart Systems:** Sensor fusion, digital telemetry, automated controls.
+        * **3D Prototyping & Design Thinking:** Bambu Lab A1 Mini 3D printer, CAD modeling, enclosure packaging.
+        * **Environmental Innovation & E-waste:** Upcycling phone parts, clean water solutions, smart farming.
+
+        #### 5. Teaching-Learning Approach
+        The STEM Lab strictly follows an inquiry and maker-oriented engineering cycle:
+        > **Problem Identification → Explore Science → Imagine Design → Build Prototype → Test Hardware → Code & Improve → Present to Jury**
+
+        #### 6. Documentation System
+        The following records are maintained digitally in the school portal:
+        * 49-Parameter Master Repository
+        * Class & Section-wise Student & Teacher Attendance CSVs
+        * 56 Structured Master Lesson Plans[cite: 1]
+        * Real-time ScienceUtsav Assessment LMS Linkage
+        * Complete Lab Inventory and Safety Audit Records
+
+        #### 7. Expected Learning Outcomes
+        Students are trained to achieve modular prototyping hygiene, logical problem decomposition, code debugging, 3D casing assembly, team leadership, and empirical test documentation.
         """)
         return True
 
-    elif title == "Lab Objectives & Guidelines":
+    elif title == "Lab Objectives & Guidelines" or sno == 2:
         st.markdown("""
         ### 📋 STEM LAB OBJECTIVES & GUIDELINES
-        * **School:** Aditya Birla Intermediate College, Renukoot | **Session:** 2026-27 | **SPOC:** Shashank Verma
+
+        * **School:** Aditya Birla Intermediate College, Renukoot
+        * **Academic Session:** 2026-27
+        * **STEM Coordinator / SPOC:** Shashank Verma
+
         ---
-        #### A. Core Objectives
-        1. **Experiential Learning:** Hands-on projects & experiments.
-        2. **Problem Solving:** Develop appropriate real-life solutions.
-        3. **Innovation:** Design & prototype new ideas.
-        4. **Scientific Temper:** Evidence-based logical reasoning.
-        5. **Technology Skills:** Coding, electronics, sensors, robotics.
+
+        #### A. Objectives of the STEM Lab
+        1. **Experiential Learning:** To provide students with direct hands-on modular kits, sensors, and microcontrollers.
+        2. **Problem Solving:** To identify school campus and community pain points and design functional engineering solutions.
+        3. **Innovation:** To build functional proof-of-concepts, alpha prototypes, and capstone demonstration models.
+        4. **Scientific Temper:** To encourage hypothesis testing, sensor data calibration, and empirical trial logging.
+        5. **Technology Mastery:** To develop coding proficiency in Arduino IDE, serial telemetry, and 3D printing design.
+
         ---
-        #### B. Mandatory Safety Guidelines
-        1. Entry permitted only under teacher/instructor supervision.
-        2. Electrical equipment shall be handled carefully. Polarity must be verified before powering Arduino/Shield.
-        3. Never short circuit battery terminals; keep water away from equipment workbenches.
-        4. In case of smoke or emergency, hit the master power cutoff switch immediately.
+
+        #### B. STEM Lab Safety & Handling Guidelines
+        1. **Supervision:** Students may enter and work in the lab only in the presence of the STEM Teacher or SPOC.
+        2. **Electrical Safety:**
+           * Verify battery/power polarity before connecting headers to the Breakout Shield.
+           * Short-circuiting battery terminals or connecting 5V directly to Ground without a load is strictly prohibited.
+           * Water, beverages, and food items are 100% prohibited on equipment workbenches.
+        3. **Tool & Shield Maintenance:**
+           * Always use 3-pin RMC ribbon cables with correct G-V-S pinout (Ground=Black, VCC=Red, Signal=Yellow).
+           * Never force microcontroller pins; report bent pins or loose solder joints immediately.
+           * Return all sensor modules, tools, multimeters, and jumpers to designated labeled bins after every period.
+        4. **Emergency Protocol:**
+           * In the event of smoke, burning smell, or electrical sparking, immediately hit the master bench power cutoff switch.
+           * CO2 Fire Extinguisher and First Aid Medical Kit are stationed at the main entrance door.
         """)
         return True
 
-    elif title == "Coordinator / SPOC Details":
+    elif title == "Coordinator / SPOC Details" or sno == 3:
         st.markdown("""
         ### 👤 STEM LAB COORDINATOR / SPOC DETAILS
-        * **Name:** Shashank Verma | **Designation:** PGT | **Qualification:** M.Sc., B.Ed.
-        * **Role:** STEM Coordinator / STEM Lab SPOC
-        * **Official Email:** `shashank.verma@adityabirlaschools.in` | **Contact:** `9826594665`
+
+        **Academic Session:** 2026-27
+
         ---
-        #### Major Responsibilities
-        1. Planning and coordinating weekly STEM Lab sessions and annual activities.
-        2. Enforcing 56 Master Lesson Plans and National Erehwon Innovation competition milestones[cite: 1].
-        3. Maintaining student attendance, teacher lab records, and digital cloud synchronizations.
-        4. Overseeing equipment safety, tool inventories, and 3D printing workflows.
+
+        #### 1. School Details
+        * **School Name:** Aditya Birla Intermediate College, Renukoot
+        * **Location:** Renukoot, Sonbhadra, Uttar Pradesh (Pin: 231217)
+
+        #### 2. Coordinator Information
+        * **Name:** Shashank Verma
+        * **Designation:** PGT
+        * **Academic Qualification:** M.Sc., B.Ed.
+        * **Official Role:** STEM Coordinator / School STEM SPOC
+        * **Official School Email:** `shashank.verma@adityabirlaschools.in`
+        * **Official Contact Number:** `9826594665`
+
+        #### 3. Core Responsibilities
+        1. Structuring and enforcing the 14-session Annual STEM Roadmap and 56 Master Lesson Plans across Classes 6–9[cite: 1].
+        2. Managing digital data synchronization with Google Sheets, Google Forms, and ScienceUtsav LMS.
+        3. Coordinating weekly lab timetables, section-wise student attendance, and teacher duty allocations.
+        4. Overseeing equipment safety, tool inventories, Bambu Lab 3D printer maintenance, and component procurement.
+        5. Mentoring 25+ student innovation teams for the National Erehwon Competition, STEM SPARK, and VVM.
+        6. Preparing monthly, quarterly, and annual STEM laboratory progress reports for school management.
         """)
         return True
 
-    elif title == "Monthly / Annual STEM Activity Plan":
+    elif title == "Monthly / Annual STEM Activity Plan" or sno == 4:
         render_annual_plan()
         return True
 
-    elif title == "Class-wise Timetable":
+    elif title == "Class-wise Timetable" or sno == 5:
         st.markdown("""
         ### ⏰ Weekly STEM Lab Schedule (2026-27)
         * **Class VI (Sections A, B, C, D):** Tuesday & Thursday (Period 4)
@@ -570,7 +743,7 @@ def render_master_content(sno, title):
         """)
         return True
 
-    elif title == "Session / Lesson Plans":
+    elif title == "Session / Lesson Plans" or sno == 6:
         st.markdown("""
         ### 📖 ANNUAL STEM LAB & ROBOTICS MASTER LESSON PLANS (JULY 2026 – JANUARY 2027)
         * **Platform:** ScienceUtsav LMS (Robo Scientist Level 2: Sensational Sensors)[cite: 1]
@@ -605,19 +778,19 @@ def render_master_content(sno, title):
             st.write(f"• **Criteria:** {plan_data[5]}")
         return True
 
-    elif title == "Student List":
+    elif title == "Student List" or sno == 7:
         render_student_excel()
         return True
 
-    elif title == "Student Attendance":
+    elif title == "Student Attendance" or sno == 8:
         render_student_attendance_viewer()
         return True
 
-    elif title == "Teacher Attendance":
+    elif title == "Teacher Attendance" or sno == 9:
         render_teacher_attendance_viewer()
         return True
 
-    elif title == "Lab Inventory":
+    elif title == "Lab Inventory" or sno == 10:
         st.markdown("""
         ### 📦 Verified STEM Lab Inventory (ScienceUtsav & ABPS Kit)
         * **Microcontrollers:** 25x Arduino Uno R3 (ATmega328P DIP), 25x Sensor Breakout Shields V5.0 (3-Pin G-V-S).
@@ -627,7 +800,7 @@ def render_master_content(sno, title):
         """)
         return True
 
-    elif title == "Equipment Details":
+    elif title == "Equipment Details" or sno == 11:
         st.markdown("""
         ### 🔬 Technical Hardware Specifications
         * **Processing Unit:** Arduino Uno R3 (16 MHz Crystal, 5V Logic, 14 Digital I/O, 6 Analog Inputs).
@@ -636,7 +809,7 @@ def render_master_content(sno, title):
         """)
         return True
 
-    elif title == "Lab Safety Rules":
+    elif title == "Lab Safety Rules" or sno == 15:
         st.markdown("""
         ### ⚠️ Mandatory STEM Lab Safety Protocol
         1. Always inspect wiring for short-circuits before plugging the USB / 5V DC barrel jack into the Arduino Uno.
@@ -646,7 +819,7 @@ def render_master_content(sno, title):
         """)
         return True
 
-    elif title == "Safety Checklist":
+    elif title == "Safety Checklist" or sno == 16:
         st.markdown("""
         ### ✅ Periodic Laboratory Safety Audit Checklist
         * [x] **Power Breakers:** Master MCB cutoff switch and bench surge protectors fully operational.
@@ -656,7 +829,7 @@ def render_master_content(sno, title):
         """)
         return True
 
-    elif title == "STEM Activities":
+    elif title == "STEM Activities" or sno == 17:
         st.markdown("""
         ### 💡 Core Laboratory Project Modules
         1. Smart Street Lighting with LDR Sensor and Transistor/Relay Switching.
@@ -667,7 +840,7 @@ def render_master_content(sno, title):
         """)
         return True
 
-    elif title == "Assessment Rubrics":
+    elif title == "Assessment Rubrics" or sno == 27:
         st.markdown("""
         ### 📊 Student STEM Assessment Rubric (100 Marks Distribution)
         * **Problem Identification & Research (20 Marks):** Campus problem statement clarity and engineering logbook documentation.
@@ -678,11 +851,11 @@ def render_master_content(sno, title):
         """)
         return True
 
-    elif title == "Student Assessment":
+    elif title == "Student Assessment" or sno == 28:
         render_scienceutsav_assessment()
         return True
 
-    elif title == "Teacher Training Records":
+    elif title == "Teacher Training Records" or sno == 35:
         st.markdown("""
         ### 🧑‍🏫 Teacher STEM Capacity Building & Training Record
         * **Conducted By:** ScienceUtsav Technical Expert Team & ABIC STEM Coordinator.
@@ -691,7 +864,7 @@ def render_master_content(sno, title):
         """)
         return True
 
-    elif title == "Annual Report":
+    elif title == "Annual Report" or sno == 46:
         st.markdown("""
         ### 📑 Annual STEM Innovation Lab Report (2026-27 Executive Summary)
         * Over 400+ students from Classes VI to IX actively enrolled in weekly hands-on maker curricula.
