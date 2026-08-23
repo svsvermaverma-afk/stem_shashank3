@@ -452,22 +452,23 @@ def render_file_preview(file_path, file_name, unique_key):
                 key=f"dl_doc_{unique_key}"
             )
 
-# ----------------- STUDENT EXCEL VIEWER (PARAMETER #8) -----------------
+# ----------------- STUDENT EXCEL VIEWER (PARAMETER #7) -----------------
 def render_student_excel():
     possible_paths = [
         "LMS STUDENT DATA.xlsx", "LMS STUDENT DATA.xls", "LMS STUDENT DATA.csv",
         "lms student data.xlsx", "lms student data.xls", "lms student data.csv",
         os.path.join(DATA_DIR, "LMS STUDENT DATA.xlsx"),
         os.path.join(DATA_DIR, "lms student data.xlsx"),
+        os.path.join(UPLOAD_DIR, "07_Student_List", "LMS STUDENT DATA.xlsx"),
+        os.path.join(UPLOAD_DIR, "07_Student_List", "lms student data.xlsx"),
         os.path.join(UPLOAD_DIR, "08_Student_List", "LMS STUDENT DATA.xlsx"),
-        os.path.join(UPLOAD_DIR, "08_Student_List", "lms student data.xlsx"),
     ]
     
-    upload_s8_dir = os.path.join(UPLOAD_DIR, "08_Student_List")
-    if os.path.exists(upload_s8_dir):
-        for f in os.listdir(upload_s8_dir):
-            if f.lower().endswith((".xlsx", ".xls", ".csv")):
-                possible_paths.append(os.path.join(upload_s8_dir, f))
+    for u_dir in [os.path.join(UPLOAD_DIR, "07_Student_List"), os.path.join(UPLOAD_DIR, "08_Student_List")]:
+        if os.path.exists(u_dir):
+            for f in os.listdir(u_dir):
+                if f.lower().endswith((".xlsx", ".xls", ".csv")):
+                    possible_paths.append(os.path.join(u_dir, f))
 
     found_file = next((p for p in possible_paths if os.path.exists(p)), None)
 
@@ -491,7 +492,7 @@ def render_student_excel():
             st.error(f"Error reading {found_file}: {e}")
     else:
         st.warning("⚠️ `LMS STUDENT DATA.xlsx` file nahi mili.")
-        st.info("Aap ise Admin Workspace me **#8. Student List** me upload karein ya project folder me paste karein.")
+        st.info("Aap ise Admin Workspace me **#7. Student List** me upload karein ya project folder me paste karein.")
 
 # ----------------- ATTENDANCE VIEWER FUNCTIONS -----------------
 def render_student_attendance_viewer():
@@ -526,7 +527,7 @@ def render_teacher_attendance_viewer():
     st.caption(f"Showing Teacher Attendance for: **{sel_month} | {sel_week}**")
     st.dataframe(df_slot, use_container_width=True, hide_index=True)
 
-# ----------------- SCIENCEUTSAV ASSESSMENT VIEWER (PARAMETER #29) -----------------
+# ----------------- SCIENCEUTSAV ASSESSMENT VIEWER (PARAMETER #28) -----------------
 def render_scienceutsav_assessment():
     st.markdown("### 📊 ScienceUtsav Classroom Assessment & Performance Portal")
     
@@ -545,7 +546,7 @@ def render_scienceutsav_assessment():
         scrolling=True
     )
 
-# ----------------- ANNUAL STEM & EREHWON MASTER PLAN (PARAMETER #4) -----------------
+# ----------------- MONTHLY / ANNUAL STEM ACTIVITY PLAN (PARAMETER #4) -----------------
 ANNUAL_PLAN_DATA = [
     {
         "Month": "July 2026", "Session #": "Session 1",
@@ -677,7 +678,7 @@ ANNUAL_PLAN_DATA = [
 
 def render_annual_plan():
     st.markdown("""
-    ### 📅 ANNUAL STEM LAB & EREHWON INNOVATION MASTER PLAN (JULY 2026 – JANUARY 2027)
+    ### 📅 MONTHLY / ANNUAL STEM ACTIVITY PLAN (JULY 2026 – JANUARY 2027)
     > **Schedule:** 2 Sessions / Month (14 Total Sessions) | **Target:** 25+ Innovation Teams (Classes 6–9 | 5–6 Students Per Team)
     """)
     
@@ -706,10 +707,10 @@ def render_annual_plan():
     else:
         display_cols = ["Month", "Session #", "Class 6", "Class 7", "Class 8", "Class 9", "Milestone", "Roles"]
 
-    st.markdown(f"**Showing Plan for:** `{selected_plan_month}` | `{selected_plan_class}` ({len(filtered_df)} Sessions)")
+    st.markdown(f"**Showing Activity Plan for:** `{selected_plan_month}` | `{selected_plan_class}` ({len(filtered_df)} Sessions)")
     st.dataframe(filtered_df[display_cols], use_container_width=True, hide_index=True)
 
-# ----------------- DETAILED LESSON PLANS DATABASE (#7) -----------------
+# ----------------- DETAILED LESSON PLANS DATABASE (#6) -----------------
 LESSON_PLANS_DB = {
     "Class 6": [
         ("Session 1 (01-15 July 2026)", "Intro to Robotics & Arduino IDE setup with Sensor Shield", "Mount shield on Arduino Uno; flash BareMinimum sketch; setup 5-6 member teams and assign roles.", "1. Robotics anatomy, Arduino IDE, mounting Breakout Shield, G-V-S headers.\n2. Sensor Shield G-V-S pinout safety (Ground-Black, VCC-Red, Signal-Yellow).\n3. Code syntax: setup(), loop(), pinMode(), digitalRead/Write, analogRead().\n4. Erehwon Track: Campus problem discovery and functional prototyping.", "Arduino Uno, Sensor Shield V5.0, USB cables, PCs with Arduino IDE.", "Continuous Lab Evaluation (10M): Shield mounting & wiring hygiene (3M), Functional code execution (4M), Logbook documentation (3M)."),
@@ -780,10 +781,10 @@ LESSON_PLANS_DB = {
 def render_lesson_plans():
     st.markdown("""
     ### 📖 ANNUAL STEM LAB & ROBOTICS MASTER LESSON PLANS (JULY 2026 – JANUARY 2027)
-    * **Platform:** ScienceUtsav LMS (Robo Scientist Level 2: Sensational Sensors)
-    * **Hardware Kit:** Arduino Uno R3 + Sensor Breakout Shield (3-Pin G-V-S Plug-and-Play)
-    * **Innovation Track:** Erehwon National Competition (25+ Teams across Classes 6–9)
-    * **Scope:** 56 Detailed Session Plans (14 Sessions / Class)
+    * **Platform:** ScienceUtsav LMS (Robo Scientist Level 2: Sensational Sensors)[cite: 1]
+    * **Hardware Kit:** Arduino Uno R3 + Sensor Breakout Shield (3-Pin G-V-S Plug-and-Play)[cite: 1]
+    * **Innovation Track:** Erehwon National Competition (25+ Teams across Classes 6–9)[cite: 1]
+    * **Scope:** 56 Detailed Session Plans (14 Sessions / Class)[cite: 1]
     ---
     """)
     
@@ -842,6 +843,8 @@ def render_profile():
     * Class VII
     * Class VIII
     * Class IX
+
+    *Activities may also be organized for other classes as required under school programmes, competitions and special projects.*
 
     #### 3. Major Objectives
     1. To develop scientific thinking and curiosity among students.
@@ -913,46 +916,46 @@ BUILTIN_RECORDS = {
     1: {"title": "STEM Lab Profile", "render": render_profile},
     2: {"title": "Lab Objectives & Guidelines", "render": render_guidelines},
     3: {"title": "Coordinator / SPOC Details", "render": render_spoc},
-    4: {"title": "Annual STEM Plan", "render": render_annual_plan},
-    6: {"title": "Class-wise Timetable", "render": lambda: st.markdown("""
+    4: {"title": "Monthly / Annual STEM Activity Plan", "render": render_annual_plan},
+    5: {"title": "Class-wise Timetable", "render": lambda: st.markdown("""
         ### ⏰ Weekly STEM Lab Schedule
         * **Class VI:** Tuesday & Thursday (Period 4)
         * **Class VII:** Monday & Wednesday (Period 5)
         * **Class VIII:** Wednesday & Friday (Period 6)
         * **Class IX:** Saturday (Period 2 to 4)
     """)},
-    7: {"title": "Session / Lesson Plans (Classes 6-9)", "render": render_lesson_plans},
-    8: {"title": "Student List (Class VI to IX)", "render": render_student_excel},
-    9: {"title": "Student Attendance", "render": render_student_attendance_viewer},
-    10: {"title": "Teacher Attendance", "render": render_teacher_attendance_viewer},
-    11: {"title": "Lab Inventory (Teacher & Student Kits)", "render": lambda: st.markdown("""
+    6: {"title": "Session / Lesson Plans (Classes 6-9)", "render": render_lesson_plans},
+    7: {"title": "Student List (Class VI to IX)", "render": render_student_excel},
+    8: {"title": "Student Attendance", "render": render_student_attendance_viewer},
+    9: {"title": "Teacher Attendance", "render": render_teacher_attendance_viewer},
+    10: {"title": "Lab Inventory (Teacher & Student Kits)", "render": lambda: st.markdown("""
         ### 📦 Verified STEM Lab Inventory
         * **Supplier / Source:** ScienceUtsav & ABPS Kit
         * **Controllers:** Arduino UNO DIP Microcontrollers, Custom Expansion Shields.
         * **Sensors:** DHT11 Temp/Humidity, Rain, Vibration, Ultrasonic, MQ2 Gas, Flame, Moisture, LDR, Touch.
         * **Actuators & 3D:** BO Motors, SG90 Servos, Water Pumps, Bambu Lab A1 Mini 3D Printer.
     """)},
-    12: {"title": "Equipment Details", "render": lambda: st.markdown("""
+    11: {"title": "Equipment Details", "render": lambda: st.markdown("""
         ### 🔬 Technical Equipment Details
         * **Microcontroller:** Arduino Uno (ATmega328P DIP), 16 MHz Clock, 5V.
         * **Connectors:** 3-Pin / 4-Pin RMC locking connectors.
         * **Prototyping:** Bambu Lab A1 Mini FDM 3D Printer.
     """)},
-    16: {"title": "Lab Safety Rules", "render": lambda: st.markdown("""
+    15: {"title": "Lab Safety Rules", "render": lambda: st.markdown("""
         ### ⚠️ Mandatory STEM Lab Safety Rules
         1. Entry permitted only under teacher/instructor supervision.
         2. Never short circuit battery terminals; verify circuit polarity before turning on power.
         3. Zero food and liquid zone near equipment workbenches.
         4. In case of smoke or loose wiring, immediately switch off main bench supply.
     """)},
-    17: {"title": "Safety Checklist", "render": lambda: st.markdown("""
+    16: {"title": "Safety Checklist", "render": lambda: st.markdown("""
         ### ✅ Laboratory Periodic Safety Audit Checklist
         * [x] **Fire Safety:** CO2 Fire Extinguisher inspected at lab entrance.
         * [x] **First Aid:** Fully-stocked medical kit accessible.
         * [x] **Power Infrastructure:** Surge protectors and MCB circuit breakers active.
         * [x] **Tool Storage:** Screwdrivers, strippers, and cutters organized in labeled toolboxes.
     """)},
-    18: {"title": "STEM Activities", "render": lambda: st.markdown("""
+    17: {"title": "STEM Activities", "render": lambda: st.markdown("""
         ### 💡 Core Laboratory Activity Modules
         1. Automatic Smart Street Light (LDR + Transistor)
         2. Smart Fire & Smoke Alert System (MQ2 + Flame Sensor)
@@ -960,17 +963,17 @@ BUILTIN_RECORDS = {
         4. Weather Monitoring Station (DHT11 + 16x2 LCD)
         5. Automated Plant Watering System (Soil Moisture Probe + DC Pump)
     """)},
-    28: {"title": "Assessment Rubrics", "render": lambda: st.markdown("""
+    27: {"title": "Assessment Rubrics", "render": lambda: st.markdown("""
         ### 📊 Student STEM Assessment Framework
         * **Problem Definition:** 20% | **Circuit Assembly:** 20% | **Coding Logic:** 20% | **Prototyping:** 20% | **Presentation:** 20%
     """)},
-    29: {"title": "Student Assessment (ScienceUtsav)", "render": render_scienceutsav_assessment},
-    36: {"title": "Teacher Training Records", "render": lambda: st.markdown("""
+    28: {"title": "Student Assessment (ScienceUtsav)", "render": render_scienceutsav_assessment},
+    35: {"title": "Teacher Training Records", "render": lambda: st.markdown("""
         ### 🧑‍🏫 STEM Capacity Building & Teacher Training
         * **Conducted by:** ScienceUtsav Technical Team & STEM SPOC
         * **Topics:** Arduino Programming, 3D Design/Printing, Sensor Interfacing & Pedagogy.
     """)},
-    47: {"title": "Annual Report", "render": lambda: st.markdown("""
+    46: {"title": "Annual Report", "render": lambda: st.markdown("""
         ### 📑 Annual STEM Innovation Lab Report (2026-27 Executive Summary)
         * Over 400+ students actively trained from Classes VI to IX.
         * 15+ student working prototypes completed.
@@ -978,34 +981,35 @@ BUILTIN_RECORDS = {
     """)}
 }
 
+# ----------------- REORGANIZED 49 MASTER CATEGORIES -----------------
 CATEGORIES = {
     "1. Administration & Planning": [
         (1, "STEM Lab Profile"), (2, "Lab Objectives & Guidelines"), (3, "Coordinator / SPOC Details"),
-        (4, "Annual STEM Plan"), (5, "Monthly Activity Plan"), (6, "Class-wise Timetable"),
-        (7, "Session / Lesson Plans"), (8, "Student List"), (9, "Student Attendance"), (10, "Teacher Attendance"),
+        (4, "Monthly / Annual STEM Activity Plan"), (5, "Class-wise Timetable"),
+        (6, "Session / Lesson Plans"), (7, "Student List"), (8, "Student Attendance"), (9, "Teacher Attendance"),
     ],
     "2. Inventory & Safety": [
-        (11, "Lab Inventory"), (12, "Equipment Details"), (13, "Equipment Photos"),
-        (14, "Equipment Purchase Records"), (15, "Maintenance Records"), (16, "Lab Safety Rules"), (17, "Safety Checklist"),
+        (10, "Lab Inventory"), (11, "Equipment Details"), (12, "Equipment Photos"),
+        (13, "Equipment Purchase Records"), (14, "Maintenance Records"), (15, "Lab Safety Rules"), (16, "Safety Checklist"),
     ],
     "3. Activities & Projects": [
-        (18, "STEM Activities"), (19, "Activity Worksheets"), (20, "Activity Photos"),
-        (21, "Activity Videos"), (22, "Student Projects"), (23, "Prototype Details"),
-        (24, "Problem Statements"), (25, "Innovation Ideas"), (26, "Project Photos"), (27, "Project Videos"),
+        (17, "STEM Activities"), (18, "Activity Worksheets"), (19, "Activity Photos"),
+        (20, "Activity Videos"), (21, "Student Projects"), (22, "Prototype Details"),
+        (23, "Problem Statements"), (24, "Innovation Ideas"), (25, "Project Photos"), (26, "Project Videos"),
     ],
     "4. Assessment & Competitions": [
-        (28, "Assessment Rubrics"), (29, "Student Assessment"), (30, "Student Performance"),
-        (31, "STEM SPARK Registration"), (32, "STEM SPARK Team Details"), (33, "STEM SPARK Submissions"),
-        (34, "VVM Records"), (35, "Other Competitions"),
+        (27, "Assessment Rubrics"), (28, "Student Assessment"), (29, "Student Performance"),
+        (30, "STEM SPARK Registration"), (31, "STEM SPARK Team Details"), (32, "STEM SPARK Submissions"),
+        (33, "VVM Records"), (34, "Other Competitions"),
     ],
     "5. Training & Communication": [
-        (36, "Teacher Training Records"), (37, "Training Certificates"), (38, "Training Attendance"),
-        (39, "Workshop Reports"), (40, "Workshop Photos"), (41, "Government Circulars"),
-        (42, "School Circulars"), (43, "Official Emails"), (44, "Meeting Minutes"),
+        (35, "Teacher Training Records"), (36, "Training Certificates"), (37, "Training Attendance"),
+        (38, "Workshop Reports"), (39, "Workshop Photos"), (40, "Government Circulars"),
+        (41, "School Circulars"), (42, "Official Emails"), (43, "Meeting Minutes"),
     ],
     "6. Reports & Achievements": [
-        (45, "Monthly Reports"), (46, "Quarterly Reports"), (47, "Annual Report"),
-        (48, "Student Certificates"), (49, "Student Achievements"), (50, "STEM Lab Event Photos"),
+        (44, "Monthly Reports"), (45, "Quarterly Reports"), (46, "Annual Report"),
+        (47, "Student Certificates"), (48, "Student Achievements"), (49, "STEM Lab Event Photos"),
     ]
 }
 
@@ -1107,7 +1111,7 @@ if access_mode == "Admin Workspace":
                 st.rerun()
 
         st.divider()
-        st.subheader("📁 Manage All Parameters")
+        st.subheader("📁 Manage All 49 Parameters")
 
         # LEFT-ALIGNED STRICT ACCORDION IN ADMIN
         for section_name, items in CATEGORIES.items():
@@ -1126,7 +1130,7 @@ if access_mode == "Admin Workspace":
 
                 if is_active:
                     st.markdown(f"### ⚙️ Managing: #{sno}. {title}")
-                    if sno == 9:
+                    if sno == 8:
                         st.markdown("#### 📝 Edit Student Attendance (Month & Week-wise)")
                         cur_m_idx, cur_w_idx = get_current_indices()
                         col_adm_st_m, col_adm_st_w = st.columns(2)
@@ -1155,7 +1159,7 @@ if access_mode == "Admin Workspace":
                             st.success(f"Student Attendance for {admin_st_month} - {admin_st_week} saved!")
                             st.rerun()
 
-                    elif sno == 10:
+                    elif sno == 9:
                         st.markdown("#### 🧑‍🏫 Edit Teacher Attendance (Month & Week-wise)")
                         cur_m_idx, cur_w_idx = get_current_indices()
                         col_adm_tc_m, col_adm_tc_w = st.columns(2)
@@ -1256,7 +1260,7 @@ else:
                     st.markdown("---")
 
     with tab2:
-        total = 50
+        total = 49
         completed = 0
         summary_rows = []
 
