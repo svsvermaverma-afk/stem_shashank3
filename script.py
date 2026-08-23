@@ -27,6 +27,13 @@ MONTHS = ["April", "May", "June", "July", "August", "September", "October", "Nov
 WEEKS = ["Week 1", "Week 2", "Week 3", "Week 4", "Week 5"]
 DAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"]
 
+# ----------------- SESSION STATE ACCORDION TRACKER -----------------
+if "active_viewer_sno" not in st.session_state:
+    st.session_state.active_viewer_sno = 1  # Default open first
+
+if "active_admin_sno" not in st.session_state:
+    st.session_state.active_admin_sno = None
+
 # ----------------- CURRENT REAL-TIME MONTH & WEEK HELPERS -----------------
 def get_current_indices():
     now = datetime.now()
@@ -487,14 +494,11 @@ def render_profile():
     ---
 
     #### 1. Introduction
-    The STEM Lab of Aditya Birla Intermediate College, Renukoot is a dedicated space for promoting Science, Technology, Engineering and Mathematics (STEM) learning through hands-on activities, experimentation, problem-solving, innovation and project-based learning. The laboratory provides students with opportunities to connect classroom concepts with real-life situations and develop practical skills through designing, making, testing and improving solutions.
+    The STEM Lab of Aditya Birla Intermediate College, Renukoot is a dedicated space for promoting Science, Technology, Engineering and Mathematics (STEM) learning through hands-on activities, experimentation, problem-solving, innovation and project-based learning.
 
     #### 2. Classes Covered
     The STEM Lab activities are primarily conducted for:
-    * Class VI
-    * Class VII
-    * Class VIII
-    * Class IX
+    * Class VI | Class VII | Class VIII | Class IX
 
     #### 3. Major Objectives
     1. To develop scientific thinking and curiosity among students.
@@ -503,10 +507,6 @@ def render_profile():
     4. To encourage students to identify real-life problems and develop solutions.
     5. To promote creativity, innovation and design thinking.
     6. To provide exposure to technology, electronics, coding, robotics and prototyping.
-    7. To encourage teamwork and collaborative learning.
-    8. To develop communication, presentation and documentation skills.
-    9. To connect STEM concepts with real-life applications.
-    10. To encourage participation in STEM competitions and innovation programmes.
     """)
 
 def render_guidelines():
@@ -753,12 +753,21 @@ if access_mode == "Admin Workspace":
         items = CATEGORIES[selected_section]
         st.divider()
 
+        # SINGLE-OPEN (ACCORDION) LOGIC IN ADMIN
         for sno, title in items:
             folder_name = get_folder_name(sno, title)
             record_dir = os.path.join(UPLOAD_DIR, folder_name)
             os.makedirs(record_dir, exist_ok=True)
 
-            with st.expander(f"**#{sno}. {title}**", expanded=False):
+            is_open = (st.session_state.active_admin_sno == sno)
+            btn_label = f"🔼 Close: #{sno}. {title}" if is_open else f"🔽 Edit: #{sno}. {title}"
+            
+            if st.button(btn_label, key=f"admin_toggle_{sno}", use_container_width=True):
+                st.session_state.active_admin_sno = None if is_open else sno
+                st.rerun()
+
+            if is_open:
+                st.markdown(f"### ⚙️ Managing: #{sno}. {title}")
                 if sno == 9:
                     st.markdown("#### 📝 Edit Student Attendance (Month & Week-wise)")
                     cur_m_idx, cur_w_idx = get_current_indices()
@@ -841,6 +850,7 @@ if access_mode == "Admin Workspace":
                             if col_b.button("Delete", key=f"del_{sno}_{fname}"):
                                 os.remove(os.path.join(record_dir, fname))
                                 st.rerun()
+                st.divider()
 
     else:
         st.title("🔒 Restricted Access")
@@ -864,7 +874,16 @@ else:
                 files = os.listdir(record_dir) if os.path.exists(record_dir) else []
                 is_builtin = sno in BUILTIN_RECORDS
 
-                with st.expander(f"#{sno}. {title}"):
+                is_active = (st.session_state.active_viewer_sno == sno)
+                toggle_btn_label = f"🔹 #{sno}. {title} (Click to Close)" if is_active else f"🔸 #{sno}. {title}"
+
+                # Accordion Toggle Button: Clicking one closes all others
+                if st.button(toggle_btn_label, key=f"viewer_btn_{sno}", use_container_width=True):
+                    st.session_state.active_viewer_sno = None if is_active else sno
+                    st.rerun()
+
+                if is_active:
+                    st.markdown(f"#### 📌 #{sno}. {title}")
                     if is_builtin:
                         BUILTIN_RECORDS[sno]["render"]()
                     
@@ -876,6 +895,7 @@ else:
                             st.write("")
                     elif not is_builtin:
                         st.info("No document uploaded yet for this section.")
+                    st.markdown("---")
 
     with tab2:
         total = 50
