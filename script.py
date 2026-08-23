@@ -22,11 +22,6 @@ MONTHS = ["April", "May", "June", "July", "August", "September", "October", "Nov
 WEEKS = ["Week 1", "Week 2", "Week 3", "Week 4", "Week 5"]
 DAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"]
 
-ALL_FORMATS = [
-    "pdf", "xlsx", "xls", "csv", "docx", "doc", "pptx", "ppt", "txt",
-    "jpg", "jpeg", "png", "webp", "gif", "mp4", "mov", "avi", "mkv", "zip", "rar"
-]
-
 SECTIONS_LIST = [
     "Class VI - Section A", "Class VI - Section B", "Class VI - Section C", "Class VI - Section D",
     "Class VII - Section A", "Class VII - Section B", "Class VII - Section C", "Class VII - Section D",
@@ -47,6 +42,20 @@ TEACHERS_LIST = [
     "Mr. Harendra Dwivedi",
     "Mr. Praveen Kumar"
 ]
+
+# ----------------- COVER PHOTO HANDLER -----------------
+def render_cover_photo():
+    possible_covers = [
+        os.path.join(DATA_DIR, "cover.jpg"),
+        os.path.join(DATA_DIR, "cover.png"),
+        os.path.join(DATA_DIR, "cover.jpeg"),
+        "cover.jpg",
+        "cover.png",
+        "cover.jpeg"
+    ]
+    found_cover = next((c for c in possible_covers if os.path.exists(c)), None)
+    if found_cover:
+        st.image(found_cover, use_container_width=True)
 
 # ----------------- SESSION STATE AUTHENTICATION -----------------
 if "is_admin_logged_in" not in st.session_state:
@@ -206,7 +215,7 @@ def save_teacher_attendance_slot(month, week, edited_df):
         
     df_updated.to_csv(TEACHER_ATTENDANCE_FILE, index=False)
 
-# ----------------- UNIVERSAL IN-LINE FILE PREVIEW RENDERER -----------------
+# ----------------- UNIVERSAL FILE RENDERER -----------------
 def render_file_preview(file_path, file_name, unique_key):
     ext = os.path.splitext(file_name)[1].lower()
 
@@ -253,31 +262,6 @@ def render_file_preview(file_path, file_name, unique_key):
                 file_name=file_name,
                 key=f"dl_doc_{unique_key}"
             )
-
-# ----------------- STUDENT EXCEL VIEWER HELPER -----------------
-def render_student_excel():
-    possible_names = ["LMS STUDENT DATA.xlsx", "LMS STUDENT DATA.xls"]
-    found_file = next((name for name in possible_names if os.path.exists(name)), None)
-
-    if found_file:
-        try:
-            df = pd.read_excel(found_file)
-            st.markdown("### 👨‍🎓 Registered Student Database (Classes VI – IX)")
-            
-            class_col = next((c for c in df.columns if c.strip().lower() == "class"), None)
-            if class_col:
-                unique_classes = ["All Classes"] + sorted([str(x) for x in df[class_col].dropna().unique()])
-                selected_class = st.selectbox("Filter by Class:", unique_classes)
-                df_display = df[df[class_col].astype(str) == selected_class] if selected_class != "All Classes" else df
-            else:
-                df_display = df
-
-            st.write(f"**Total Students Displayed:** {len(df_display)}")
-            st.dataframe(df_display, use_container_width=True, hide_index=True)
-        except Exception as e:
-            st.error(f"Error reading {found_file}: {e}")
-    else:
-        st.info("ℹ️ LMS STUDENT DATA.xlsx file project folder me rakhein.")
 
 # ----------------- ATTENDANCE VIEWER FUNCTIONS -----------------
 def render_student_attendance_viewer():
@@ -577,7 +561,7 @@ BUILTIN_RECORDS = {
         * **Class VIII:** Wednesday & Friday (Period 6)
         * **Class IX:** Saturday (Period 2 to 4)
     """)},
-    8: {"title": "Student List (Class VI to IX)", "render": render_student_excel},
+    8: {"title": "Student List (Class VI to IX)", "render": lambda: st.info("Place LMS STUDENT DATA.xlsx in project folder.")},
     9: {"title": "Student Attendance", "render": render_student_attendance_viewer},
     10: {"title": "Teacher Attendance", "render": render_teacher_attendance_viewer},
     11: {"title": "Lab Inventory (Teacher & Student Kits)", "render": lambda: st.markdown("""
@@ -709,12 +693,10 @@ access_mode = st.sidebar.radio("Navigation Mode", ["Public Viewer", "Admin Works
 if access_mode == "Admin Workspace":
     st.sidebar.markdown("---")
     
-    # Auto-login check
     if not st.session_state.is_admin_logged_in:
         st.sidebar.subheader("Admin Login")
         password_input = st.sidebar.text_input("Enter Admin Password", type="password", key="login_pass_input")
         
-        # Direct check on input or Button click
         if password_input == "stem@admin123" or st.sidebar.button("Login", type="primary"):
             if password_input == "stem@admin123":
                 st.session_state.is_admin_logged_in = True
@@ -728,7 +710,19 @@ if access_mode == "Admin Workspace":
             st.rerun()
 
     if st.session_state.is_admin_logged_in:
+        render_cover_photo()
         st.title("⚙️ Admin Workspace: Manage Records & Live Attendance")
+
+        # COVER PHOTO MANAGEMENT IN ADMIN PANEL
+        with st.expander("🖼️ **Update Portal Cover Photo (Banner)**", expanded=False):
+            cover_file = st.file_uploader("Upload Portal Cover Photo (JPG/PNG)", type=["jpg", "jpeg", "png"], key="upload_cover_banner")
+            if cover_file:
+                c_ext = os.path.splitext(cover_file.name)[1].lower()
+                save_cover_path = os.path.join(DATA_DIR, f"cover{c_ext}")
+                with open(save_cover_path, "wb") as f:
+                    f.write(cover_file.getbuffer())
+                st.success("Cover Photo successfully updated!")
+                st.rerun()
 
         selected_section = st.selectbox("Select Category to Manage", list(CATEGORIES.keys()))
         items = CATEGORIES[selected_section]
@@ -740,7 +734,6 @@ if access_mode == "Admin Workspace":
             os.makedirs(record_dir, exist_ok=True)
 
             with st.expander(f"**#{sno}. {title}**", expanded=False):
-                # SPECIAL HANDLER FOR #9 STUDENT ATTENDANCE (DATE, DAY DROPDOWN, CLASS, TOTAL STUDENTS, PERIOD 1, PERIOD 2, PRESENT, ABSENT)
                 if sno == 9:
                     st.markdown("#### 📝 Edit Student Attendance (Month & Week-wise)")
                     col_adm_st_m, col_adm_st_w = st.columns(2)
@@ -754,11 +747,7 @@ if access_mode == "Admin Workspace":
                     
                     student_column_config = {
                         "Date": st.column_config.TextColumn("Date (DD/MM/YYYY)"),
-                        "Day": st.column_config.SelectboxColumn(
-                            "Day",
-                            options=DAYS,
-                            required=False
-                        )
+                        "Day": st.column_config.SelectboxColumn("Day", options=DAYS, required=False)
                     }
                     
                     edited_st_slot_df = st.data_editor(
@@ -774,7 +763,6 @@ if access_mode == "Admin Workspace":
                         st.success(f"Student Attendance for {admin_st_month} - {admin_st_week} saved!")
                         st.rerun()
 
-                # SPECIAL HANDLER FOR #10 TEACHER ATTENDANCE (DATE, DAY DROPDOWN, S.NO, TEACHER NAME, DETAILS)
                 elif sno == 10:
                     st.markdown("#### 🧑‍🏫 Edit Teacher Attendance (Month & Week-wise)")
                     col_adm_tc_m, col_adm_tc_w = st.columns(2)
@@ -788,11 +776,7 @@ if access_mode == "Admin Workspace":
                     
                     teacher_column_config = {
                         "Date": st.column_config.TextColumn("Date (DD/MM/YYYY)"),
-                        "Day": st.column_config.SelectboxColumn(
-                            "Day",
-                            options=DAYS,
-                            required=False
-                        )
+                        "Day": st.column_config.SelectboxColumn("Day", options=DAYS, required=False)
                     }
                     
                     edited_tc_slot_df = st.data_editor(
@@ -808,10 +792,9 @@ if access_mode == "Admin Workspace":
                         st.success(f"Teacher Attendance for {admin_tc_month} - {admin_tc_week} saved!")
                         st.rerun()
 
-                # UNIVERSAL ALL-FORMAT FILE UPLOADER FOR ALL OTHER PARAMETERS
                 else:
                     uploaded_files = st.file_uploader(
-                        f"Upload files for #{sno} (All Formats: PDF, Excel, Word, PPT, Images, Videos, ZIP etc.)",
+                        f"Upload files for #{sno} (All Formats Allowed)",
                         type=None,
                         accept_multiple_files=True,
                         key=f"upload_{sno}"
@@ -840,6 +823,7 @@ if access_mode == "Admin Workspace":
 
 # ----------------- PUBLIC VIEWER -----------------
 else:
+    render_cover_photo()
     st.title("🔬 STEM Innovation & Learning Laboratory")
     st.caption("Aditya Birla Intermediate College, Renukoot | Academic Session 2026-27")
 
