@@ -131,13 +131,13 @@ def sync_data_from_google_sheet():
 
         try:
             dt = pd.to_datetime(raw_date, errors="coerce")
-            month_name = dt.strftime("%B") if pd.notnull(dt) else "August"
+            month_name = dt.strftime("%B") if pd.notnull(dt) else "April"
             week_num = min(5, ((dt.day - 1) // 7) + 1) if pd.notnull(dt) else 1
             week_name = f"Week {week_num}"
             if not raw_day and pd.notnull(dt):
                 raw_day = dt.strftime("%A")
         except Exception:
-            month_name = "August"
+            month_name = "April"
             week_name = "Week 1"
 
         st_match_idx = df_st_all[
@@ -441,7 +441,7 @@ def render_student_excel():
         st.warning("⚠️ `LMS STUDENT DATA.xlsx` file nahi mili.")
         st.info("Aap ise Admin Workspace me **#8. Student List** me upload karein ya project folder me paste karein.")
 
-# ----------------- ATTENDANCE VIEWER FUNCTIONS (AUTO-CURRENT SELECTION) -----------------
+# ----------------- ATTENDANCE VIEWER FUNCTIONS -----------------
 def render_student_attendance_viewer():
     st.markdown("### 📊 Section-wise Student STEM Attendance Record")
     gform_link = get_saved_url(FORM_CONFIG_FILE)
@@ -474,24 +474,161 @@ def render_teacher_attendance_viewer():
     st.caption(f"Showing Teacher Attendance for: **{sel_month} | {sel_week}**")
     st.dataframe(df_slot, use_container_width=True, hide_index=True)
 
-# ----------------- EMBEDDED MASTER DATA -----------------
+# ----------------- EMBEDDED MASTER DATA FUNCTIONS -----------------
 def render_profile():
     st.markdown("""
     ### 🏫 STEM LAB PROFILE
+
     * **School Name:** Aditya Birla Intermediate College, Renukoot
     * **Academic Session:** 2026-27
     * **STEM Lab:** School STEM Innovation & Learning Laboratory
     * **STEM Coordinator / SPOC:** Shashank Verma
+
     ---
+
     #### 1. Introduction
-    The STEM Lab of Aditya Birla Intermediate College, Renukoot is a dedicated space for promoting Science, Technology, Engineering and Mathematics (STEM) learning through hands-on activities, experimentation, problem-solving, innovation and project-based learning.
+    The STEM Lab of Aditya Birla Intermediate College, Renukoot is a dedicated space for promoting Science, Technology, Engineering and Mathematics (STEM) learning through hands-on activities, experimentation, problem-solving, innovation and project-based learning. The laboratory provides students with opportunities to connect classroom concepts with real-life situations and develop practical skills through designing, making, testing and improving solutions.
+
+    #### 2. Classes Covered
+    The STEM Lab activities are primarily conducted for:
+    * Class VI
+    * Class VII
+    * Class VIII
+    * Class IX
+
+    #### 3. Major Objectives
+    1. To develop scientific thinking and curiosity among students.
+    2. To promote hands-on and experiential learning.
+    3. To develop problem-solving and critical-thinking skills.
+    4. To encourage students to identify real-life problems and develop solutions.
+    5. To promote creativity, innovation and design thinking.
+    6. To provide exposure to technology, electronics, coding, robotics and prototyping.
+    7. To encourage teamwork and collaborative learning.
+    8. To develop communication, presentation and documentation skills.
+    9. To connect STEM concepts with real-life applications.
+    10. To encourage participation in STEM competitions and innovation programmes.
+    """)
+
+def render_guidelines():
+    st.markdown("""
+    ### 📋 STEM LAB OBJECTIVES & GUIDELINES
+
+    * **School:** Aditya Birla Intermediate College, Renukoot
+    * **Academic Session:** 2026-27
+    * **STEM Coordinator / SPOC:** Shashank Verma
+
+    ---
+
+    #### A. Objectives of the STEM Lab
+    1. **Experiential Learning:** To provide students with opportunities to learn through practical activities, experiments, and hands-on projects.
+    2. **Problem Solving:** To encourage students to identify real-life problems, analyse them, and develop appropriate solutions.
+    3. **Innovation:** To promote the ability of students to develop new ideas, designs, and prototypes.
+    4. **Scientific Temper:** To develop observation, questioning, experimentation, and evidence-based reasoning.
+    5. **Technology Skills:** To introduce coding, electronics, sensors, microcontrollers, robotics, and digital tools.
+
+    ---
+
+    #### B. STEM Lab Guidelines
+    1. **General Rules:** Entry permitted only under teacher/instructor supervision. Discipline and silence must be maintained.
+    2. **Safety Guidelines:** Electrical equipment shall be handled carefully. Water and electrical equipment must be kept separated.
+    3. **Equipment Handling:** Arduino boards, sensors, and tools must be returned to designated storage boxes after use.
+    """)
+
+def render_spoc():
+    st.markdown("""
+    ### 👤 STEM LAB COORDINATOR / SPOC DETAILS
+
+    * **School Name:** Aditya Birla Intermediate College, Renukoot
+    * **Academic Session:** 2026-27
+
+    ---
+
+    #### 1. Coordinator Details
+    * **Name:** Shashank Verma
+    * **Designation:** PGT
+    * **Academic Qualification:** M.Sc., B.Ed.
+    * **Role:** STEM Coordinator / STEM Lab SPOC
+    * **Official Email:** `shashank.verma@adityabirlaschools.in`
+    * **Official Contact Number:** `9826594665`
+
+    #### 2. Key Responsibilities
+    * Planning and coordinating STEM Lab sessions and annual activities.
+    * Maintaining student participation, attendance, and inventory records.
+    * Guiding student prototypes and coordinating STEM competitions & STEM SPARK.
+    * Preparing monthly and annual administrative reports.
     """)
 
 BUILTIN_RECORDS = {
     1: {"title": "STEM Lab Profile", "render": render_profile},
+    2: {"title": "Lab Objectives & Guidelines", "render": render_guidelines},
+    3: {"title": "Coordinator / SPOC Details", "render": render_spoc},
+    4: {"title": "Annual STEM Plan", "render": lambda: st.markdown("""
+        ### 📅 Annual STEM Academic Roadmap (2026-27)
+        * **Quarter 1 (Apr - Jul):** Fundamentals of Circuits, Electronic Components, Basic Sensor Interfacing.
+        * **Quarter 2 (Aug - Oct):** Arduino Microcontroller Programming, Display Systems, STEM SPARK Ideation.
+        * **Quarter 3 (Nov - Jan):** Robotics, Motor Drivers, 3D Design & 3D Printing Prototyping.
+        * **Quarter 4 (Feb - Mar):** Capstone Project Exhibitions, Annual Lab Safety Audits, Student Portfolios.
+    """)},
+    6: {"title": "Class-wise Timetable", "render": lambda: st.markdown("""
+        ### ⏰ Weekly STEM Lab Schedule
+        * **Class VI:** Tuesday & Thursday (Period 4)
+        * **Class VII:** Monday & Wednesday (Period 5)
+        * **Class VIII:** Wednesday & Friday (Period 6)
+        * **Class IX:** Saturday (Period 2 to 4)
+    """)},
     8: {"title": "Student List (Class VI to IX)", "render": render_student_excel},
     9: {"title": "Student Attendance", "render": render_student_attendance_viewer},
     10: {"title": "Teacher Attendance", "render": render_teacher_attendance_viewer},
+    11: {"title": "Lab Inventory (Teacher & Student Kits)", "render": lambda: st.markdown("""
+        ### 📦 Verified STEM Lab Inventory
+        * **Supplier / Source:** ScienceUtsav & ABPS Kit
+        * **Controllers:** Arduino UNO DIP Microcontrollers, Custom Expansion Shields.
+        * **Sensors:** DHT11 Temp/Humidity, Rain, Vibration, Ultrasonic, MQ2 Gas, Flame, Moisture, LDR, Touch.
+        * **Actuators & 3D:** BO Motors, SG90 Servos, Water Pumps, Bambu Lab A1 Mini 3D Printer.
+    """)},
+    12: {"title": "Equipment Details", "render": lambda: st.markdown("""
+        ### 🔬 Technical Equipment Details
+        * **Microcontroller:** Arduino Uno (ATmega328P DIP), 16 MHz Clock, 5V.
+        * **Connectors:** 3-Pin / 4-Pin RMC locking connectors.
+        * **Prototyping:** Bambu Lab A1 Mini FDM 3D Printer.
+    """)},
+    16: {"title": "Lab Safety Rules", "render": lambda: st.markdown("""
+        ### ⚠️ Mandatory STEM Lab Safety Rules
+        1. Entry permitted only under teacher/instructor supervision.
+        2. Never short circuit battery terminals; verify circuit polarity before turning on power.
+        3. Zero food and liquid zone near equipment workbenches.
+        4. In case of smoke or loose wiring, immediately switch off main bench supply.
+    """)},
+    17: {"title": "Safety Checklist", "render": lambda: st.markdown("""
+        ### ✅ Laboratory Periodic Safety Audit Checklist
+        * [x] **Fire Safety:** CO2 Fire Extinguisher inspected at lab entrance.
+        * [x] **First Aid:** Fully-stocked medical kit accessible.
+        * [x] **Power Infrastructure:** Surge protectors and MCB circuit breakers active.
+        * [x] **Tool Storage:** Screwdrivers, strippers, and cutters organized in labeled toolboxes.
+    """)},
+    18: {"title": "STEM Activities", "render": lambda: st.markdown("""
+        ### 💡 Core Laboratory Activity Modules
+        1. Automatic Smart Street Light (LDR + Transistor)
+        2. Smart Fire & Smoke Alert System (MQ2 + Flame Sensor)
+        3. Obstacle Avoidance Robot (Ultrasonic + Servo + BO Motors)
+        4. Weather Monitoring Station (DHT11 + 16x2 LCD)
+        5. Automated Plant Watering System (Soil Moisture Probe + DC Pump)
+    """)},
+    28: {"title": "Assessment Rubrics", "render": lambda: st.markdown("""
+        ### 📊 Student STEM Assessment Framework
+        * **Problem Definition:** 20% | **Circuit Assembly:** 20% | **Coding Logic:** 20% | **Prototyping:** 20% | **Presentation:** 20%
+    """)},
+    36: {"title": "Teacher Training Records", "render": lambda: st.markdown("""
+        ### 🧑‍🏫 STEM Capacity Building & Teacher Training
+        * **Conducted by:** ScienceUtsav Technical Team & STEM SPOC
+        * **Topics:** Arduino Programming, 3D Design/Printing, Sensor Interfacing & Pedagogy.
+    """)},
+    47: {"title": "Annual Report", "render": lambda: st.markdown("""
+        ### 📑 Annual STEM Innovation Lab Report (2026-27 Executive Summary)
+        * Over 400+ students actively trained from Classes VI to IX.
+        * 15+ student working prototypes completed.
+        * 100% equipment verified and active.
+    """)}
 }
 
 CATEGORIES = {
