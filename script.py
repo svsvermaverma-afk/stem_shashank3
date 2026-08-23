@@ -285,6 +285,47 @@ def render_file_preview(file_path, file_name, unique_key):
                 key=f"dl_doc_{unique_key}"
             )
 
+# ----------------- ROBUST STUDENT EXCEL VIEWER (PARAMETER #8) -----------------
+def render_student_excel():
+    possible_paths = [
+        "LMS STUDENT DATA.xlsx", "LMS STUDENT DATA.xls", "LMS STUDENT DATA.csv",
+        "lms student data.xlsx", "lms student data.xls", "lms student data.csv",
+        os.path.join(DATA_DIR, "LMS STUDENT DATA.xlsx"),
+        os.path.join(DATA_DIR, "lms student data.xlsx"),
+        os.path.join(UPLOAD_DIR, "08_Student_List", "LMS STUDENT DATA.xlsx"),
+        os.path.join(UPLOAD_DIR, "08_Student_List", "lms student data.xlsx"),
+    ]
+    
+    upload_s8_dir = os.path.join(UPLOAD_DIR, "08_Student_List")
+    if os.path.exists(upload_s8_dir):
+        for f in os.listdir(upload_s8_dir):
+            if f.lower().endswith((".xlsx", ".xls", ".csv")):
+                possible_paths.append(os.path.join(upload_s8_dir, f))
+
+    found_file = next((p for p in possible_paths if os.path.exists(p)), None)
+
+    if found_file:
+        try:
+            ext = os.path.splitext(found_file)[1].lower()
+            df = pd.read_csv(found_file) if ext == ".csv" else pd.read_excel(found_file)
+            st.markdown("### 👨‍🎓 Registered Student Database (Classes VI – IX)")
+            
+            class_col = next((c for c in df.columns if "class" in str(c).lower()), None)
+            if class_col:
+                unique_classes = ["All Classes"] + sorted([str(x) for x in df[class_col].dropna().unique()])
+                selected_class = st.selectbox("Filter by Class:", unique_classes, key="st_excel_filter")
+                df_display = df[df[class_col].astype(str) == selected_class] if selected_class != "All Classes" else df
+            else:
+                df_display = df
+
+            st.write(f"**Total Students Displayed:** {len(df_display)}")
+            st.dataframe(df_display, use_container_width=True, hide_index=True)
+        except Exception as e:
+            st.error(f"Error reading {found_file}: {e}")
+    else:
+        st.warning("⚠️ `LMS STUDENT DATA.xlsx` file nahi mili.")
+        st.info("Aap ise Admin Workspace me **#8. Student List** me upload karein ya project folder me paste karein.")
+
 # ----------------- ATTENDANCE VIEWER FUNCTIONS -----------------
 def render_student_attendance_viewer():
     st.markdown("### 📊 Section-wise Student STEM Attendance Record")
@@ -583,7 +624,7 @@ BUILTIN_RECORDS = {
         * **Class VIII:** Wednesday & Friday (Period 6)
         * **Class IX:** Saturday (Period 2 to 4)
     """)},
-    8: {"title": "Student List (Class VI to IX)", "render": lambda: st.info("Place LMS STUDENT DATA.xlsx in project folder.")},
+    8: {"title": "Student List (Class VI to IX)", "render": render_student_excel},
     9: {"title": "Student Attendance", "render": render_student_attendance_viewer},
     10: {"title": "Teacher Attendance", "render": render_teacher_attendance_viewer},
     11: {"title": "Lab Inventory (Teacher & Student Kits)", "render": lambda: st.markdown("""
