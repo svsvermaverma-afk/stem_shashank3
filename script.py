@@ -16,7 +16,6 @@ st.set_page_config(page_title="ABIC STEM Lab Portal", page_icon="🔬", layout="
 # ----------------- STRICT INTERNAL BUTTON LEFT ALIGNMENT CSS -----------------
 st.markdown("""
 <style>
-/* Target Streamlit button and all internal text/markdown wrappers */
 div[data-testid="stButton"] button {
     justify-content: flex-start !important;
     text-align: left !important;
@@ -546,6 +545,175 @@ def render_scienceutsav_assessment():
         scrolling=True
     )
 
+# ----------------- ANNUAL STEM & EREHWON MASTER PLAN (PARAMETER #4) -----------------
+ANNUAL_PLAN_DATA = [
+    {
+        "Month": "July 2026", "Session #": "Session 1",
+        "Class 6": "Intro to Robotics & Arduino IDE setup",
+        "Class 7": "Microcontroller Recap & Sensor Safety",
+        "Class 8": "Advanced Programming Architecture",
+        "Class 9": "Multi-Sensor System Architecture & I/O",
+        "Milestone": "Erehwon Phase 1: Team Formation (25+ Teams across Classes 6-9; 5-6 members each). Role allocation & Lab Logbooks initiated.",
+        "Roles": "Team Lead & Problem Scout"
+    },
+    {
+        "Month": "July 2026", "Session #": "Session 2",
+        "Class 6": "Digital Pins & LED Blink Logic",
+        "Class 7": "Tilt Switch Basics & Angle Alerts",
+        "Class 8": "7-Segment / LCD Interface Basics",
+        "Class 9": "Data Fusion & Complex Logic Loops",
+        "Milestone": "Problem Discovery: Community, school campus & environmental pain point identification.",
+        "Roles": "Problem Scout & QA Tester"
+    },
+    {
+        "Month": "August 2026", "Session #": "Session 3",
+        "Class 6": "Switches & Pull-up/Pull-down Logic",
+        "Class 7": "Tilt Safety System Integration",
+        "Class 8": "Digital Display Logic & Variables",
+        "Class 9": "Capstone Planning & BOM Setup",
+        "Milestone": "MILESTONE 1: Submission & approval of 25+ validated Problem Statements & Bill of Materials (BOM).",
+        "Roles": "Team Lead & Circuit Engineer"
+    },
+    {
+        "Month": "August 2026", "Session #": "Session 4",
+        "Class 6": "Potentiometer & Analog Read Values",
+        "Class 7": "Magnetic Detection & Hall Effect Intro",
+        "Class 8": "Sensor-Driven Counting Algorithms",
+        "Class 9": "Modular Subsystem Design & Pin Mapping",
+        "Milestone": "Ideation & Architecture: System block diagrams, circuit schematics & hardware flowcharts.",
+        "Roles": "Firmware Programmer & Casing Designer"
+    },
+    {
+        "Month": "September 2026", "Session #": "Session 5",
+        "Class 6": "Light Sensing (LDR) & Thresholds",
+        "Class 7": "Hall Logic & Contactless Switches",
+        "Class 8": "Touch Sensors & Capacitive Switching",
+        "Class 9": "Interfacing Multi-Sensor Arrays",
+        "Milestone": "Low-Fidelity Prototyping: Breadboard wiring & sensor threshold calibration.",
+        "Roles": "Circuit Engineer & QA Tester"
+    },
+    {
+        "Month": "September 2026", "Session #": "Session 6",
+        "Class 6": "Auto Lighting System Integration",
+        "Class 7": "IR Object Detection Fundamentals",
+        "Class 8": "RGB Modulation via PWM Logic",
+        "Class 9": "Multi-Actuator Output Orchestration",
+        "Milestone": "MILESTONE 2: Low-Fidelity Prototype Walkthrough (Breadboards functional + cardboard mockups).",
+        "Roles": "Casing Designer & Programmer"
+    },
+    {
+        "Month": "October 2026", "Session #": "Session 7",
+        "Class 6": "Sound Reactive System & Mic Modules",
+        "Class 7": "IR Threshold Tuning & Alerts",
+        "Class 8": "Laser Optical Transceivers & LDRs",
+        "Class 9": "Code Integration & State Machine Coding",
+        "Milestone": "Mid-Term Assembly: Combining sensors with actuators (servos, buzzers, multi-stage displays).",
+        "Roles": "Firmware Programmer & Circuit Engineer"
+    },
+    {
+        "Month": "October 2026", "Session #": "Session 8",
+        "Class 6": "Acoustic Threshold Noise Alerts",
+        "Class 7": "Servo Motor Motion & PWM (0°-180°)",
+        "Class 8": "Multi-Trigger Security (AND/OR Logic)",
+        "Class 9": "Smart System Capstone Integration (Pt 1)",
+        "Milestone": "Logic Debugging: State machine loops, sensor conflict resolution & power distribution.",
+        "Roles": "Programmer & QA Tester"
+    },
+    {
+        "Month": "November 2026", "Session #": "Session 9",
+        "Class 6": "Multi-LED Logic & Gated Alerts",
+        "Class 7": "Automated IR + Servo Barrier System",
+        "Class 8": "Subsystem Integration & Wire Looms",
+        "Class 9": "Smart System Capstone Integration (Pt 2)",
+        "Milestone": "High-Fidelity Packaging: Enclosure fabrication (acrylic/wood/cardboard) and cable looming.",
+        "Roles": "Casing Designer & Circuit Engineer"
+    },
+    {
+        "Month": "November 2026", "Session #": "Session 10",
+        "Class 6": "System Testing & Breadboard Cleanup",
+        "Class 7": "Enclosure Packaging & Assembly",
+        "Class 8": "Edge Case Handling & Debounce Code",
+        "Class 9": "Full System Field Testing & Telemetry",
+        "Milestone": "MILESTONE 3: Alpha Working Prototype Demonstration in Lab under simulated operating conditions.",
+        "Roles": "All 5-6 Team Members"
+    },
+    {
+        "Month": "December 2026", "Session #": "Session 11",
+        "Class 6": "Prototype Stress Testing & Debugging",
+        "Class 7": "Mechanical Reliability & Power Checks",
+        "Class 8": "System Stress Testing (100+ Cycles)",
+        "Class 9": "Code Optimization & Fail-Safe Logic",
+        "Milestone": "Stress Testing & Data Logging: 50-100 continuous test cycles, fail-safe verification & reliability audit.",
+        "Roles": "QA Tester & Programmer"
+    },
+    {
+        "Month": "December 2026", "Session #": "Session 12",
+        "Class 6": "Presentation Skills & Pitch Deck Basics",
+        "Class 7": "Project Report & Technical Schematics",
+        "Class 8": "Pitch Scripting & Demo Storyboarding",
+        "Class 9": "Comprehensive Engineering Dossier",
+        "Milestone": "Documentation & Scripting: 1-Page Project Dossier, complete schematics, BOM and pitch script.",
+        "Roles": "Pitch Lead & Team Lead"
+    },
+    {
+        "Month": "January 2027", "Session #": "Session 13",
+        "Class 6": "Internal Qualifying Pitch & Demo",
+        "Class 7": "Internal Jury Evaluation & Feedback",
+        "Class 8": "Pre-Competition Mock Presentation",
+        "Class 9": "Grand Internal Capstone Defense",
+        "Milestone": "School-Level Qualifying Round: 3-minute live pitch + 2-minute live hardware demonstration for all 25+ teams.",
+        "Roles": "Pitch Lead & Full Team"
+    },
+    {
+        "Month": "January 2027", "Session #": "Session 14",
+        "Class 6": "Video Production & Competition Entry",
+        "Class 7": "Final Video Shoot & Erehwon Upload",
+        "Class 8": "Video Asset Rendering & Submission",
+        "Class 9": "Final Portal Submission & Lab Archive",
+        "Milestone": "MILESTONE 4: Final 2-Minute Demonstration Video Shoot & Official National Submission to Erehwon Competition Portal.",
+        "Roles": "All 5-6 Team Members"
+    }
+]
+
+def render_annual_plan():
+    st.markdown("""
+    ### 📅 ANNUAL STEM LAB & EREHWON INNOVATION MASTER PLAN (JULY 2026 – JANUARY 2027)
+    > **Schedule:** 2 Sessions / Month (14 Total Sessions) | **Target:** 25+ Innovation Teams (Classes 6–9 | 5–6 Students Per Team)
+    """)
+    
+    df_plan = pd.DataFrame(ANNUAL_PLAN_DATA)
+    
+    plan_months = ["All Months"] + sorted(list(df_plan["Month"].unique()), key=lambda x: datetime.strptime(x, "%B %Y"))
+    class_options = ["All Classes", "Class 6 (Beginner Tier)", "Class 7 (Intermediate Tier)", "Class 8 (Advanced Tier)", "Class 9 (Expert Tier)"]
+    
+    # Auto-detect real-time Month
+    now_dt = datetime.now()
+    cur_month_str = now_dt.strftime("%B %Y")
+    default_month_idx = plan_months.index(cur_month_str) if cur_month_str in plan_months else 0
+    
+    # FILTER BUTTONS / SELECTORS
+    col_m, col_c = st.columns([1, 1])
+    selected_plan_month = col_m.selectbox("📅 Filter by Month (Auto-Selected Present Month):", plan_months, index=default_month_idx, key="filter_plan_month")
+    selected_plan_class = col_c.selectbox("🎓 Filter by Class:", class_options, key="filter_plan_class")
+    
+    # Apply Month Filter
+    filtered_df = df_plan if selected_plan_month == "All Months" else df_plan[df_plan["Month"] == selected_plan_month]
+    
+    # Apply Class Filter
+    if selected_plan_class == "Class 6 (Beginner Tier)":
+        display_cols = ["Month", "Session #", "Class 6", "Milestone", "Roles"]
+    elif selected_plan_class == "Class 7 (Intermediate Tier)":
+        display_cols = ["Month", "Session #", "Class 7", "Milestone", "Roles"]
+    elif selected_plan_class == "Class 8 (Advanced Tier)":
+        display_cols = ["Month", "Session #", "Class 8", "Milestone", "Roles"]
+    elif selected_plan_class == "Class 9 (Expert Tier)":
+        display_cols = ["Month", "Session #", "Class 9", "Milestone", "Roles"]
+    else:
+        display_cols = ["Month", "Session #", "Class 6", "Class 7", "Class 8", "Class 9", "Milestone", "Roles"]
+
+    st.markdown(f"**Showing Plan for:** `{selected_plan_month}` | `{selected_plan_class}` ({len(filtered_df)} Sessions)")
+    st.dataframe(filtered_df[display_cols], use_container_width=True, hide_index=True)
+
 # ----------------- FULL UNTRUNCATED MASTER DATA -----------------
 def render_profile():
     st.markdown("""
@@ -735,13 +903,7 @@ BUILTIN_RECORDS = {
     1: {"title": "STEM Lab Profile", "render": render_profile},
     2: {"title": "Lab Objectives & Guidelines", "render": render_guidelines},
     3: {"title": "Coordinator / SPOC Details", "render": render_spoc},
-    4: {"title": "Annual STEM Plan", "render": lambda: st.markdown("""
-        ### 📅 Annual STEM Academic Roadmap (2026-27)
-        * **Quarter 1 (Apr - Jul):** Fundamentals of Circuits, Electronic Components, Basic Sensor Interfacing.
-        * **Quarter 2 (Aug - Oct):** Arduino Microcontroller Programming, Display Systems, STEM SPARK Ideation.
-        * **Quarter 3 (Nov - Jan):** Robotics, Motor Drivers, 3D Design & 3D Printing Prototyping.
-        * **Quarter 4 (Feb - Mar):** Capstone Project Exhibitions, Annual Lab Safety Audits, Student Portfolios.
-    """)},
+    4: {"title": "Annual STEM Plan", "render": render_annual_plan},
     6: {"title": "Class-wise Timetable", "render": lambda: st.markdown("""
         ### ⏰ Weekly STEM Lab Schedule
         * **Class VI:** Tuesday & Thursday (Period 4)
@@ -1059,12 +1221,11 @@ else:
                 files = os.listdir(record_dir) if os.path.exists(record_dir) else []
                 is_builtin = sno in BUILTIN_RECORDS
 
-                is_active = (st.session_state.active_sno_viewer == sno)
+                is_active = (st.session_state.active_viewer_sno == sno)
                 toggle_btn_label = f"▼ #{sno}. {title}" if is_active else f"▶ #{sno}. {title}"
 
-                # Strict left-aligned single-open accordion button
                 if st.button(toggle_btn_label, key=f"viewer_btn_{sno}", use_container_width=True):
-                    st.session_state.active_sno_viewer = None if is_active else sno
+                    st.session_state.active_viewer_sno = None if is_active else sno
                     st.rerun()
 
                 if is_active:
