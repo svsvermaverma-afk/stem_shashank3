@@ -13,7 +13,7 @@ except ImportError:
 
 st.set_page_config(page_title="ABIC STEM Lab Portal", page_icon="🔬", layout="wide")
 
-# ----------------- STRICT INTERNAL BUTTON LEFT ALIGNMENT CSS -----------------
+# ----------------- STRICT INTERNAL BUTTON LEFT ALIGNMENT & MESSAGE BOX CSS -----------------
 st.markdown("""
 <style>
 div[data-testid="stButton"] button {
@@ -54,6 +54,24 @@ div[data-testid="stButton"] button:hover {
 div[data-testid="stButton"] button:focus {
     box-shadow: none !important;
 }
+
+/* Custom Executive Message Cards */
+.msg-container {
+    background-color: #f0f7ff;
+    border: 1px solid #cce3ff;
+    border-left: 5px solid #0969da;
+    border-radius: 8px;
+    padding: 14px 18px;
+    margin-bottom: 12px;
+}
+.msg-container-vp {
+    background-color: #f6f8fa;
+    border: 1px solid #d0d7de;
+    border-left: 5px solid #1f883d;
+    border-radius: 8px;
+    padding: 14px 18px;
+    margin-bottom: 14px;
+}
 </style>
 """, unsafe_allow_html=True)
 
@@ -67,6 +85,7 @@ STUDENT_ATTENDANCE_FILE = os.path.join(DATA_DIR, "student_attendance.csv")
 TEACHER_ATTENDANCE_FILE = os.path.join(DATA_DIR, "teacher_attendance.csv")
 SAFETY_CHECKLIST_FILE = os.path.join(DATA_DIR, "safety_checklist.csv")
 PRINCIPAL_MSG_FILE = os.path.join(DATA_DIR, "principal_message.txt")
+VICE_PRINCIPAL_MSG_FILE = os.path.join(DATA_DIR, "vice_principal_message.txt")
 SHEET_CONFIG_FILE = os.path.join(DATA_DIR, "gsheet_url.txt")
 FORM_CONFIG_FILE = os.path.join(DATA_DIR, "gform_url.txt")
 SCIENCEUTSAV_CONFIG_FILE = os.path.join(DATA_DIR, "scienceutsav_url.txt")
@@ -77,7 +96,6 @@ MONTHS = ["April", "May", "June", "July", "August", "September", "October", "Nov
 WEEKS = ["Week 1", "Week 2", "Week 3", "Week 4", "Week 5"]
 DAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"]
 
-# EXACT SAFETY POINTS BASED ON STEM LAB SAFETY RULES POSTER
 DEFAULT_SAFETY_POINTS = [
     "[1. General] Enter the lab only with permission",
     "[1. General] Follow all instructions of the teacher",
@@ -136,7 +154,6 @@ TEACHERS_LIST = [
     "Dr. Rakesh Singh", "Mr. Chandra Mohan Singh", "Mr. Harendra Dwivedi", "Mr. Praveen Kumar"
 ]
 
-# ----------------- 49 MASTER CATEGORIES -----------------
 CATEGORIES = {
     "1. Administration & Planning": [
         (1, "STEM Lab Profile"), (2, "Lab Objectives & Guidelines"), (3, "Coordinator / SPOC Details"),
@@ -168,7 +185,6 @@ CATEGORIES = {
     ]
 }
 
-# ----------------- SESSION STATE TRACKERS -----------------
 if "active_viewer_sno" not in st.session_state:
     st.session_state["active_viewer_sno"] = 1
 
@@ -201,7 +217,6 @@ def save_url(file_path, url):
     with open(file_path, "w", encoding="utf-8") as f:
         f.write(url.strip())
 
-# ----------------- LIVE CACHED GOOGLE SHEET FETCHER (AUTO SYNC) -----------------
 @st.cache_data(ttl=60)
 def fetch_google_sheet_data_cached(sheet_url):
     try:
@@ -234,12 +249,12 @@ def render_cover_photo():
     if found_cover:
         st.image(found_cover, use_container_width=True)
 
+# ----------------- EXECUTIVE MESSAGES & PHOTOS HANDLER -----------------
 def get_principal_message():
     if os.path.exists(PRINCIPAL_MSG_FILE):
         with open(PRINCIPAL_MSG_FILE, "r", encoding="utf-8") as f:
             return f.read()
-    return """**Principal's Desk:**
-"Our STEM Innovation & Learning Laboratory is dedicated to nurturing scientific curiosity, critical problem-solving skills, and experiential innovation among our students. We encourage all learners to explore technology, build creative models, and lead the technical advancements of tomorrow."
+    return """"Our STEM Innovation & Learning Laboratory is dedicated to nurturing scientific curiosity, critical problem-solving skills, and experiential innovation among our students. We encourage all learners to explore technology, build creative models, and lead the technical advancements of tomorrow."
 
 — **Principal, Aditya Birla Intermediate College, Renukoot**"""
 
@@ -247,8 +262,60 @@ def save_principal_message(msg):
     with open(PRINCIPAL_MSG_FILE, "w", encoding="utf-8") as f:
         f.write(msg)
 
-def render_principal_message():
-    st.info(get_principal_message())
+def get_vice_principal_message():
+    if os.path.exists(VICE_PRINCIPAL_MSG_FILE):
+        with open(VICE_PRINCIPAL_MSG_FILE, "r", encoding="utf-8") as f:
+            return f.read()
+    return """"Practical hands-on exploration in our STEM lab bridges the gap between textbook concepts and real-world execution. We emphasize regular project mentoring, rigorous inquiry, and national innovation participation for every student."
+
+— **Vice Principal, Aditya Birla Intermediate College, Renukoot**"""
+
+def save_vice_principal_message(msg):
+    with open(VICE_PRINCIPAL_MSG_FILE, "w", encoding="utf-8") as f:
+        f.write(msg)
+
+def get_profile_photo(role):
+    valid_exts = [".jpg", ".jpeg", ".png", ".webp"]
+    for ext in valid_exts:
+        candidate = os.path.join(DATA_DIR, f"{role}{ext}")
+        if os.path.exists(candidate):
+            return candidate
+    return None
+
+def render_executive_messages():
+    principal_img = get_profile_photo("principal_photo")
+    vp_img = get_profile_photo("vice_principal_photo")
+
+    # Principal Desk Box
+    col_p1, col_p2 = st.columns([1, 7]) if principal_img else (None, None)
+    with st.container():
+        st.markdown('<div class="msg-container">', unsafe_allow_html=True)
+        if principal_img:
+            cp1, cp2 = st.columns([1.1, 8.9])
+            with cp1:
+                st.image(principal_img, width=105)
+            with cp2:
+                st.markdown(f"**🏛️ Principal's Desk**")
+                st.markdown(get_principal_message())
+        else:
+            st.markdown(f"**🏛️ Principal's Desk**")
+            st.markdown(get_principal_message())
+        st.markdown('</div>', unsafe_allow_html=True)
+
+    # Vice Principal Desk Box
+    with st.container():
+        st.markdown('<div class="msg-container-vp">', unsafe_allow_html=True)
+        if vp_img:
+            cvp1, cvp2 = st.columns([1.1, 8.9])
+            with cvp1:
+                st.image(vp_img, width=105)
+            with cvp2:
+                st.markdown(f"**📘 Vice Principal's Desk**")
+                st.markdown(get_vice_principal_message())
+        else:
+            st.markdown(f"**📘 Vice Principal's Desk**")
+            st.markdown(get_vice_principal_message())
+        st.markdown('</div>', unsafe_allow_html=True)
 
 # ----------------- ATTENDANCE & SAFETY INITIALIZATION -----------------
 def init_student_attendance():
@@ -1079,7 +1146,7 @@ if access_mode == "Admin Workspace":
 
     if st.session_state["is_admin_logged_in"]:
         render_cover_photo()
-        render_principal_message()
+        render_executive_messages()
         st.title("⚙️ Admin Workspace: Manage Records & Live Attendance")
 
         with st.expander("🔗 **Google Forms, Sheets & ScienceUtsav Integration**", expanded=False):
@@ -1120,7 +1187,8 @@ if access_mode == "Admin Workspace":
                 save_url(SCIENCEUTSAV_CONFIG_FILE, su_input)
                 st.success("ScienceUtsav URL saved!")
 
-        with st.expander("🖼️ **Update Cover Photo & Principal Message**", expanded=False):
+        with st.expander("🖼️ **Update Cover Photo, Principal & VP Messages & Photos**", expanded=False):
+            st.markdown("##### 1. Main Cover Banner")
             cover_file = st.file_uploader("Upload Banner Photo", type=["jpg", "jpeg", "png", "webp"], key="upload_cover_banner")
             if cover_file:
                 c_ext = os.path.splitext(cover_file.name)[1].lower()
@@ -1128,13 +1196,52 @@ if access_mode == "Admin Workspace":
                     f.write(cover_file.getbuffer())
                 st.success("Banner updated!")
                 st.rerun()
+            
             st.divider()
-            current_p_msg = get_principal_message()
-            edited_p_msg = st.text_area("Principal Message:", value=current_p_msg, height=120)
-            if st.button("💾 Save Message", type="primary"):
-                save_principal_message(edited_p_msg)
-                st.success("Saved!")
-                st.rerun()
+            st.markdown("##### 2. Principal Message & Photo")
+            c_p_up, c_p_txt = st.columns([1, 2])
+            with c_p_up:
+                principal_photo_file = st.file_uploader("Upload Principal Photo (Corner Icon):", type=["jpg", "jpeg", "png", "webp"], key="up_principal_photo")
+                if principal_photo_file:
+                    p_ext = os.path.splitext(principal_photo_file.name)[1].lower()
+                    for ext in [".jpg", ".jpeg", ".png", ".webp"]:
+                        old_p = os.path.join(DATA_DIR, f"principal_photo{ext}")
+                        if os.path.exists(old_p):
+                            os.remove(old_p)
+                    with open(os.path.join(DATA_DIR, f"principal_photo{p_ext}"), "wb") as f:
+                        f.write(principal_photo_file.getbuffer())
+                    st.success("Principal Photo Updated!")
+                    st.rerun()
+            with c_p_txt:
+                current_p_msg = get_principal_message()
+                edited_p_msg = st.text_area("Principal Message:", value=current_p_msg, height=110)
+                if st.button("💾 Save Principal Message", type="primary"):
+                    save_principal_message(edited_p_msg)
+                    st.success("Principal Message Saved!")
+                    st.rerun()
+
+            st.divider()
+            st.markdown("##### 3. Vice Principal Message & Photo")
+            c_vp_up, c_vp_txt = st.columns([1, 2])
+            with c_vp_up:
+                vp_photo_file = st.file_uploader("Upload Vice Principal Photo (Corner Icon):", type=["jpg", "jpeg", "png", "webp"], key="up_vp_photo")
+                if vp_photo_file:
+                    vp_ext = os.path.splitext(vp_photo_file.name)[1].lower()
+                    for ext in [".jpg", ".jpeg", ".png", ".webp"]:
+                        old_vp = os.path.join(DATA_DIR, f"vice_principal_photo{ext}")
+                        if os.path.exists(old_vp):
+                            os.remove(old_vp)
+                    with open(os.path.join(DATA_DIR, f"vice_principal_photo{vp_ext}"), "wb") as f:
+                        f.write(vp_photo_file.getbuffer())
+                    st.success("Vice Principal Photo Updated!")
+                    st.rerun()
+            with c_vp_txt:
+                current_vp_msg = get_vice_principal_message()
+                edited_vp_msg = st.text_area("Vice Principal Message:", value=current_vp_msg, height=110)
+                if st.button("💾 Save Vice Principal Message", type="primary"):
+                    save_vice_principal_message(edited_vp_msg)
+                    st.success("Vice Principal Message Saved!")
+                    st.rerun()
 
         st.divider()
         st.subheader("📁 Manage All 49 Parameters")
@@ -1232,7 +1339,7 @@ if access_mode == "Admin Workspace":
 # ----------------- PUBLIC VIEWER -----------------
 else:
     render_cover_photo()
-    render_principal_message()
+    render_executive_messages()
     st.title("🔬 STEM Innovation & Learning Laboratory")
     st.caption("Aditya Birla Intermediate College, Renukoot | Academic Session 2026-27")
 
