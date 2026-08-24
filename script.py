@@ -201,7 +201,9 @@ def save_url(file_path, url):
     with open(file_path, "w", encoding="utf-8") as f:
         f.write(url.strip())
 
-def fetch_google_sheet_data(sheet_url):
+# ----------------- LIVE CACHED GOOGLE SHEET FETCHER (AUTO SYNC) -----------------
+@st.cache_data(ttl=60)
+def fetch_google_sheet_data_cached(sheet_url):
     try:
         if "pub?output=csv" in sheet_url or "pubhtml" in sheet_url:
             csv_url = sheet_url.replace("pubhtml", "pub?output=csv")
@@ -286,19 +288,6 @@ def get_student_attendance_all():
         init_student_attendance()
         return pd.read_csv(STUDENT_ATTENDANCE_FILE, dtype=str).fillna("")
 
-def get_student_attendance_for_slot(month, week):
-    df_all = get_student_attendance_all()
-    if not df_all.empty and {"Month", "Week", "Date", "Day"}.issubset(set(df_all.columns)):
-        filtered = df_all[(df_all["Month"] == str(month)) & (df_all["Week"] == str(week))]
-        if not filtered.empty:
-            return filtered.drop(columns=[c for c in ["Month", "Week"] if c in filtered.columns])
-    return pd.DataFrame({
-        "Date": ["" for _ in SECTIONS_LIST], "Day": ["" for _ in SECTIONS_LIST],
-        "Class & Section": SECTIONS_LIST, "Total Students": ["" for _ in SECTIONS_LIST],
-        "Period 1": ["" for _ in SECTIONS_LIST], "Period 2": ["" for _ in SECTIONS_LIST],
-        "Total Present": ["" for _ in SECTIONS_LIST], "Total Absent": ["" for _ in SECTIONS_LIST]
-    })
-
 def save_student_attendance_slot(month, week, edited_df):
     df_all = get_student_attendance_all()
     edited_df = edited_df.copy()
@@ -313,21 +302,6 @@ def get_teacher_attendance_all():
     except Exception:
         init_teacher_attendance()
         return pd.read_csv(TEACHER_ATTENDANCE_FILE, dtype=str).fillna("")
-
-def get_teacher_attendance_for_slot(month, week):
-    df_all = get_teacher_attendance_all()
-    if not df_all.empty and {"Month", "Week", "Date", "Day"}.issubset(set(df_all.columns)):
-        filtered = df_all[(df_all["Month"] == str(month)) & (df_all["Week"] == str(week))]
-        if not filtered.empty:
-            return filtered.drop(columns=[c for c in ["Month", "Week"] if c in filtered.columns])
-    return pd.DataFrame({
-        "Date": ["" for _ in TEACHERS_LIST], "Day": ["" for _ in TEACHERS_LIST],
-        "S.No.": list(range(1, len(TEACHERS_LIST) + 1)), "Teacher Name": TEACHERS_LIST,
-        "Class & Section Taught": ["" for _ in TEACHERS_LIST], "Period / Time Slot": ["" for _ in TEACHERS_LIST],
-        "Lab Activity / Topic Covered": ["" for _ in TEACHERS_LIST], "Total Present Students": ["" for _ in TEACHERS_LIST],
-        "In-Time": ["" for _ in TEACHERS_LIST], "Out-Time": ["" for _ in TEACHERS_LIST],
-        "Teacher Signature": ["" for _ in TEACHERS_LIST]
-    })
 
 def save_teacher_attendance_slot(month, week, edited_df):
     df_all = get_teacher_attendance_all()
@@ -370,11 +344,12 @@ def save_safety_checklist_slot(month, week, edited_df):
     df_remaining = df_all[~((df_all["Month"] == str(month)) & (df_all["Week"] == str(week)))] if not df_all.empty else pd.DataFrame()
     pd.concat([df_remaining, edited_df], ignore_index=True).to_csv(SAFETY_CHECKLIST_FILE, index=False)
 
+# ----------------- REAL-TIME GOOGLE SHEET SYNC ENGINE -----------------
 def sync_data_from_google_sheet():
     sheet_url = get_saved_url(SHEET_CONFIG_FILE)
     if not sheet_url:
         return False, "Google Sheet URL not configured."
-    df_raw, err = fetch_google_sheet_data(sheet_url)
+    df_raw, err = fetch_google_sheet_data_cached(sheet_url)
     if err or df_raw is None or df_raw.empty:
         return False, err if err else "Google Sheet is empty."
 
@@ -425,34 +400,66 @@ def sync_data_from_google_sheet():
             month_name = now.strftime("%B")
             week_name = "Week 1"
 
-        st_match_idx = df_st_all[(df_st_all["Month"] == month_name) & (df_st_all["Week"] == week_name) & (df_st_all["Class & Section"] == raw_class)].index
-        new_st_row = {
-            "Month": month_name, "Week": week_name, "Date": raw_date.split(" ")[0], "Day": raw_day,
-            "Class & Section": raw_class, "Total Students": raw_tot, "Period 1": raw_period, "Period 2": "",
-            "Total Present": raw_pres, "Total Absent": raw_abs
-        }
-        if len(st_match_idx) > 0:
-            for k, v in new_st_row.items():
-                df_st_all.loc[st_match_idx[0], k] = v
-        else:
-            df_st_all = pd.concat([df_st_all, pd.DataFrame([new_st_row])], ignore_index=True)
+        if raw_class:
+            st_match_idx = df_st_all[(df_st_all["Month"] == month_name) & (df_st_all["Week"] == week_name) & (df_st_all["Class & Section"] == raw_class)].index
+            new_st_row = {
+                "Month": month_name, "Week": week_name, "Date": raw_date.split(" ")[0], "Day": raw_day,
+                "Class & Section": raw_class, "Total Students": raw_tot, "Period 1": raw_period, "Period 2": "",
+                "Total Present": raw_pres, "Total Absent": raw_abs
+            }
+            if len(st_match_idx) > 0:
+                for k, v in new_st_row.items():
+                    df_st_all.loc[st_match_idx[0], k] = v
+            else:
+                df_st_all = pd.concat([df_st_all, pd.DataFrame([new_st_row])], ignore_index=True)
 
-        tc_match_idx = df_tc_all[(df_tc_all["Month"] == month_name) & (df_tc_all["Week"] == week_name) & (df_tc_all["Teacher Name"] == raw_teacher)].index
-        new_tc_row = {
-            "Month": month_name, "Week": week_name, "Date": raw_date.split(" ")[0], "Day": raw_day,
-            "S.No.": str(len(df_tc_all) + 1), "Teacher Name": raw_teacher, "Class & Section Taught": raw_class,
-            "Period / Time Slot": raw_period, "Lab Activity / Topic Covered": raw_topic,
-            "Total Present Students": raw_pres, "In-Time": raw_in, "Out-Time": raw_out, "Teacher Signature": "Verified"
-        }
-        if len(tc_match_idx) > 0:
-            for k, v in new_tc_row.items():
-                df_tc_all.loc[tc_match_idx[0], k] = v
-        else:
-            df_tc_all = pd.concat([df_tc_all, pd.DataFrame([new_tc_row])], ignore_index=True)
+        if raw_teacher:
+            tc_match_idx = df_tc_all[(df_tc_all["Month"] == month_name) & (df_tc_all["Week"] == week_name) & (df_tc_all["Teacher Name"] == raw_teacher)].index
+            new_tc_row = {
+                "Month": month_name, "Week": week_name, "Date": raw_date.split(" ")[0], "Day": raw_day,
+                "S.No.": str(len(df_tc_all) + 1), "Teacher Name": raw_teacher, "Class & Section Taught": raw_class,
+                "Period / Time Slot": raw_period, "Lab Activity / Topic Covered": raw_topic,
+                "Total Present Students": raw_pres, "In-Time": raw_in, "Out-Time": raw_out, "Teacher Signature": "Verified"
+            }
+            if len(tc_match_idx) > 0:
+                for k, v in new_tc_row.items():
+                    df_tc_all.loc[tc_match_idx[0], k] = v
+            else:
+                df_tc_all = pd.concat([df_tc_all, pd.DataFrame([new_tc_row])], ignore_index=True)
 
     df_st_all.to_csv(STUDENT_ATTENDANCE_FILE, index=False)
     df_tc_all.to_csv(TEACHER_ATTENDANCE_FILE, index=False)
-    return True, f"Successfully synced {len(df_raw)} records!"
+    return True, f"Synced {len(df_raw)} records automatically."
+
+def get_student_attendance_for_slot(month, week):
+    sync_data_from_google_sheet()
+    df_all = get_student_attendance_all()
+    if not df_all.empty and {"Month", "Week", "Date", "Day"}.issubset(set(df_all.columns)):
+        filtered = df_all[(df_all["Month"] == str(month)) & (df_all["Week"] == str(week))]
+        if not filtered.empty:
+            return filtered.drop(columns=[c for c in ["Month", "Week"] if c in filtered.columns])
+    return pd.DataFrame({
+        "Date": ["" for _ in SECTIONS_LIST], "Day": ["" for _ in SECTIONS_LIST],
+        "Class & Section": SECTIONS_LIST, "Total Students": ["" for _ in SECTIONS_LIST],
+        "Period 1": ["" for _ in SECTIONS_LIST], "Period 2": ["" for _ in SECTIONS_LIST],
+        "Total Present": ["" for _ in SECTIONS_LIST], "Total Absent": ["" for _ in SECTIONS_LIST]
+    })
+
+def get_teacher_attendance_for_slot(month, week):
+    sync_data_from_google_sheet()
+    df_all = get_teacher_attendance_all()
+    if not df_all.empty and {"Month", "Week", "Date", "Day"}.issubset(set(df_all.columns)):
+        filtered = df_all[(df_all["Month"] == str(month)) & (df_all["Week"] == str(week))]
+        if not filtered.empty:
+            return filtered.drop(columns=[c for c in ["Month", "Week"] if c in filtered.columns])
+    return pd.DataFrame({
+        "Date": ["" for _ in TEACHERS_LIST], "Day": ["" for _ in TEACHERS_LIST],
+        "S.No.": list(range(1, len(TEACHERS_LIST) + 1)), "Teacher Name": TEACHERS_LIST,
+        "Class & Section Taught": ["" for _ in TEACHERS_LIST], "Period / Time Slot": ["" for _ in TEACHERS_LIST],
+        "Lab Activity / Topic Covered": ["" for _ in TEACHERS_LIST], "Total Present Students": ["" for _ in TEACHERS_LIST],
+        "In-Time": ["" for _ in TEACHERS_LIST], "Out-Time": ["" for _ in TEACHERS_LIST],
+        "Teacher Signature": ["" for _ in TEACHERS_LIST]
+    })
 
 # ----------------- UNIVERSAL FILE RENDERER & PREVIEW -----------------
 def render_file_preview(file_path, file_name, unique_key):
@@ -511,7 +518,7 @@ def render_student_attendance_viewer():
     sel_month = c1.selectbox("Select Month (Student):", MONTHS, index=cur_m_idx, key="view_st_month")
     sel_week = c2.selectbox("Select Week (Student):", WEEKS, index=cur_w_idx, key="view_st_week")
     df_slot = get_student_attendance_for_slot(sel_month, sel_week)
-    st.caption(f"Showing Student Attendance for: **{sel_month} | {sel_week}**")
+    st.caption(f"Showing Student Attendance for: **{sel_month} | {sel_week}** (Auto-Synced with Google Sheet)")
     st.dataframe(df_slot, use_container_width=True, hide_index=True)
 
 def render_teacher_attendance_viewer():
@@ -525,7 +532,7 @@ def render_teacher_attendance_viewer():
     sel_month = c1.selectbox("Select Month (Teacher):", MONTHS, index=cur_m_idx, key="view_tc_month")
     sel_week = c2.selectbox("Select Week (Teacher):", WEEKS, index=cur_w_idx, key="view_tc_week")
     df_slot = get_teacher_attendance_for_slot(sel_month, sel_week)
-    st.caption(f"Showing Teacher Attendance for: **{sel_month} | {sel_week}**")
+    st.caption(f"Showing Teacher Attendance for: **{sel_month} | {sel_week}** (Auto-Synced with Google Sheet)")
     st.dataframe(df_slot, use_container_width=True, hide_index=True)
 
 def render_safety_checklist_viewer():
@@ -710,7 +717,7 @@ LESSON_PLANS_DB = {
     ]
 }
 
-# ----------------- MASTER CONTENT ROUTER -----------------
+# ----------------- MASTER CONTENT ROUTER (ZERO TRUNCATION) -----------------
 def render_master_content(sno, title):
     if title == "STEM Lab Profile" or sno == 1:
         st.markdown("""
@@ -1082,10 +1089,12 @@ if access_mode == "Admin Workspace":
             c_save_s, c_sync = st.columns(2)
             if c_save_s.button("💾 Save Sheet Link"):
                 save_url(SHEET_CONFIG_FILE, sheet_input)
+                fetch_google_sheet_data_cached.clear()
                 st.success("Google Sheet link saved!")
-            if c_sync.button("🔄 Sync Now from Google Sheet", type="primary"):
+            if c_sync.button("🔄 Force Sync Now", type="primary"):
                 if sheet_input:
                     save_url(SHEET_CONFIG_FILE, sheet_input)
+                fetch_google_sheet_data_cached.clear()
                 success, msg = sync_data_from_google_sheet()
                 if success:
                     st.success(msg)
