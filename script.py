@@ -185,8 +185,9 @@ CATEGORIES = {
     ]
 }
 
+# ----------------- SESSION STATE TRACKERS (DEFAULT CLOSED) -----------------
 if "active_viewer_sno" not in st.session_state:
-    st.session_state["active_viewer_sno"] = 1
+    st.session_state["active_viewer_sno"] = None
 
 if "active_admin_sno" not in st.session_state:
     st.session_state["active_admin_sno"] = None
@@ -287,7 +288,6 @@ def render_executive_messages():
     vp_img = get_profile_photo("vice_principal_photo")
 
     # Principal Desk Box
-    col_p1, col_p2 = st.columns([1, 7]) if principal_img else (None, None)
     with st.container():
         st.markdown('<div class="msg-container">', unsafe_allow_html=True)
         if principal_img:
