@@ -98,48 +98,22 @@ MONTHS = ["April", "May", "June", "July", "August", "September", "October", "Nov
 WEEKS = ["Week 1", "Week 2", "Week 3", "Week 4", "Week 5"]
 DAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"]
 
+# EXACT SAFETY COMPLIANCE CHECKLIST: ELECTRONICS STEM LAB
 DEFAULT_SAFETY_POINTS = [
-    "[1. General] Enter the lab only with permission",
-    "[1. General] Follow all instructions of the teacher",
-    "[1. General] Maintain discipline and silence",
-    "[1. General] Do not run, push or shout",
-    "[1. General] Keep your workstation clean and organized",
-    "[1. General] Do not bring food or drinks",
-    "[1. General] Do not remove any equipment from the lab",
-    "[2. Electrical] Handle electrical equipment carefully",
-    "[2. Electrical] Do not use damaged wires or equipment",
-    "[2. Electrical] Switch off power before making connections",
-    "[2. Electrical] Do not connect to power source without teacher supervision",
-    "[2. Electrical] Keep water away from electrical equipment",
-    "[2. Electrical] Report any sparking, unusual heating or fault immediately",
-    "[2. Electrical] Do not touch exposed connections",
-    "[3. Robotics] Handle boards, sensors and components carefully",
-    "[3. Robotics] Check connections before switching on",
-    "[3. Robotics] Use correct voltage and power supply",
-    "[3. Robotics] Do not force components into connectors",
-    "[3. Robotics] Operate motors and moving parts only under supervision",
-    "[3. Robotics] Keep loose wires away from moving parts",
-    "[3. Robotics] Switch off power after completing the activity",
-    "[4. Tools] Use tools only for their intended purpose",
-    "[4. Tools] Handle tools carefully; do not leave sharp tools unattended",
-    "[4. Tools] Return all tools to their place after use",
-    "[4. Tools] Report damaged or missing tools immediately",
-    "[4. Tools] Use tools under teacher supervision",
-    "[5. 3D Printer] Operate 3D printer only under supervision",
-    "[5. 3D Printer] Do not touch hot nozzle or heated bed",
-    "[5. 3D Printer] Keep hands and objects away from moving parts",
-    "[5. 3D Printer] Do not repair or modify the printer",
-    "[5. 3D Printer] Switch off the printer when not in use; report any malfunction immediately",
-    "[6. Battery] Use only specified batteries and chargers",
-    "[6. Battery] Do not short-circuit batteries",
-    "[6. Battery] Do not use damaged, swollen or leaking batteries",
-    "[6. Battery] Follow proper charging procedure; do not leave batteries connected unnecessarily",
-    "[6. Battery] Store batteries in designated place",
-    "[7. Emergency] Stay calm during an emergency & inform teacher immediately",
-    "[7. Emergency] Switch off power if safe to do so; do not try to handle electrical faults",
-    "[7. Emergency] Follow school emergency & evacuation procedures; do not re-enter until permitted",
-    "[Student Responsibility] Follow all safety instructions & work responsibly/cooperatively",
-    "[Student Responsibility] Handle equipment with care, report damage immediately & keep lab clean/safe"
+    "Fire Extinguisher (CO₂ / Dry Powder): Ready and verified for electrical fire safety.",
+    "Main Power Cut-off (Emergency Kill Switch): Functional to cut bench power instantly.",
+    "Soldering Stations: Insulated stands, tip cleaners, and auto-shutoff enabled.",
+    "Fume Ventilation: Solder smoke extractors/fans running properly.",
+    "DC Power Supplies: Low-voltage limits set (3.3V–12V) and short-circuit protection checked.",
+    "Multimeters & Probes: Intact insulation with functional internal fuses.",
+    "Power Strips & Wiring: Securely mounted without loose or daisy-chained cords.",
+    "Li-ion & Battery Storage: Dedicated fire-safe container for batteries and harvested cells.",
+    "ESD & Component Storage: Anti-static protection for microcontrollers, ICs, and sensors.",
+    "Hand Tools & Cutters: Insulated handles on pliers, strippers, and flush cutters.",
+    "Eye Protection (Safety Glasses): Worn during wire snipping and soldering.",
+    "First Aid Kit: Equipped with burn care dressings and minor cut treatments.",
+    "E-Waste & Scrap Disposal: Separate bins for lead clippings, blown parts, and dead cells.",
+    "Workstation Cleanliness: Benches free of loose wire snippets and solder residue."
 ]
 
 SECTIONS_LIST = [
@@ -387,28 +361,35 @@ def get_safety_checklist_all():
         init_safety_checklist()
         return pd.read_csv(SAFETY_CHECKLIST_FILE, dtype=str).fillna("")
 
-def get_safety_checklist_for_slot(month, week):
+def get_safety_checklist_for_slot(month, week, default_date_str=None):
     df_all = get_safety_checklist_all()
+    if not default_date_str:
+        default_date_str = datetime.now().strftime("%Y-%m-%d")
+        
     if not df_all.empty and {"Month", "Week", "Safety Parameter / Check Item"}.issubset(set(df_all.columns)):
         filtered = df_all[(df_all["Month"] == str(month)) & (df_all["Week"] == str(week))]
         if not filtered.empty:
             df_slot = filtered.drop(columns=[c for c in ["Month", "Week"] if c in filtered.columns]).copy()
             df_slot["Status"] = df_slot["Status"].apply(lambda x: True if str(x).lower() in ["true", "1", "yes", "passed"] else False)
+            if "Date" not in df_slot.columns or df_slot["Date"].dropna().empty or (df_slot["Date"] == "").all():
+                df_slot["Date"] = default_date_str
             return df_slot
 
     return pd.DataFrame({
-        "Date": [datetime.now().strftime("%Y-%m-%d") for _ in DEFAULT_SAFETY_POINTS],
+        "Date": [default_date_str for _ in DEFAULT_SAFETY_POINTS],
         "S.No.": list(range(1, len(DEFAULT_SAFETY_POINTS) + 1)),
         "Safety Parameter / Check Item": DEFAULT_SAFETY_POINTS,
         "Status": [False for _ in DEFAULT_SAFETY_POINTS],
         "Remarks": ["Verified Compliant" for _ in DEFAULT_SAFETY_POINTS]
     })
 
-def save_safety_checklist_slot(month, week, edited_df):
+def save_safety_checklist_slot(month, week, edited_df, chosen_date=None):
     df_all = get_safety_checklist_all()
     edited_df = edited_df.copy()
     edited_df["Month"] = str(month)
     edited_df["Week"] = str(week)
+    if chosen_date:
+        edited_df["Date"] = str(chosen_date)
     edited_df["Status"] = edited_df["Status"].apply(lambda x: "Passed" if x is True else "Failed")
     df_remaining = df_all[~((df_all["Month"] == str(month)) & (df_all["Week"] == str(week)))] if not df_all.empty else pd.DataFrame()
     pd.concat([df_remaining, edited_df], ignore_index=True).to_csv(SAFETY_CHECKLIST_FILE, index=False)
@@ -604,19 +585,22 @@ def render_teacher_attendance_viewer():
     st.caption(f"Showing Teacher Attendance for: **{sel_month} | {sel_week}** (Auto-Synced with Google Sheet)")
     st.dataframe(df_slot, use_container_width=True, hide_index=True)
 
+# ----------------- UPDATED SAFETY CHECKLIST VIEWER WITH DATE SELECTOR -----------------
 def render_safety_checklist_viewer():
-    st.markdown("### 🛡️ Weekly STEM Lab Safety Audit Checklist")
-    st.caption("Standardized as per ABIC STEM Lab Safety Protocol: Be Safe • Be Responsible • Be Innovative")
+    st.markdown("### 🛡️ Safety Compliance Checklist: Electronics STEM Lab")
+    st.caption("Standardized as per ABIC STEM Lab Electronics Safety Protocol")
     cur_m_idx, cur_w_idx = get_current_indices()
-    c1, c2 = st.columns(2)
+    
+    c1, c2, c3 = st.columns([1.2, 1.2, 1.2])
     sel_month = c1.selectbox("Select Month (Safety Audit):", MONTHS, index=cur_m_idx, key="view_safe_month")
     sel_week = c2.selectbox("Select Week (Safety Audit):", WEEKS, index=cur_w_idx, key="view_safe_week")
+    sel_date = c3.date_input("Inspection Date:", value=datetime.now(), key="view_safe_date")
     
-    df_slot = get_safety_checklist_for_slot(sel_month, sel_week)
-    st.caption(f"Showing Lab Safety Inspection for: **{sel_month} | {sel_week}**")
+    df_slot = get_safety_checklist_for_slot(sel_month, sel_week, default_date_str=str(sel_date))
+    st.caption(f"Showing Electronics Safety Inspection for: **{sel_month} | {sel_week} | Date: {sel_date}**")
 
     display_df = df_slot.copy()
-    display_df["Inspection Status"] = display_df["Status"].apply(lambda x: "✅ Passed / Compliant" if x is True else "❌ Not Verified / Attention Needed")
+    display_df["Inspection Status"] = display_df["Status"].apply(lambda x: "✅ Verified / Compliant" if x is True else "❌ Attention Needed")
     display_df = display_df.drop(columns=["Status"])
     
     st.dataframe(display_df, use_container_width=True, hide_index=True)
@@ -1290,10 +1274,12 @@ if access_mode == "Admin Workspace":
                             st.rerun()
                     elif title == "Safety Checklist":
                         cur_m_idx, cur_w_idx = get_current_indices()
-                        c_m, c_w = st.columns(2)
+                        c_m, c_w, c_d = st.columns([1.2, 1.2, 1.2])
                         admin_safe_month = c_m.selectbox("Select Month:", MONTHS, index=cur_m_idx, key=f"adm_sf_m_{sno}")
                         admin_safe_week = c_w.selectbox("Select Week:", WEEKS, index=cur_w_idx, key=f"adm_sf_w_{sno}")
-                        current_safe_df = get_safety_checklist_for_slot(admin_safe_month, admin_safe_week)
+                        admin_safe_date = c_d.date_input("Audit Date:", value=datetime.now(), key=f"adm_sf_d_{sno}")
+                        
+                        current_safe_df = get_safety_checklist_for_slot(admin_safe_month, admin_safe_week, default_date_str=str(admin_safe_date))
                         
                         st.markdown("Tick/verify safety compliance parameters and update remarks:")
                         edited_safe_df = st.data_editor(
@@ -1315,8 +1301,8 @@ if access_mode == "Admin Workspace":
                             key=f"adm_ed_sf_{sno}"
                         )
                         if st.button(f"💾 Save Safety Checklist ({admin_safe_month} - {admin_safe_week})", type="primary", key=f"btn_sf_s_{sno}"):
-                            save_safety_checklist_slot(admin_safe_month, admin_safe_week, edited_safe_df)
-                            st.success(f"Safety checklist for {admin_safe_month} ({admin_safe_week}) saved!")
+                            save_safety_checklist_slot(admin_safe_month, admin_safe_week, edited_safe_df, chosen_date=admin_safe_date)
+                            st.success(f"Safety checklist for {admin_safe_month} ({admin_safe_week} - Date: {admin_safe_date}) saved!")
                             st.rerun()
                     else:
                         uploaded_files = st.file_uploader(f"Upload files for #{sno} ({title})", type=None, accept_multiple_files=True, key=f"upload_{sno}")
