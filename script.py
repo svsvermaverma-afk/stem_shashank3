@@ -84,6 +84,10 @@ os.makedirs(DATA_DIR, exist_ok=True)
 STUDENT_ATTENDANCE_FILE = os.path.join(DATA_DIR, "student_attendance.csv")
 TEACHER_ATTENDANCE_FILE = os.path.join(DATA_DIR, "teacher_attendance.csv")
 SAFETY_CHECKLIST_FILE = os.path.join(DATA_DIR, "safety_checklist.csv")
+MAINTENANCE_DAILY_FILE = os.path.join(DATA_DIR, "maintenance_daily.csv")
+MAINTENANCE_DEEP_FILE = os.path.join(DATA_DIR, "maintenance_deep.csv")
+MAINTENANCE_BREAKDOWN_FILE = os.path.join(DATA_DIR, "maintenance_breakdown.csv")
+
 PRINCIPAL_MSG_FILE = os.path.join(DATA_DIR, "principal_message.txt")
 VICE_PRINCIPAL_MSG_FILE = os.path.join(DATA_DIR, "vice_principal_message.txt")
 SHEET_CONFIG_FILE = os.path.join(DATA_DIR, "gsheet_url.txt")
@@ -98,7 +102,7 @@ MONTHS = ["April", "May", "June", "July", "August", "September", "October", "Nov
 WEEKS = ["Week 1", "Week 2", "Week 3", "Week 4", "Week 5"]
 DAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"]
 
-# EXACT SAFETY COMPLIANCE CHECKLIST: ELECTRONICS STEM LAB
+# EXACT SAFETY COMPLIANCE CHECKLIST: ELECTRONICS STEM LAB (#16)
 DEFAULT_SAFETY_POINTS = [
     "Fire Extinguisher (CO₂ / Dry Powder): Ready and verified for electrical fire safety.",
     "Main Power Cut-off (Emergency Kill Switch): Functional to cut bench power instantly.",
@@ -114,6 +118,27 @@ DEFAULT_SAFETY_POINTS = [
     "First Aid Kit: Equipped with burn care dressings and minor cut treatments.",
     "E-Waste & Scrap Disposal: Separate bins for lead clippings, blown parts, and dead cells.",
     "Workstation Cleanliness: Benches free of loose wire snippets and solder residue."
+]
+
+# DEFAULT WORKSTATIONS FOR DAILY MAINTENANCE (#14)
+DEFAULT_DAILY_AREAS = [
+    "Student Workstations (Bench 1 to 5)",
+    "Student Workstations (Bench 6 to 10)",
+    "Component Storage & Racks",
+    "Soldering & Desoldering Workbench",
+    "Teacher Demonstration Bench",
+    "3D Printer Prototyping Corner"
+]
+
+# DEFAULT TASKS FOR DEEP MAINTENANCE (#14)
+DEFAULT_DEEP_TASKS = [
+    ("Benches & floors dry sweeping (No metal snips / Magnet roller used)", "Weekly"),
+    ("Exhaust fans / Fume absorber carbon filters cleaning", "Weekly"),
+    ("Multimeter probes, fuses & 9V battery voltage check", "Monthly"),
+    ("Soldering iron tips cleaning, tinning & oxidation check", "Monthly"),
+    ("Component drawers dusting & sensor/resistor box re-labeling", "Monthly"),
+    ("Li-ion & Lithium battery health check (Discard swollen cells)", "Monthly"),
+    ("Main MCB / Emergency Kill Switch trip test & Earthing check", "Monthly")
 ]
 
 SECTIONS_LIST = [
@@ -293,8 +318,8 @@ def render_executive_messages():
             st.markdown(get_vice_principal_message())
         st.markdown('</div>', unsafe_allow_html=True)
 
-# ----------------- ATTENDANCE & SAFETY INITIALIZATION -----------------
-def init_student_attendance():
+# ----------------- ATTENDANCE, SAFETY & MAINTENANCE INITIALIZATION -----------------
+def init_all_data_structures():
     if not os.path.exists(STUDENT_ATTENDANCE_FILE):
         structure = {
             "Month": [], "Week": [], "Date": [], "Day": [], "Class & Section": [],
@@ -302,7 +327,6 @@ def init_student_attendance():
         }
         pd.DataFrame(structure).to_csv(STUDENT_ATTENDANCE_FILE, index=False)
 
-def init_teacher_attendance():
     if not os.path.exists(TEACHER_ATTENDANCE_FILE):
         structure = {
             "Month": [], "Week": [], "Date": [], "Day": [], "S.No.": [],
@@ -312,7 +336,6 @@ def init_teacher_attendance():
         }
         pd.DataFrame(structure).to_csv(TEACHER_ATTENDANCE_FILE, index=False)
 
-def init_safety_checklist():
     if not os.path.exists(SAFETY_CHECKLIST_FILE):
         structure = {
             "Month": [], "Week": [], "Date": [], "S.No.": [],
@@ -320,15 +343,38 @@ def init_safety_checklist():
         }
         pd.DataFrame(structure).to_csv(SAFETY_CHECKLIST_FILE, index=False)
 
-init_student_attendance()
-init_teacher_attendance()
-init_safety_checklist()
+    if not os.path.exists(MAINTENANCE_DAILY_FILE):
+        structure = {
+            "Month": [], "Week": [], "Date": [], "Workstation / Area": [],
+            "Safai Check (Dusting / Scraps)": [], "Equipment Check (Tools in place)": [],
+            "Power Switch OFF": [], "Checked By": [], "Remarks": []
+        }
+        pd.DataFrame(structure).to_csv(MAINTENANCE_DAILY_FILE, index=False)
 
+    if not os.path.exists(MAINTENANCE_DEEP_FILE):
+        structure = {
+            "Month": [], "Week": [], "Date": [], "S.No.": [],
+            "Parameter / Deep Task": [], "Frequency": [], "Status": [],
+            "Action Taken / Remarks": [], "Verified By": []
+        }
+        pd.DataFrame(structure).to_csv(MAINTENANCE_DEEP_FILE, index=False)
+
+    if not os.path.exists(MAINTENANCE_BREAKDOWN_FILE):
+        structure = {
+            "Month": [], "Week": [], "Date Reported": [], "S.No.": [],
+            "Equipment / Tool Name": [], "Problem / Issue": [], "Action Required": [],
+            "Status": [], "Date Resolved": [], "Remarks": []
+        }
+        pd.DataFrame(structure).to_csv(MAINTENANCE_BREAKDOWN_FILE, index=False)
+
+init_all_data_structures()
+
+# ----------------- ATTENDANCE & SAFETY LOGIC -----------------
 def get_student_attendance_all():
     try:
         return pd.read_csv(STUDENT_ATTENDANCE_FILE, dtype=str).fillna("")
     except Exception:
-        init_student_attendance()
+        init_all_data_structures()
         return pd.read_csv(STUDENT_ATTENDANCE_FILE, dtype=str).fillna("")
 
 def save_student_attendance_slot(month, week, edited_df):
@@ -343,7 +389,7 @@ def get_teacher_attendance_all():
     try:
         return pd.read_csv(TEACHER_ATTENDANCE_FILE, dtype=str).fillna("")
     except Exception:
-        init_teacher_attendance()
+        init_all_data_structures()
         return pd.read_csv(TEACHER_ATTENDANCE_FILE, dtype=str).fillna("")
 
 def save_teacher_attendance_slot(month, week, edited_df):
@@ -358,7 +404,7 @@ def get_safety_checklist_all():
     try:
         return pd.read_csv(SAFETY_CHECKLIST_FILE, dtype=str).fillna("")
     except Exception:
-        init_safety_checklist()
+        init_all_data_structures()
         return pd.read_csv(SAFETY_CHECKLIST_FILE, dtype=str).fillna("")
 
 def get_safety_checklist_for_slot(month, week, default_date_str=None):
@@ -393,6 +439,128 @@ def save_safety_checklist_slot(month, week, edited_df, chosen_date=None):
     edited_df["Status"] = edited_df["Status"].apply(lambda x: "Passed" if x is True else "Failed")
     df_remaining = df_all[~((df_all["Month"] == str(month)) & (df_all["Week"] == str(week)))] if not df_all.empty else pd.DataFrame()
     pd.concat([df_remaining, edited_df], ignore_index=True).to_csv(SAFETY_CHECKLIST_FILE, index=False)
+
+# ----------------- MAINTENANCE DATA ACCESSORS (#14) -----------------
+def get_daily_maint_for_slot(month, week, default_date_str=None):
+    try:
+        df_all = pd.read_csv(MAINTENANCE_DAILY_FILE, dtype=str).fillna("")
+    except Exception:
+        init_all_data_structures()
+        df_all = pd.read_csv(MAINTENANCE_DAILY_FILE, dtype=str).fillna("")
+        
+    if not default_date_str:
+        default_date_str = datetime.now().strftime("%Y-%m-%d")
+
+    if not df_all.empty and {"Month", "Week", "Workstation / Area"}.issubset(set(df_all.columns)):
+        filtered = df_all[(df_all["Month"] == str(month)) & (df_all["Week"] == str(week))]
+        if not filtered.empty:
+            df_slot = filtered.drop(columns=[c for c in ["Month", "Week"] if c in filtered.columns]).copy()
+            for col in ["Safai Check (Dusting / Scraps)", "Equipment Check (Tools in place)", "Power Switch OFF"]:
+                if col in df_slot.columns:
+                    df_slot[col] = df_slot[col].apply(lambda x: True if str(x).lower() in ["true", "1", "yes", "done"] else False)
+            return df_slot
+
+    return pd.DataFrame({
+        "Date": [default_date_str for _ in DEFAULT_DAILY_AREAS],
+        "Workstation / Area": DEFAULT_DAILY_AREAS,
+        "Safai Check (Dusting / Scraps)": [False for _ in DEFAULT_DAILY_AREAS],
+        "Equipment Check (Tools in place)": [False for _ in DEFAULT_DAILY_AREAS],
+        "Power Switch OFF": [False for _ in DEFAULT_DAILY_AREAS],
+        "Checked By": ["Lab Attendant / Teacher" for _ in DEFAULT_DAILY_AREAS],
+        "Remarks": ["Wire scraps & benches cleared" for _ in DEFAULT_DAILY_AREAS]
+    })
+
+def save_daily_maint_slot(month, week, edited_df, chosen_date=None):
+    try:
+        df_all = pd.read_csv(MAINTENANCE_DAILY_FILE, dtype=str).fillna("")
+    except Exception:
+        df_all = pd.DataFrame()
+    edited_df = edited_df.copy()
+    edited_df["Month"] = str(month)
+    edited_df["Week"] = str(week)
+    if chosen_date:
+        edited_df["Date"] = str(chosen_date)
+    for col in ["Safai Check (Dusting / Scraps)", "Equipment Check (Tools in place)", "Power Switch OFF"]:
+        if col in edited_df.columns:
+            edited_df[col] = edited_df[col].apply(lambda x: "Done" if x is True else "Pending")
+            
+    df_rem = df_all[~((df_all["Month"] == str(month)) & (df_all["Week"] == str(week)))] if not df_all.empty else pd.DataFrame()
+    pd.concat([df_rem, edited_df], ignore_index=True).to_csv(MAINTENANCE_DAILY_FILE, index=False)
+
+def get_deep_maint_for_slot(month, week, default_date_str=None):
+    try:
+        df_all = pd.read_csv(MAINTENANCE_DEEP_FILE, dtype=str).fillna("")
+    except Exception:
+        init_all_data_structures()
+        df_all = pd.read_csv(MAINTENANCE_DEEP_FILE, dtype=str).fillna("")
+        
+    if not default_date_str:
+        default_date_str = datetime.now().strftime("%Y-%m-%d")
+
+    if not df_all.empty and {"Month", "Week", "Parameter / Deep Task"}.issubset(set(df_all.columns)):
+        filtered = df_all[(df_all["Month"] == str(month)) & (df_all["Week"] == str(week))]
+        if not filtered.empty:
+            df_slot = filtered.drop(columns=[c for c in ["Month", "Week"] if c in filtered.columns]).copy()
+            df_slot["Status"] = df_slot["Status"].apply(lambda x: True if str(x).lower() in ["true", "1", "yes", "ok"] else False)
+            return df_slot
+
+    return pd.DataFrame({
+        "Date": [default_date_str for _ in DEFAULT_DEEP_TASKS],
+        "S.No.": list(range(1, len(DEFAULT_DEEP_TASKS) + 1)),
+        "Parameter / Deep Task": [t[0] for t in DEFAULT_DEEP_TASKS],
+        "Frequency": [t[1] for t in DEFAULT_DEEP_TASKS],
+        "Status": [False for _ in DEFAULT_DEEP_TASKS],
+        "Action Taken / Remarks": ["Inspection Completed / Cleaned" for _ in DEFAULT_DEEP_TASKS],
+        "Verified By": ["SPOC / Coordinator" for _ in DEFAULT_DEEP_TASKS]
+    })
+
+def save_deep_maint_slot(month, week, edited_df, chosen_date=None):
+    try:
+        df_all = pd.read_csv(MAINTENANCE_DEEP_FILE, dtype=str).fillna("")
+    except Exception:
+        df_all = pd.DataFrame()
+    edited_df = edited_df.copy()
+    edited_df["Month"] = str(month)
+    edited_df["Week"] = str(week)
+    if chosen_date:
+        edited_df["Date"] = str(chosen_date)
+    edited_df["Status"] = edited_df["Status"].apply(lambda x: "OK" if x is True else "Pending")
+    df_rem = df_all[~((df_all["Month"] == str(month)) & (df_all["Week"] == str(week)))] if not df_all.empty else pd.DataFrame()
+    pd.concat([df_rem, edited_df], ignore_index=True).to_csv(MAINTENANCE_DEEP_FILE, index=False)
+
+def get_breakdown_maint_for_slot(month, week):
+    try:
+        df_all = pd.read_csv(MAINTENANCE_BREAKDOWN_FILE, dtype=str).fillna("")
+    except Exception:
+        init_all_data_structures()
+        df_all = pd.read_csv(MAINTENANCE_BREAKDOWN_FILE, dtype=str).fillna("")
+
+    if not df_all.empty and {"Month", "Week", "Equipment / Tool Name"}.issubset(set(df_all.columns)):
+        filtered = df_all[(df_all["Month"] == str(month)) & (df_all["Week"] == str(week))]
+        if not filtered.empty:
+            return filtered.drop(columns=[c for c in ["Month", "Week"] if c in filtered.columns]).copy()
+
+    return pd.DataFrame({
+        "Date Reported": [datetime.now().strftime("%Y-%m-%d"), datetime.now().strftime("%Y-%m-%d")],
+        "S.No.": ["1", "2"],
+        "Equipment / Tool Name": ["Soldering Station 3", "DC Bench Power Supply"],
+        "Problem / Issue": ["Tip not heating / loose connector", "Voltage display fluctuation"],
+        "Action Required": ["Heating element replaced & tested", "Recalibrated / Sent for repair"],
+        "Status": ["Repaired", "Pending"],
+        "Date Resolved": [datetime.now().strftime("%Y-%m-%d"), ""],
+        "Remarks": ["Ready for students", "Tagged Red: Under Maintenance"]
+    })
+
+def save_breakdown_maint_slot(month, week, edited_df):
+    try:
+        df_all = pd.read_csv(MAINTENANCE_BREAKDOWN_FILE, dtype=str).fillna("")
+    except Exception:
+        df_all = pd.DataFrame()
+    edited_df = edited_df.copy()
+    edited_df["Month"] = str(month)
+    edited_df["Week"] = str(week)
+    df_rem = df_all[~((df_all["Month"] == str(month)) & (df_all["Week"] == str(week)))] if not df_all.empty else pd.DataFrame()
+    pd.concat([df_rem, edited_df], ignore_index=True).to_csv(MAINTENANCE_BREAKDOWN_FILE, index=False)
 
 # ----------------- REAL-TIME GOOGLE SHEET SYNC ENGINE -----------------
 def sync_data_from_google_sheet():
@@ -585,7 +753,41 @@ def render_teacher_attendance_viewer():
     st.caption(f"Showing Teacher Attendance for: **{sel_month} | {sel_week}** (Auto-Synced with Google Sheet)")
     st.dataframe(df_slot, use_container_width=True, hide_index=True)
 
-# ----------------- UPDATED SAFETY CHECKLIST VIEWER WITH DATE SELECTOR -----------------
+# ----------------- UPDATED MAINTENANCE VIEWER (#14) -----------------
+def render_maintenance_viewer():
+    st.markdown("### 🛠️ Electronics STEM Lab Maintenance & Cleaning System")
+    st.caption("Standardized Lab Protocol: Daily Sanitization, Deep Maintenance & Breakdown Tagging")
+    
+    cur_m_idx, cur_w_idx = get_current_indices()
+    c1, c2, c3 = st.columns([1.2, 1.2, 1.2])
+    sel_month = c1.selectbox("Select Month (Maintenance):", MONTHS, index=cur_m_idx, key="view_maint_month")
+    sel_week = c2.selectbox("Select Week (Maintenance):", WEEKS, index=cur_w_idx, key="view_maint_week")
+    sel_date = c3.date_input("Audit / Log Date:", value=datetime.now(), key="view_maint_date")
+    
+    tab_m1, tab_m2, tab_m3 = st.tabs(["🧹 1. Daily Cleaning & Workstation Log", "🔍 2. Deep Maintenance & Hygiene", "⚠️ 3. Equipment Breakdown Register"])
+    
+    with tab_m1:
+        st.markdown(f"##### 📅 Daily Log for: `{sel_month} | {sel_week} | {sel_date}`")
+        df_daily = get_daily_maint_for_slot(sel_month, sel_week, default_date_str=str(sel_date))
+        disp_daily = df_daily.copy()
+        for col in ["Safai Check (Dusting / Scraps)", "Equipment Check (Tools in place)", "Power Switch OFF"]:
+            if col in disp_daily.columns:
+                disp_daily[col] = disp_daily[col].apply(lambda x: "✅ Done" if x is True else "⏳ Pending")
+        st.dataframe(disp_daily, use_container_width=True, hide_index=True)
+        
+    with tab_m2:
+        st.markdown(f"##### 🛡️ Deep Hardware & Hygiene Audit: `{sel_month} | {sel_week}`")
+        df_deep = get_deep_maint_for_slot(sel_month, sel_week, default_date_str=str(sel_date))
+        disp_deep = df_deep.copy()
+        disp_deep["Status"] = disp_deep["Status"].apply(lambda x: "✅ OK / Cleaned" if x is True else "⚠️ Action Required")
+        st.dataframe(disp_deep, use_container_width=True, hide_index=True)
+        
+    with tab_m3:
+        st.markdown(f"##### 🏷️ Equipment Breakdown & Red-Tag Repair Tracking")
+        df_bd = get_breakdown_maint_for_slot(sel_month, sel_week)
+        st.dataframe(df_bd, use_container_width=True, hide_index=True)
+
+# ----------------- UPDATED SAFETY CHECKLIST VIEWER (#16) -----------------
 def render_safety_checklist_viewer():
     st.markdown("### 🛡️ Safety Compliance Checklist: Electronics STEM Lab")
     st.caption("Standardized as per ABIC STEM Lab Electronics Safety Protocol")
@@ -735,38 +937,6 @@ LESSON_PLANS_DB = {
         ("Session 12 (16-31 December 2026)", "Technical Schematics & Project Pitch Preparation", "Draft technical report and circuit diagrams; storyboard 2-minute video pitch narrative with team roles.", "1. Full circuit schematics, bill of materials, slide deck layout.\n2. Engineering dossier completion.\n3. Pitch presentation script.", "PCs, Schematics software/Paper, Presentation slides.", "Lab Evaluation (10M): Schematics accuracy (4M), Dossier completeness (4M), Pitch (2M)."),
         ("Session 13 (01-15 January 2027)", "Internal Qualifying Evaluation & Jury Defense", "Present working hardware prototype before school evaluation committee; implement jury feedback.", "1. 3-minute pitch, live automated gate demo, fault injection test by jury.\n2. Technical oral defense.\n3. Post-eval optimization.", "Completed Prototypes, Projector, Evaluation scorecards.", "Qualifying Defense Score (10M): Mechanism reliability (4M), Defense (4M), Teamwork (2M)."),
         ("Session 14 (16-31 January 2027)", "Final Video Production & Erehwon Portal Upload", "Record 2-minute demonstration video showing IR trigger and servo actuation; submit entry on Erehwon portal.", "1. HD video recording, voiceover narration, digital portfolio upload.\n2. Milestone 4 Final National Submission.\n3. Lab repository handover.", "Smartphones/Camera, Assembled Gate Rig, Erehwon Portal.", "Lab Evaluation (10M): Video clarity (5M), Portal submission verified (5M).")
-    ],
-    "Class 8": [
-        ("Session 1 (01-15 July 2026)", "Advanced Programming Architecture & Shield I/O Banks", "Setup Arduino Uno + Shield; map analog/digital/I2C channels; form 5-6 member teams; scout access tracking problems.", "1. Arrays, state machines, shield I2C/UART ports, pin budgeting.\n2. I2C bus addressing.\n3. Team allocation for advanced security tracks.", "Arduino Uno, Sensor Shield, I2C scanner tools, PC.", "Lab Evaluation (10M): Shield mapping (3M), Architecture planning (4M), Logbook (3M)."),
-        ("Session 2 (16-31 July 2026)", "7-Segment Display Architecture & Segment Mapping", "Connect 7-segment display module to digital pins 2-8; display digits 0-9 sequentially; draft project scope.", "1. Common cathode/anode pinouts, segment truth tables (a-g), 220Ω resistor protection.\n2. Bitwise display mapping.\n3. Project charter drafting.", "Arduino Uno, Sensor Shield, 7-Segment display module, Resistors.", "Lab Evaluation (10M): Segment code accuracy (4M), Wiring (3M), Logbook (3M)."),
-        ("Session 3 (01-15 August 2026)", "Digital Counting Logic & Software Switch Debounce", "Build Digital Counter with 2 pushbuttons (Entry/Exit) and 7-segment display on shield; finalize Milestone 1 Problem Charter.", "1. Counter variables, debounce timing with millis(), increment/decrement.\n2. Milestone 1: Problem Statement & BOM approval.\n3. Edge detection logic.", "Arduino Uno, Sensor Shield, 7-Segment Display, 2x Push Buttons.", "Lab Evaluation (10M): Counter debouncing (4M), BOM setup (3M), Logbook (3M)."),
-        ("Session 4 (16-31 August 2026)", "I2C LCD 16x2 Interface & Dedicated Shield I2C Port", "Plug I2C LCD directly into 4-pin I2C port on shield; initialize display at address 0x27; print live visitor count strings.", "1. I2C bus (SDA/SCL on A4/A5), LiquidCrystal_I2C library, LCD cursor control.\n2. Memory optimization on Uno.\n3. String formatting on LCD.", "Arduino Uno, Sensor Shield, 16x2 I2C LCD module, 4-pin cable.", "Lab Evaluation (10M): I2C communication (4M), Display logic (3M), Logbook (3M)."),
-        ("Session 5 (01-15 September 2026)", "Capacitive Touch Sensing & Variable Switching", "Connect 3-pin Touch Sensor to Pin 4 and RGB LED to PWM Pins 9, 10, 11 on shield; program 3-stage touch-controlled dimmer.", "1. TTP223 Capacitive Touch module, digital touch states, PWM LED dimming.\n2. Touch state latching vs momentary.\n3. Dimming curves.", "Arduino Uno, Sensor Shield, TTP223 Touch module, RGB LED module.", "Lab Evaluation (10M): Touch dimming loop (4M), Wiring (3M), Logbook (3M)."),
-        ("Session 6 (16-30 September 2026)", "RGB Color Modulation via PWM Logic", "Code multi-color warning beacon on shield (Green=Normal, Amber=Caution, Red=Alert); interface with touch button.", "1. AnalogWrite() duty cycles (0-255), RGB additive color mixing, visual status modes.\n2. Milestone 2: Low-Fidelity Prototype Walkthrough.\n3. State beacon coding.", "Arduino Uno, Sensor Shield, RGB LED, Touch module.", "Lab Evaluation (10M): Color mixing accuracy (4M), Wiring (3M), Logbook (3M)."),
-        ("Session 7 (01-15 October 2026)", "Laser Optical Transceivers & Narrow-Beam Alignment", "Mount Laser Module on Pin 8 and LDR on Pin A0 of shield; align optical beam inside shrouded tube; log breach thresholds.", "1. 650nm Laser Diode module, shielded LDR receiver module, optical tripwire physics.\n2. Optical collimation and shroud alignment.\n3. Optical breach detection.", "Arduino Uno, Sensor Shield, 5V Laser Diode, Shrouded LDR module.", "Lab Evaluation (10M): Optical alignment (4M), Threshold calibration (3M), Logbook (3M)."),
-        ("Session 8 (16-31 October 2026)", "Multi-Trigger Security System (AND/OR Conditional Logic)", "Build Dual-Factor Security Grid: Laser breach + Touch perimeter trigger multi-tone siren and latch Red LED; test reset logic.", "1. Compound boolean logic (laserTripped && touchAlert), software alarm latching.\n2. Keypad/Touch disarm logic.\n3. Multi-sensor security rules.", "Arduino Uno, Sensor Shield, Laser, LDR, Touch Sensor, Buzzer, RGB LED.", "Lab Evaluation (10M): Dual-factor logic (4M), Alarm latching (3M), Logbook (3M)."),
-        ("Session 9 (01-15 November 2026)", "Subsystem Integration & Wire Looming inside Casing", "Assemble full system on shield; route cables into rigid acrylic/wood casing; test live LCD status updates.", "1. Combining I2C LCD, Laser tripwire, Touch sensor, and Siren into single shield setup.\n2. Cable management & looming.\n3. Casing fabrication.", "Arduino Uno, Sensor Shield, Full Sensor Suite, Acrylic/Wood housing.", "Lab Evaluation (10M): Integration hygiene (4M), LCD readout (3M), Logbook (3M)."),
-        ("Session 10 (16-30 November 2026)", "Edge Case Handling & Debounce Code Hardening", "Alpha Prototype Review: Test laser security grid under changing ambient room lights; optimize threshold code.", "1. Eliminating false optical triggers, ambient light compensation, code hardening.\n2. Milestone 3: Alpha Working Prototype Demonstration.\n3. Noise filtering.", "Arduino Uno, Sensor Shield, Integrated Security Rig, Variable Room Lighting.", "Lab Evaluation (10M): False-alarm rejection (5M), Stability (3M), Logbook (2M)."),
-        ("Session 11 (01-15 December 2026)", "System Stress Testing (100+ Cycles) & QA Logging", "Execute 100 continuous intrusion tests; record trigger reliability in QA Test Sheet; verify zero false alarms.", "1. Automated 100-cycle tripwire testing, alarm latency measurement, power stability.\n2. Quantitative QA logging.\n3. Thermal stability check.", "Arduino Uno, Sensor Shield, Security Rig, QA Test Log.", "Lab Evaluation (10M): 100-test zero fault (4M), QA log (4M), Wiring (2M)."),
-        ("Session 12 (16-31 December 2026)", "Pitch Deck Creation & Video Storyboarding", "Compile technical dossier, wiring schematic, and BOM; storyboard 2-minute pitch video with designated student speakers.", "1. Value proposition, technical architecture slide, video scriptwriting.\n2. Complete engineering schematic generation.\n3. Oral presentation run-through.", "PCs, Fritzing/Schematic tool, Presentation templates.", "Lab Evaluation (10M): Dossier completeness (4M), Video storyboard (4M), Pitch (2M)."),
-        ("Session 13 (01-15 January 2027)", "Pre-Competition Mock Defense & Jury Evaluation", "Full dress rehearsal: Present working laser/display security prototype before senior faculty panel; refine pitch.", "1. 3-minute presentation, live laser breach demonstration, faculty technical Q&A.\n2. Rigorous jury defense.\n3. Feedback implementation.", "Complete Integrated Prototype, Projector, Jury Scorecards.", "Mock Defense Score (10M): Technical depth (4M), Live demonstration (4M), Team (2M)."),
-        ("Session 14 (16-31 January 2027)", "Final Video Rendering & Erehwon Dossier Upload", "Record final 2-minute demonstration video; upload code (.ino), schematic, and documentation to Erehwon portal.", "1. HD video recording, schematic export, complete project submission.\n2. Milestone 4 National Competition Submission.\n3. Lab archive deployment.", "Camera, Completed System, Erehwon Portal.", "Lab Evaluation (10M): Video demo quality (5M), Portal submission verified (5M).")
-    ],
-    "Class 9": [
-        ("Session 1 (01-15 July 2026)", "Multi-Sensor System Architecture & Shield Bus Management", "Analyze Uno+Shield pin allocation; map 4+ simultaneous sensor channels; form 5-6 member teams; scout Agritech/Industry problems.", "1. Heterogeneous sensor bus, pinout budgeting, non-blocking millis() timing.\n2. Power rails decoupling on shield.\n3. Capstone team charter.", "Arduino Uno, Sensor Shield, Multi-sensor array, Multimeter.", "Lab Evaluation (10M): Bus allocation (3M), Architecture design (4M), Logbook (3M)."),
-        ("Session 2 (16-31 July 2026)", "Data Fusion & Multi-Variable Logic Loops", "Connect LDR + Tilt + Sound modules simultaneously to shield; write synchronized telemetry code; draft Capstone Charters.", "1. Sensor fusion principles, combining analog environmental data with digital triggers.\n2. Multi-channel telemetry over Serial.\n3. Capstone Charter drafting.", "Arduino Uno, Sensor Shield, LDR, Tilt, Sound Sensor modules.", "Lab Evaluation (10M): Sensor fusion code (4M), Wiring (3M), Logbook (3M)."),
-        ("Session 3 (01-15 August 2026)", "Capstone System Planning & BOM Optimization", "Finalize Capstone BOM (Sensors, actuators, displays, battery); submit Erehwon Milestone 1 Project Charter for sign-off.", "1. System architecture diagrams, component specifications, power budgeting (500mA limit).\n2. Milestone 1: Validated Problem Statement & BOM.\n3. Power distribution planning.", "Arduino Uno, Sensor Shield, Components catalog, BOM Spreadsheet.", "Lab Evaluation (10M): BOM optimization (4M), Architecture rigor (3M), Logbook (3M)."),
-        ("Session 4 (16-31 August 2026)", "Modular Subsystem Prototyping (Sensing vs Actuation)", "Build Sensing Subsystem (Analog inputs on shield) and Actuation Subsystem (Servos/Relays) on separate benches; verify signals.", "1. Decoupling hardware layers: Input sensing subsystem vs Output actuator subsystem.\n2. Signal integrity and power isolation.\n3. Independent subsystem testing.", "Arduino Uno, Sensor Shield, Relay module, High-torque Servo, Sensors.", "Lab Evaluation (10M): Subsystem isolation (4M), Signal integrity (3M), Logbook (3M)."),
-        ("Session 5 (01-15 September 2026)", "Interfacing Multi-Sensor Arrays on Breakout Shield", "Integrate full sensor array onto shield; verify zero signal crosstalk; write unified sensor sampling routine.", "1. Simultaneous wiring of IR, Hall, Tilt, and LDR modules on shield headers.\n2. Non-blocking sensor polling.\n3. Crosstalk prevention.", "Arduino Uno, Sensor Shield, IR, Hall, Tilt, LDR sensors.", "Lab Evaluation (10M): Polling routine (4M), High-density wiring (3M), Logbook (3M)."),
-        ("Session 6 (16-30 September 2026)", "Multi-Actuator Orchestration & Power Isolation", "Connect SG90 servo + 5V Relay module + I2C LCD to shield; supply external 5V power to terminal block; test concurrent actuation.", "1. Driving multiple servos, relays, and buzzers via shield external power terminals.\n2. Milestone 2: Low-Fidelity Prototype Walkthrough.\n3. Inductive kickback protection.", "Arduino Uno, Sensor Shield, Servo, Relay, I2C LCD, External DC Supply.", "Lab Evaluation (10M): Concurrent actuation (4M), Power isolation (3M), Logbook (3M)."),
-        ("Session 7 (01-15 October 2026)", "Non-Blocking State Machine Code Integration", "Merge sensor sampling and actuator routines into a non-blocking master sketch; eliminate code blocking; test real-time response.", "1. Replacing delay() with millis() timers, interrupt service routines (ISR), state enums.\n2. State machine architecture.\n3. Real-time responsiveness.", "Arduino Uno, Sensor Shield, Full Hardware Setup, PC IDE.", "Lab Evaluation (10M): State machine logic (4M), Zero-blocking verified (3M), Logbook (3M)."),
-        ("Session 8 (16-31 October 2026)", "Smart System Capstone Integration (Part 1: Core Logic)", "Assemble integrated Capstone build (Sensors + Actuators + Display on shield); code automated feedback control loop.", "1. Automated greenhouse / industrial safety interlocking logic, multi-stage thresholds.\n2. Closed-loop feedback control.\n3. Telemetry streaming.", "Arduino Uno, Sensor Shield, Full Capstone Sensors & Actuators, Chassis.", "Lab Evaluation (10M): Closed-loop execution (4M), Assembly (3M), Logbook (3M)."),
-        ("Session 9 (01-15 November 2026)", "Smart System Capstone Integration (Part 2: Casing & Looms)", "Mount Arduino+Shield assembly into durable modular chassis; bundle cables with spiral wrap; test standalone battery operation.", "1. Industrial-grade enclosure fabrication, heat-shrink wire looms, power switch.\n2. Mechanical stress relief on cables.\n3. Standalone battery integration.", "Arduino Uno, Sensor Shield, Industrial Modular Chassis, Spiral wrap, Battery pack.", "Lab Evaluation (10M): Industrial casing (4M), Cable looming (3M), Logbook (3M)."),
-        ("Session 10 (16-30 November 2026)", "Full System Field Testing & Telemetry Logging", "Milestone 3 Alpha Review: Subject capstone build to 50 continuous operational cycles; log performance metrics in QA dossier.", "1. Field stress testing over 50 continuous cycles, sensor drift and latency logging.\n2. Milestone 3: Alpha Working Prototype Demonstration.\n3. Telemetry recording.", "Complete Capstone Unit, Test Environment, QA Telemetry Sheet.", "Lab Evaluation (10M): 50-cycle stability (5M), Telemetry log (3M), Logbook (2M)."),
-        ("Session 11 (01-15 December 2026)", "Code Hardening, Fail-Safes & Auto-Recovery", "Implement fail-safe routines (auto-shutdown on sensor fault); optimize code execution speed; finalize firmware repository.", "1. Watchdog timers, error-handling routines, sensor disconnection auto-recovery.\n2. Firmware code hardening.\n3. Safe state default routines.", "Arduino Uno, Sensor Shield, Capstone Rig, PC IDE.", "Lab Evaluation (10M): Fail-safe recovery (4M), Firmware optimization (4M), Logbook (2M)."),
-        ("Session 12 (16-31 December 2026)", "Comprehensive Engineering Dossier & Schematics", "Compile comprehensive engineering dossier (Problem statement, block diagram, schematics, source code, test analytics).", "1. IEEE-style project documentation, full circuit schematics, test data graphs.\n2. Bill of Materials reconciliation.\n3. Pitch scriptwriting.", "PCs, Schematics CAD tools, Engineering Dossier Template.", "Lab Evaluation (10M): Dossier depth (4M), Schematics accuracy (4M), Script (2M)."),
-        ("Session 13 (01-15 January 2027)", "Grand Internal Capstone Defense & Jury Review", "Formal Capstone defense before school leadership and external technical jury; demonstrate full system autonomy.", "1. 5-minute technical defense, live autonomous operation demo, rigorous panel Q&A.\n2. Technical committee evaluation.\n3. Defense rubric scoring.", "Completed Capstone System, Projector, Jury Evaluation Dossiers.", "Capstone Defense Score (10M): Autonomy & rigor (4M), Defense (4M), Teamwork (2M)."),
-        ("Session 14 (16-31 January 2027)", "National Submission & Lab Archive Deployment", "Milestone 4: Record broadcast-quality 2-min demo video; complete final submission on Erehwon portal; archive code in lab repo.", "1. Final 2-minute video production, Erehwon portal upload, lab repository handover.\n2. Milestone 4 National Competition Submission.\n3. STEM Lab permanent archiving.", "Camera Rig, Finished Capstone, Erehwon Portal.", "Lab Evaluation (10M): Broadcast demo video (5M), Portal submission verified (5M).")
     ]
 }
 
@@ -977,6 +1147,10 @@ def render_master_content(sno, title):
         * **Shield Architecture:** Dedicated external servo power terminal block, I2C port (A4/A5), UART (TX/RX).
         * **Rapid Prototyping:** Bambu Lab A1 Mini FDM 3D Printer (0.4mm Nozzle, Auto-bed Leveling, 180x180x180mm Build Volume).
         """)
+        return True
+
+    elif title == "Maintenance Records" or sno == 14:
+        render_maintenance_viewer()
         return True
 
     elif title == "Lab Safety Rules" or sno == 15:
@@ -1272,6 +1446,65 @@ if access_mode == "Admin Workspace":
                             save_teacher_attendance_slot(admin_tc_month, admin_tc_week, edited_tc_slot_df)
                             st.success("Saved!")
                             st.rerun()
+                    elif title == "Maintenance Records":
+                        cur_m_idx, cur_w_idx = get_current_indices()
+                        c_m, c_w, c_d = st.columns([1.2, 1.2, 1.2])
+                        adm_m_month = c_m.selectbox("Select Month:", MONTHS, index=cur_m_idx, key=f"adm_mt_m_{sno}")
+                        adm_m_week = c_w.selectbox("Select Week:", WEEKS, index=cur_w_idx, key=f"adm_mt_w_{sno}")
+                        adm_m_date = c_d.date_input("Audit / Log Date:", value=datetime.now(), key=f"adm_mt_d_{sno}")
+                        
+                        tb1, tb2, tb3 = st.tabs(["🧹 1. Daily Cleaning Log", "🔍 2. Deep Maintenance Audit", "⚠️ 3. Breakdown & Repair Register"])
+                        
+                        with tb1:
+                            st.markdown("##### Update Daily Cleaning & Workstation Checklist:")
+                            df_cur_daily = get_daily_maint_for_slot(adm_m_month, adm_m_week, default_date_str=str(adm_m_date))
+                            ed_daily = st.data_editor(
+                                df_cur_daily,
+                                column_config={
+                                    "Safai Check (Dusting / Scraps)": st.column_config.CheckboxColumn("Safai Check", default=False),
+                                    "Equipment Check (Tools in place)": st.column_config.CheckboxColumn("Equipment Check", default=False),
+                                    "Power Switch OFF": st.column_config.CheckboxColumn("Power OFF", default=False),
+                                    "Workstation / Area": st.column_config.TextColumn("Workstation / Area", disabled=True)
+                                },
+                                num_rows="dynamic", use_container_width=True, key=f"ed_mt_daily_{sno}"
+                            )
+                            if st.button("💾 Save Daily Cleaning Log", type="primary", key=f"btn_save_daily_{sno}"):
+                                save_daily_maint_slot(adm_m_month, adm_m_week, ed_daily, chosen_date=adm_m_date)
+                                st.success(f"Daily cleaning log for {adm_m_month} ({adm_m_week}) saved!")
+                                st.rerun()
+                                
+                        with tb2:
+                            st.markdown("##### Update Weekly/Monthly Deep Maintenance & Hardware Audit:")
+                            df_cur_deep = get_deep_maint_for_slot(adm_m_month, adm_m_week, default_date_str=str(adm_m_date))
+                            ed_deep = st.data_editor(
+                                df_cur_deep,
+                                column_config={
+                                    "Status": st.column_config.CheckboxColumn("Passed / OK?", default=False),
+                                    "Parameter / Deep Task": st.column_config.TextColumn("Parameter / Deep Task", disabled=True),
+                                    "S.No.": st.column_config.NumberColumn("S.No.", disabled=True)
+                                },
+                                num_rows="dynamic", use_container_width=True, key=f"ed_mt_deep_{sno}"
+                            )
+                            if st.button("💾 Save Deep Maintenance Audit", type="primary", key=f"btn_save_deep_{sno}"):
+                                save_deep_maint_slot(adm_m_month, adm_m_week, ed_deep, chosen_date=adm_m_date)
+                                st.success(f"Deep maintenance audit for {adm_m_month} ({adm_m_week}) saved!")
+                                st.rerun()
+
+                        with tb3:
+                            st.markdown("##### Manage Equipment Breakdown, Red Tags & Repair Logs:")
+                            df_cur_bd = get_breakdown_maint_for_slot(adm_m_month, adm_m_week)
+                            ed_bd = st.data_editor(
+                                df_cur_bd,
+                                column_config={
+                                    "Status": st.column_config.SelectboxColumn("Status", options=["Pending", "Under Repair", "Repaired", "Replaced"], default="Pending")
+                                },
+                                num_rows="dynamic", use_container_width=True, key=f"ed_mt_bd_{sno}"
+                            )
+                            if st.button("💾 Save Breakdown Register", type="primary", key=f"btn_save_bd_{sno}"):
+                                save_breakdown_maint_slot(adm_m_month, adm_m_week, ed_bd)
+                                st.success("Breakdown register saved successfully!")
+                                st.rerun()
+                                
                     elif title == "Safety Checklist":
                         cur_m_idx, cur_w_idx = get_current_indices()
                         c_m, c_w, c_d = st.columns([1.2, 1.2, 1.2])
@@ -1372,7 +1605,7 @@ else:
                     "STEM Lab Profile", "Lab Objectives & Guidelines", "Coordinator / SPOC Details",
                     "Monthly / Annual STEM Activity Plan", "Class-wise Timetable", "Session / Lesson Plans",
                     "Student List", "Student Attendance", "Teacher Attendance", "Lab Inventory",
-                    "Equipment Details", "Lab Safety Rules", "Safety Checklist", "STEM Activities",
+                    "Equipment Details", "Maintenance Records", "Lab Safety Rules", "Safety Checklist", "STEM Activities",
                     "Assessment Rubrics", "Student Assessment", "Teacher Training Records", "Annual Report"
                 ]
                 if has_builtin or len(files_found) > 0:
