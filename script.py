@@ -90,6 +90,8 @@ SHEET_CONFIG_FILE = os.path.join(DATA_DIR, "gsheet_url.txt")
 FORM_CONFIG_FILE = os.path.join(DATA_DIR, "gform_url.txt")
 SCIENCEUTSAV_CONFIG_FILE = os.path.join(DATA_DIR, "scienceutsav_url.txt")
 
+# CREDENTIALS
+ADMIN_USER = "shashank@abic"
 ADMIN_PASS = "stem@admin123"
 
 MONTHS = ["April", "May", "June", "July", "August", "September", "October", "November", "December", "January", "February", "March"]
@@ -1131,13 +1133,15 @@ if access_mode == "Admin Workspace":
     st.sidebar.markdown("---")
     if not st.session_state["is_admin_logged_in"]:
         st.sidebar.subheader("Admin Login")
+        user_input = st.sidebar.text_input("Enter Admin Username", key="login_user_input")
         password_input = st.sidebar.text_input("Enter Admin Password", type="password", key="login_pass_input")
-        if password_input == ADMIN_PASS or st.sidebar.button("Login", type="primary"):
-            if password_input == ADMIN_PASS:
+        
+        if st.sidebar.button("Login", type="primary") or (user_input == ADMIN_USER and password_input == ADMIN_PASS):
+            if user_input == ADMIN_USER and password_input == ADMIN_PASS:
                 st.session_state["is_admin_logged_in"] = True
                 st.rerun()
             else:
-                st.sidebar.error("Incorrect Password")
+                st.sidebar.error("Incorrect Username or Password")
     else:
         st.sidebar.success("Authenticated as SPOC")
         if st.sidebar.button("🚪 Logout"):
@@ -1334,7 +1338,7 @@ if access_mode == "Admin Workspace":
                     st.divider()
     else:
         st.title("🔒 Restricted Access")
-        st.info("Enter admin password in the sidebar to access Admin Workspace.")
+        st.info("Enter admin credentials in the sidebar to access Admin Workspace.")
 
 # ----------------- PUBLIC VIEWER -----------------
 else:
