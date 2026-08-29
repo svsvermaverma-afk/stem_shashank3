@@ -98,6 +98,13 @@ SCIENCEUTSAV_CONFIG_FILE = os.path.join(DATA_DIR, "scienceutsav_url.txt")
 ADMIN_USER = "shashank@abic"
 ADMIN_PASS = "stem@admin123"
 
+# PERMANENT FALLBACK CONFIGS (Server reboot par bhi ye hamesha active rahenge)
+DEFAULT_CONFIGS = {
+    SHEET_CONFIG_FILE: "https://docs.google.com/spreadsheets/d/1X5X7eexample/edit", # Apna Google Sheet link yahan replace karein
+    FORM_CONFIG_FILE: "https://docs.google.com/forms/d/e/1FAIpQLSc_example/viewform", # Apna Google Form link yahan replace karein
+    SCIENCEUTSAV_CONFIG_FILE: "https://report.scienceutsav.com/class/k57a8q5h6mzanqt4vdvn48c1vx8ba0q3/report"
+}
+
 MONTHS = ["April", "May", "June", "July", "August", "September", "October", "November", "December", "January", "February", "March"]
 WEEKS = ["Week 1", "Week 2", "Week 3", "Week 4", "Week 5"]
 DAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"]
@@ -186,7 +193,7 @@ CATEGORIES = {
     ]
 }
 
-# ----------------- SESSION STATE TRACKERS (DEFAULT CLOSED) -----------------
+# ----------------- SESSION STATE TRACKERS -----------------
 if "active_viewer_sno" not in st.session_state:
     st.session_state["active_viewer_sno"] = None
 
@@ -196,7 +203,7 @@ if "active_admin_sno" not in st.session_state:
 if "is_admin_logged_in" not in st.session_state:
     st.session_state["is_admin_logged_in"] = False
 
-# ----------------- HELPER FUNCTIONS -----------------
+# ----------------- HELPER FUNCTIONS & PERMANENT STORAGE -----------------
 def get_current_indices():
     now = datetime.now()
     cur_month_name = now.strftime("%B")
@@ -210,10 +217,23 @@ def get_folder_name(sno, title):
     return f"{sno:02d}_{title.replace(' ', '_').replace('/', '_')}"
 
 def get_saved_url(file_path):
+    # 1. Local Saved file
     if os.path.exists(file_path):
         with open(file_path, "r", encoding="utf-8") as f:
-            return f.read().strip()
-    return ""
+            val = f.read().strip()
+            if val:
+                return val
+                
+    # 2. Cloud Secrets
+    if "gsheet" in file_path and "GSHEET_URL" in st.secrets:
+        return st.secrets["GSHEET_URL"]
+    if "gform" in file_path and "GFORM_URL" in st.secrets:
+        return st.secrets["GFORM_URL"]
+    if "scienceutsav" in file_path and "SCIENCEUTSAV_URL" in st.secrets:
+        return st.secrets["SCIENCEUTSAV_URL"]
+        
+    # 3. Permanent Hardcoded Fallback
+    return DEFAULT_CONFIGS.get(file_path, "")
 
 def save_url(file_path, url):
     with open(file_path, "w", encoding="utf-8") as f:
@@ -937,6 +957,38 @@ LESSON_PLANS_DB = {
         ("Session 12 (16-31 December 2026)", "Technical Schematics & Project Pitch Preparation", "Draft technical report and circuit diagrams; storyboard 2-minute video pitch narrative with team roles.", "1. Full circuit schematics, bill of materials, slide deck layout.\n2. Engineering dossier completion.\n3. Pitch presentation script.", "PCs, Schematics software/Paper, Presentation slides.", "Lab Evaluation (10M): Schematics accuracy (4M), Dossier completeness (4M), Pitch (2M)."),
         ("Session 13 (01-15 January 2027)", "Internal Qualifying Evaluation & Jury Defense", "Present working hardware prototype before school evaluation committee; implement jury feedback.", "1. 3-minute pitch, live automated gate demo, fault injection test by jury.\n2. Technical oral defense.\n3. Post-eval optimization.", "Completed Prototypes, Projector, Evaluation scorecards.", "Qualifying Defense Score (10M): Mechanism reliability (4M), Defense (4M), Teamwork (2M)."),
         ("Session 14 (16-31 January 2027)", "Final Video Production & Erehwon Portal Upload", "Record 2-minute demonstration video showing IR trigger and servo actuation; submit entry on Erehwon portal.", "1. HD video recording, voiceover narration, digital portfolio upload.\n2. Milestone 4 Final National Submission.\n3. Lab repository handover.", "Smartphones/Camera, Assembled Gate Rig, Erehwon Portal.", "Lab Evaluation (10M): Video clarity (5M), Portal submission verified (5M).")
+    ],
+    "Class 8": [
+        ("Session 1 (01-15 July 2026)", "Advanced Programming Architecture & Shield I/O Banks", "Setup Arduino Uno + Shield; map analog/digital/I2C channels; form 5-6 member teams; scout access tracking problems.", "1. Arrays, state machines, shield I2C/UART ports, pin budgeting.\n2. I2C bus addressing.\n3. Team allocation for advanced security tracks.", "Arduino Uno, Sensor Shield, I2C scanner tools, PC.", "Lab Evaluation (10M): Shield mapping (3M), Architecture planning (4M), Logbook (3M)."),
+        ("Session 2 (16-31 July 2026)", "7-Segment Display Architecture & Segment Mapping", "Connect 7-segment display module to digital pins 2-8; display digits 0-9 sequentially; draft project scope.", "1. Common cathode/anode pinouts, segment truth tables (a-g), 220Ω resistor protection.\n2. Bitwise display mapping.\n3. Project charter drafting.", "Arduino Uno, Sensor Shield, 7-Segment display module, Resistors.", "Lab Evaluation (10M): Segment code accuracy (4M), Wiring (3M), Logbook (3M)."),
+        ("Session 3 (01-15 August 2026)", "Digital Counting Logic & Software Switch Debounce", "Build Digital Counter with 2 pushbuttons (Entry/Exit) and 7-segment display on shield; finalize Milestone 1 Problem Charter.", "1. Counter variables, debounce timing with millis(), increment/decrement.\n2. Milestone 1: Problem Statement & BOM approval.\n3. Edge detection logic.", "Arduino Uno, Sensor Shield, 7-Segment Display, 2x Push Buttons.", "Lab Evaluation (10M): Counter debouncing (4M), BOM setup (3M), Logbook (3M)."),
+        ("Session 4 (16-31 August 2026)", "I2C LCD 16x2 Interface & Dedicated Shield I2C Port", "Plug I2C LCD directly into 4-pin I2C port on shield; initialize display at address 0x27; print live visitor count strings.", "1. I2C bus (SDA/SCL on A4/A5), LiquidCrystal_I2C library, LCD cursor control.\n2. Memory optimization on Uno.\n3. String formatting on LCD.", "Arduino Uno, Sensor Shield, 16x2 I2C LCD module, 4-pin cable.", "Lab Evaluation (10M): I2C communication (4M), Display logic (3M), Logbook (3M)."),
+        ("Session 5 (01-15 September 2026)", "Capacitive Touch Sensing & Variable Switching", "Connect 3-pin Touch Sensor to Pin 4 and RGB LED to PWM Pins 9, 10, 11 on shield; program 3-stage touch-controlled dimmer.", "1. TTP223 Capacitive Touch module, digital touch states, PWM LED dimming.\n2. Touch state latching vs momentary.\n3. Dimming curves.", "Arduino Uno, Sensor Shield, TTP223 Touch module, RGB LED module.", "Lab Evaluation (10M): Touch dimming loop (4M), Wiring (3M), Logbook (3M)."),
+        ("Session 6 (16-30 September 2026)", "RGB Color Modulation via PWM Logic", "Code multi-color warning beacon on shield (Green=Normal, Amber=Caution, Red=Alert); interface with touch button.", "1. AnalogWrite() duty cycles (0-255), RGB additive color mixing, visual status modes.\n2. Milestone 2: Low-Fidelity Prototype Walkthrough.\n3. State beacon coding.", "Arduino Uno, Sensor Shield, RGB LED, Touch module.", "Lab Evaluation (10M): Color mixing accuracy (4M), Wiring (3M), Logbook (3M)."),
+        ("Session 7 (01-15 October 2026)", "Laser Optical Transceivers & Narrow-Beam Alignment", "Mount Laser Module on Pin 8 and LDR on Pin A0 of shield; align optical beam inside shrouded tube; log breach thresholds.", "1. 650nm Laser Diode module, shielded LDR receiver module, optical tripwire physics.\n2. Optical collimation and shroud alignment.\n3. Optical breach detection.", "Arduino Uno, Sensor Shield, 5V Laser Diode, Shrouded LDR module.", "Lab Evaluation (10M): Optical alignment (4M), Threshold calibration (3M), Logbook (3M)."),
+        ("Session 8 (16-31 October 2026)", "Multi-Trigger Security System (AND/OR Conditional Logic)", "Build Dual-Factor Security Grid: Laser breach + Touch perimeter trigger multi-tone siren and latch Red LED; test reset logic.", "1. Compound boolean logic (laserTripped && touchAlert), software alarm latching.\n2. Keypad/Touch disarm logic.\n3. Multi-sensor security rules.", "Arduino Uno, Sensor Shield, Laser, LDR, Touch Sensor, Buzzer, RGB LED.", "Lab Evaluation (10M): Dual-factor logic (4M), Alarm latching (3M), Logbook (3M)."),
+        ("Session 9 (01-15 November 2026)", "Subsystem Integration & Wire Looming inside Casing", "Assemble full system on shield; route cables into rigid acrylic/wood casing; test live LCD status updates.", "1. Combining I2C LCD, Laser tripwire, Touch sensor, and Siren into single shield setup.\n2. Cable management & looming.\n3. Casing fabrication.", "Arduino Uno, Sensor Shield, Full Sensor Suite, Acrylic/Wood housing.", "Lab Evaluation (10M): Integration hygiene (4M), LCD readout (3M), Logbook (3M)."),
+        ("Session 10 (16-30 November 2026)", "Edge Case Handling & Debounce Code Hardening", "Alpha Prototype Review: Test laser security grid under changing ambient room lights; optimize threshold code.", "1. Eliminating false optical triggers, ambient light compensation, code hardening.\n2. Milestone 3: Alpha Working Prototype Demonstration.\n3. Noise filtering.", "Arduino Uno, Sensor Shield, Integrated Security Rig, Variable Room Lighting.", "Lab Evaluation (10M): False-alarm rejection (5M), Stability (3M), Logbook (2M)."),
+        ("Session 11 (01-15 December 2026)", "System Stress Testing (100+ Cycles) & QA Logging", "Execute 100 continuous intrusion tests; record trigger reliability in QA Test Sheet; verify zero false alarms.", "1. Automated 100-cycle tripwire testing, alarm latency measurement, power stability.\n2. Quantitative QA logging.\n3. Thermal stability check.", "Arduino Uno, Sensor Shield, Security Rig, QA Test Log.", "Lab Evaluation (10M): 100-test zero fault (4M), QA log (4M), Wiring (2M)."),
+        ("Session 12 (16-31 December 2026)", "Pitch Deck Creation & Video Storyboarding", "Compile technical dossier, wiring schematic, and BOM; storyboard 2-minute pitch video with designated student speakers.", "1. Value proposition, technical architecture slide, video scriptwriting.\n2. Complete engineering schematic generation.\n3. Oral presentation run-through.", "PCs, Fritzing/Schematic tool, Presentation templates.", "Lab Evaluation (10M): Dossier completeness (4M), Video storyboard (4M), Pitch (2M)."),
+        ("Session 13 (01-15 January 2027)", "Pre-Competition Mock Defense & Jury Evaluation", "Full dress rehearsal: Present working laser/display security prototype before senior faculty panel; refine pitch.", "1. 3-minute presentation, live laser breach demonstration, faculty technical Q&A.\n2. Rigorous jury defense.\n3. Feedback implementation.", "Complete Integrated Prototype, Projector, Jury Scorecards.", "Mock Defense Score (10M): Technical depth (4M), Live demonstration (4M), Team (2M)."),
+        ("Session 14 (16-31 January 2027)", "Final Video Rendering & Erehwon Dossier Upload", "Record final 2-minute demonstration video; upload code (.ino), schematic, and documentation to Erehwon portal.", "1. HD video recording, schematic export, complete project submission.\n2. Milestone 4 National Competition Submission.\n3. Lab archive deployment.", "Camera, Completed System, Erehwon Portal.", "Lab Evaluation (10M): Video demo quality (5M), Portal submission verified (5M).")
+    ],
+    "Class 9": [
+        ("Session 1 (01-15 July 2026)", "Multi-Sensor System Architecture & Shield Bus Management", "Analyze Uno+Shield pin allocation; map 4+ simultaneous sensor channels; form 5-6 member teams; scout Agritech/Industry problems.", "1. Heterogeneous sensor bus, pinout budgeting, non-blocking millis() timing.\n2. Power rails decoupling on shield.\n3. Capstone team charter.", "Arduino Uno, Sensor Shield, Multi-sensor array, Multimeter.", "Lab Evaluation (10M): Bus allocation (3M), Architecture design (4M), Logbook (3M)."),
+        ("Session 2 (16-31 July 2026)", "Data Fusion & Multi-Variable Logic Loops", "Connect LDR + Tilt + Sound modules simultaneously to shield; write synchronized telemetry code; draft Capstone Charters.", "1. Sensor fusion principles, combining analog environmental data with digital triggers.\n2. Multi-channel telemetry over Serial.\n3. Capstone Charter drafting.", "Arduino Uno, Sensor Shield, LDR, Tilt, Sound Sensor modules.", "Lab Evaluation (10M): Sensor fusion code (4M), Wiring (3M), Logbook (3M)."),
+        ("Session 3 (01-15 August 2026)", "Capstone System Planning & BOM Optimization", "Finalize Capstone BOM (Sensors, actuators, displays, battery); submit Erehwon Milestone 1 Project Charter for sign-off.", "1. System architecture diagrams, component specifications, power budgeting (500mA limit).\n2. Milestone 1: Validated Problem Statement & BOM.\n3. Power distribution planning.", "Arduino Uno, Sensor Shield, Components catalog, BOM Spreadsheet.", "Lab Evaluation (10M): BOM optimization (4M), Architecture rigor (3M), Logbook (3M)."),
+        ("Session 4 (16-31 August 2026)", "Modular Subsystem Prototyping (Sensing vs Actuation)", "Build Sensing Subsystem (Analog inputs on shield) and Actuation Subsystem (Servos/Relays) on separate benches; verify signals.", "1. Decoupling hardware layers: Input sensing subsystem vs Output actuator subsystem.\n2. Signal integrity and power isolation.\n3. Independent subsystem testing.", "Arduino Uno, Sensor Shield, Relay module, High-torque Servo, Sensors.", "Lab Evaluation (10M): Subsystem isolation (4M), Signal integrity (3M), Logbook (3M)."),
+        ("Session 5 (01-15 September 2026)", "Interfacing Multi-Sensor Arrays on Breakout Shield", "Integrate full sensor array onto shield; verify zero signal crosstalk; write unified sensor sampling routine.", "1. Simultaneous wiring of IR, Hall, Tilt, and LDR modules on shield headers.\n2. Non-blocking sensor polling.\n3. Crosstalk prevention.", "Arduino Uno, Sensor Shield, IR, Hall, Tilt, LDR sensors.", "Lab Evaluation (10M): Polling routine (4M), High-density wiring (3M), Logbook (3M)."),
+        ("Session 6 (16-30 September 2026)", "Multi-Actuator Orchestration & Power Isolation", "Connect SG90 servo + 5V Relay module + I2C LCD to shield; supply external 5V power to terminal block; test concurrent actuation.", "1. Driving multiple servos, relays, and buzzers via shield external power terminals.\n2. Milestone 2: Low-Fidelity Prototype Walkthrough.\n3. Inductive kickback protection.", "Arduino Uno, Sensor Shield, Servo, Relay, I2C LCD, External DC Supply.", "Lab Evaluation (10M): Concurrent actuation (4M), Power isolation (3M), Logbook (3M)."),
+        ("Session 7 (01-15 October 2026)", "Non-Blocking State Machine Code Integration", "Merge sensor sampling and actuator routines into a non-blocking master sketch; eliminate code blocking; test real-time response.", "1. Replacing delay() with millis() timers, interrupt service routines (ISR), state enums.\n2. State machine architecture.\n3. Real-time responsiveness.", "Arduino Uno, Sensor Shield, Full Hardware Setup, PC IDE.", "Lab Evaluation (10M): State machine logic (4M), Zero-blocking verified (3M), Logbook (3M)."),
+        ("Session 8 (16-31 October 2026)", "Smart System Capstone Integration (Part 1: Core Logic)", "Assemble integrated Capstone build (Sensors + Actuators + Display on shield); code automated feedback control loop.", "1. Automated greenhouse / industrial safety interlocking logic, multi-stage thresholds.\n2. Closed-loop feedback control.\n3. Telemetry streaming.", "Arduino Uno, Sensor Shield, Full Capstone Sensors & Actuators, Chassis.", "Lab Evaluation (10M): Closed-loop execution (4M), Assembly (3M), Logbook (3M)."),
+        ("Session 9 (01-15 November 2026)", "Smart System Capstone Integration (Part 2: Casing & Looms)", "Mount Arduino+Shield assembly into durable modular chassis; bundle cables with spiral wrap; test standalone battery operation.", "1. Industrial-grade enclosure fabrication, heat-shrink wire looms, power switch.\n2. Mechanical stress relief on cables.\n3. Standalone battery integration.", "Arduino Uno, Sensor Shield, Industrial Modular Chassis, Spiral wrap, Battery pack.", "Lab Evaluation (10M): Industrial casing (4M), Cable looming (3M), Logbook (3M)."),
+        ("Session 10 (16-30 November 2026)", "Full System Field Testing & Telemetry Logging", "Milestone 3 Alpha Review: Subject capstone build to 50 continuous operational cycles; log performance metrics in QA dossier.", "1. Field stress testing over 50 continuous cycles, sensor drift and latency logging.\n2. Milestone 3: Alpha Working Prototype Demonstration.\n3. Telemetry recording.", "Complete Capstone Unit, Test Environment, QA Telemetry Sheet.", "Lab Evaluation (10M): 50-cycle stability (5M), Telemetry log (3M), Logbook (2M)."),
+        ("Session 11 (01-15 December 2026)", "Code Hardening, Fail-Safes & Auto-Recovery", "Implement fail-safe routines (auto-shutdown on sensor fault); optimize code execution speed; finalize firmware repository.", "1. Watchdog timers, error-handling routines, sensor disconnection auto-recovery.\n2. Firmware code hardening.\n3. Safe state default routines.", "Arduino Uno, Sensor Shield, Capstone Rig, PC IDE.", "Lab Evaluation (10M): Fail-safe recovery (4M), Firmware optimization (4M), Logbook (2M)."),
+        ("Session 12 (16-31 December 2026)", "Comprehensive Engineering Dossier & Schematics", "Compile comprehensive engineering dossier (Problem statement, block diagram, schematics, source code, test analytics).", "1. IEEE-style project documentation, full circuit schematics, test data graphs.\n2. Bill of Materials reconciliation.\n3. Pitch scriptwriting.", "PCs, Schematics CAD tools, Engineering Dossier Template.", "Lab Evaluation (10M): Dossier depth (4M), Schematics accuracy (4M), Script (2M)."),
+        ("Session 13 (01-15 January 2027)", "Grand Internal Capstone Defense & Jury Review", "Formal Capstone defense before school leadership and external technical jury; demonstrate full system autonomy.", "1. 5-minute technical defense, live autonomous operation demo, rigorous panel Q&A.\n2. Technical committee evaluation.\n3. Defense rubric scoring.", "Completed Capstone System, Projector, Jury Evaluation Dossiers.", "Capstone Defense Score (10M): Autonomy & rigor (4M), Defense (4M), Teamwork (2M)."),
+        ("Session 14 (16-31 January 2027)", "National Submission & Lab Archive Deployment", "Milestone 4: Record broadcast-quality 2-min demo video; complete final submission on Erehwon portal; archive code in lab repo.", "1. Final 2-minute video production, Erehwon portal upload, lab repository handover.\n2. Milestone 4 National Competition Submission.\n3. STEM Lab permanent archiving.", "Camera Rig, Finished Capstone, Erehwon Portal.", "Lab Evaluation (10M): Broadcast demo video (5M), Portal submission verified (5M).")
     ]
 }
 
