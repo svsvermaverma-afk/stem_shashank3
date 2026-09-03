@@ -98,10 +98,10 @@ SCIENCEUTSAV_CONFIG_FILE = os.path.join(DATA_DIR, "scienceutsav_url.txt")
 ADMIN_USER = "shashank@abic"
 ADMIN_PASS = "stem@admin123"
 
-# PERMANENT FALLBACK CONFIGS (Server reboot par bhi ye hamesha active rahenge)
+# PERMANENT HARDCODED LINKS (App reboot hone par bhi ye kabhi delete ya blank nahi honge)
 DEFAULT_CONFIGS = {
-    SHEET_CONFIG_FILE: "https://docs.google.com/spreadsheets/d/1X5X7eexample/edit", # Apna Google Sheet link yahan replace karein
-    FORM_CONFIG_FILE: "https://docs.google.com/forms/d/e/1FAIpQLSc_example/viewform", # Apna Google Form link yahan replace karein
+    SHEET_CONFIG_FILE: "https://docs.google.com/spreadsheets/d/1999l0-GPaDxUh2trREm4HOx6NAfsYHGU_0Qakzy4Bwo/edit?usp=sharing",
+    FORM_CONFIG_FILE: "https://docs.google.com/forms/d/e/1FAIpQLSeAE6pzeLi-NVO4aTA82gfXH2oKqtFf3TTlIyI0VCQobP9qxQ/viewform?usp=sharing&ouid=116197222500145214334",
     SCIENCEUTSAV_CONFIG_FILE: "https://report.scienceutsav.com/class/k57a8q5h6mzanqt4vdvn48c1vx8ba0q3/report"
 }
 
@@ -203,7 +203,7 @@ if "active_admin_sno" not in st.session_state:
 if "is_admin_logged_in" not in st.session_state:
     st.session_state["is_admin_logged_in"] = False
 
-# ----------------- HELPER FUNCTIONS & PERMANENT STORAGE -----------------
+# ----------------- PERMANENT URL ACCESS ENGINE -----------------
 def get_current_indices():
     now = datetime.now()
     cur_month_name = now.strftime("%B")
@@ -217,22 +217,26 @@ def get_folder_name(sno, title):
     return f"{sno:02d}_{title.replace(' ', '_').replace('/', '_')}"
 
 def get_saved_url(file_path):
-    # 1. Local Saved file
+    # 1. Check local saved file with validation (Sheet me form link na ho)
     if os.path.exists(file_path):
         with open(file_path, "r", encoding="utf-8") as f:
             val = f.read().strip()
-            if val:
+            if "gsheet" in file_path and "spreadsheets" in val:
                 return val
-                
-    # 2. Cloud Secrets
+            elif "gform" in file_path and "forms" in val:
+                return val
+            elif "scienceutsav" in file_path and val:
+                return val
+
+    # 2. Check Streamlit cloud secrets
     if "gsheet" in file_path and "GSHEET_URL" in st.secrets:
         return st.secrets["GSHEET_URL"]
     if "gform" in file_path and "GFORM_URL" in st.secrets:
         return st.secrets["GFORM_URL"]
     if "scienceutsav" in file_path and "SCIENCEUTSAV_URL" in st.secrets:
         return st.secrets["SCIENCEUTSAV_URL"]
-        
-    # 3. Permanent Hardcoded Fallback
+
+    # 3. Permanent hardcoded fallback
     return DEFAULT_CONFIGS.get(file_path, "")
 
 def save_url(file_path, url):
@@ -589,7 +593,7 @@ def sync_data_from_google_sheet():
         return False, "Google Sheet URL not configured."
     df_raw, err = fetch_google_sheet_data_cached(sheet_url)
     if err or df_raw is None or df_raw.empty:
-        return False, err if err else "Google Sheet is empty."
+        return False, err if err else "Google Sheet is empty or not accessible."
 
     def find_col(keywords):
         for col in df_raw.columns:
@@ -1369,11 +1373,14 @@ if access_mode == "Admin Workspace":
             sheet_input = st.text_input("Google Sheet Share Link (Viewer):", value=current_sheet_url)
             c_save_s, c_sync = st.columns(2)
             if c_save_s.button("💾 Save Sheet Link"):
-                save_url(SHEET_CONFIG_FILE, sheet_input)
-                fetch_google_sheet_data_cached.clear()
-                st.success("Google Sheet link saved!")
+                if "docs.google.com/forms" in sheet_input:
+                    st.error("⚠️ Yeh Google Form ka link hai! Kripya yahan Google Sheet ka link dalein.")
+                else:
+                    save_url(SHEET_CONFIG_FILE, sheet_input)
+                    fetch_google_sheet_data_cached.clear()
+                    st.success("Google Sheet link saved!")
             if c_sync.button("🔄 Force Sync Now", type="primary"):
-                if sheet_input:
+                if sheet_input and "docs.google.com/spreadsheets" in sheet_input:
                     save_url(SHEET_CONFIG_FILE, sheet_input)
                 fetch_google_sheet_data_cached.clear()
                 success, msg = sync_data_from_google_sheet()
@@ -1388,8 +1395,11 @@ if access_mode == "Admin Workspace":
             current_form_url = get_saved_url(FORM_CONFIG_FILE)
             form_input = st.text_input("Google Form Link:", value=current_form_url)
             if st.button("💾 Save Form Link"):
-                save_url(FORM_CONFIG_FILE, form_input)
-                st.success("Google Form link saved!")
+                if "docs.google.com/spreadsheets" in form_input:
+                    st.error("⚠️ Yeh Google Sheet ka link hai! Kripya yahan Google Form ka link dalein.")
+                else:
+                    save_url(FORM_CONFIG_FILE, form_input)
+                    st.success("Google Form link saved!")
 
             st.divider()
             st.markdown("##### 3. ScienceUtsav Classroom Report Link")
