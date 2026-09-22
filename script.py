@@ -7,7 +7,6 @@ import streamlit.components.v1 as components
 
 try:
     import pypdfium2 as pdfium
-
     PDFIUM_AVAILABLE = True
 except ImportError:
     PDFIUM_AVAILABLE = False
@@ -99,15 +98,14 @@ SCIENCEUTSAV_CONFIG_FILE = os.path.join(DATA_DIR, "scienceutsav_url.txt")
 ADMIN_USER = "shashank@abic"
 ADMIN_PASS = "stem@admin123"
 
-# PERMANENT HARDCODED LINKS (App reboot hone par bhi ye kabhi delete ya blank nahi honge)
+# PERMANENT HARDCODED LINKS
 DEFAULT_CONFIGS = {
     SHEET_CONFIG_FILE: "https://docs.google.com/spreadsheets/d/1999l0-GPaDxUh2trREm4HOx6NAfsYHGU_0Qakzy4Bwo/edit?usp=sharing",
     FORM_CONFIG_FILE: "https://docs.google.com/forms/d/e/1FAIpQLSeAE6pzeLi-NVO4aTA82gfXH2oKqtFf3TTlIyI0VCQobP9qxQ/viewform?usp=sharing&ouid=116197222500145214334",
     SCIENCEUTSAV_CONFIG_FILE: "https://report.scienceutsav.com/class/k57a8q5h6mzanqt4vdvn48c1vx8ba0q3/report"
 }
 
-MONTHS = ["April", "May", "June", "July", "August", "September", "October", "November", "December", "January",
-          "February", "March"]
+MONTHS = ["April", "May", "June", "July", "August", "September", "October", "November", "December", "January", "February", "March"]
 WEEKS = ["Week 1", "Week 2", "Week 3", "Week 4", "Week 5"]
 DAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"]
 
@@ -206,7 +204,6 @@ if "active_admin_sno" not in st.session_state:
 if "is_admin_logged_in" not in st.session_state:
     st.session_state["is_admin_logged_in"] = False
 
-
 # ----------------- PERMANENT URL ACCESS ENGINE -----------------
 def get_current_indices():
     now = datetime.now()
@@ -217,13 +214,10 @@ def get_current_indices():
     week_idx = WEEKS.index(cur_week_name) if cur_week_name in WEEKS else 0
     return month_idx, week_idx
 
-
 def get_folder_name(sno, title):
     return f"{sno:02d}_{title.replace(' ', '_').replace('/', '_')}"
 
-
 def get_saved_url(file_path):
-    # 1. Check local saved file with validation (Sheet me form link na ho)
     if os.path.exists(file_path):
         with open(file_path, "r", encoding="utf-8") as f:
             val = f.read().strip()
@@ -234,7 +228,6 @@ def get_saved_url(file_path):
             elif "scienceutsav" in file_path and val:
                 return val
 
-    # 2. Check Streamlit cloud secrets
     if "gsheet" in file_path and "GSHEET_URL" in st.secrets:
         return st.secrets["GSHEET_URL"]
     if "gform" in file_path and "GFORM_URL" in st.secrets:
@@ -242,14 +235,11 @@ def get_saved_url(file_path):
     if "scienceutsav" in file_path and "SCIENCEUTSAV_URL" in st.secrets:
         return st.secrets["SCIENCEUTSAV_URL"]
 
-    # 3. Permanent hardcoded fallback
     return DEFAULT_CONFIGS.get(file_path, "")
-
 
 def save_url(file_path, url):
     with open(file_path, "w", encoding="utf-8") as f:
         f.write(url.strip())
-
 
 @st.cache_data(ttl=60)
 def fetch_google_sheet_data_cached(sheet_url):
@@ -266,7 +256,6 @@ def fetch_google_sheet_data_cached(sheet_url):
         return df, None
     except Exception as e:
         return None, str(e)
-
 
 def render_cover_photo():
     search_dirs = [".", DATA_DIR, os.path.join(UPLOAD_DIR, "00_Cover"), os.path.join(UPLOAD_DIR, "cover")]
@@ -285,7 +274,6 @@ def render_cover_photo():
     if found_cover:
         st.image(found_cover, use_container_width=True)
 
-
 # ----------------- EXECUTIVE MESSAGES & PHOTOS HANDLER -----------------
 def get_principal_message():
     if os.path.exists(PRINCIPAL_MSG_FILE):
@@ -295,11 +283,9 @@ def get_principal_message():
 
 — **Principal, Aditya Birla Intermediate College, Renukoot**"""
 
-
 def save_principal_message(msg):
     with open(PRINCIPAL_MSG_FILE, "w", encoding="utf-8") as f:
         f.write(msg)
-
 
 def get_vice_principal_message():
     if os.path.exists(VICE_PRINCIPAL_MSG_FILE):
@@ -309,11 +295,9 @@ def get_vice_principal_message():
 
 — **Vice Principal, Aditya Birla Intermediate College, Renukoot**"""
 
-
 def save_vice_principal_message(msg):
     with open(VICE_PRINCIPAL_MSG_FILE, "w", encoding="utf-8") as f:
         f.write(msg)
-
 
 def get_profile_photo(role):
     valid_exts = [".jpg", ".jpeg", ".png", ".webp"]
@@ -323,12 +307,10 @@ def get_profile_photo(role):
             return candidate
     return None
 
-
 def render_executive_messages():
     principal_img = get_profile_photo("principal_photo")
     vp_img = get_profile_photo("vice_principal_photo")
 
-    # Principal Desk Box
     with st.container():
         st.markdown('<div class="msg-container">', unsafe_allow_html=True)
         if principal_img:
@@ -336,14 +318,13 @@ def render_executive_messages():
             with cp1:
                 st.image(principal_img, width=105)
             with cp2:
-                st.markdown(f"**🏛️ Principal's Desk**")
+                st.markdown("**🏛️ Principal's Desk**")
                 st.markdown(get_principal_message())
         else:
-            st.markdown(f"**🏛️ Principal's Desk**")
+            st.markdown("**🏛️ Principal's Desk**")
             st.markdown(get_principal_message())
         st.markdown('</div>', unsafe_allow_html=True)
 
-    # Vice Principal Desk Box
     with st.container():
         st.markdown('<div class="msg-container-vp">', unsafe_allow_html=True)
         if vp_img:
@@ -351,13 +332,12 @@ def render_executive_messages():
             with cvp1:
                 st.image(vp_img, width=105)
             with cvp2:
-                st.markdown(f"**📘 Vice Principal's Desk**")
+                st.markdown("**📘 Vice Principal's Desk**")
                 st.markdown(get_vice_principal_message())
         else:
-            st.markdown(f"**📘 Vice Principal's Desk**")
+            st.markdown("**📘 Vice Principal's Desk**")
             st.markdown(get_vice_principal_message())
         st.markdown('</div>', unsafe_allow_html=True)
-
 
 # ----------------- ATTENDANCE, SAFETY & MAINTENANCE INITIALIZATION -----------------
 def init_all_data_structures():
@@ -408,9 +388,7 @@ def init_all_data_structures():
         }
         pd.DataFrame(structure).to_csv(MAINTENANCE_BREAKDOWN_FILE, index=False)
 
-
 init_all_data_structures()
-
 
 # ----------------- ATTENDANCE & SAFETY LOGIC -----------------
 def get_student_attendance_all():
@@ -420,16 +398,13 @@ def get_student_attendance_all():
         init_all_data_structures()
         return pd.read_csv(STUDENT_ATTENDANCE_FILE, dtype=str).fillna("")
 
-
 def save_student_attendance_slot(month, week, edited_df):
     df_all = get_student_attendance_all()
     edited_df = edited_df.copy()
     edited_df["Month"] = str(month)
     edited_df["Week"] = str(week)
-    df_remaining = df_all[
-        ~((df_all["Month"] == str(month)) & (df_all["Week"] == str(week)))] if not df_all.empty else pd.DataFrame()
+    df_remaining = df_all[~((df_all["Month"] == str(month)) & (df_all["Week"] == str(week)))] if not df_all.empty else pd.DataFrame()
     pd.concat([df_remaining, edited_df], ignore_index=True).to_csv(STUDENT_ATTENDANCE_FILE, index=False)
-
 
 def get_teacher_attendance_all():
     try:
@@ -438,16 +413,13 @@ def get_teacher_attendance_all():
         init_all_data_structures()
         return pd.read_csv(TEACHER_ATTENDANCE_FILE, dtype=str).fillna("")
 
-
 def save_teacher_attendance_slot(month, week, edited_df):
     df_all = get_teacher_attendance_all()
     edited_df = edited_df.copy()
     edited_df["Month"] = str(month)
     edited_df["Week"] = str(week)
-    df_remaining = df_all[
-        ~((df_all["Month"] == str(month)) & (df_all["Week"] == str(week)))] if not df_all.empty else pd.DataFrame()
+    df_remaining = df_all[~((df_all["Month"] == str(month)) & (df_all["Week"] == str(week)))] if not df_all.empty else pd.DataFrame()
     pd.concat([df_remaining, edited_df], ignore_index=True).to_csv(TEACHER_ATTENDANCE_FILE, index=False)
-
 
 def get_safety_checklist_all():
     try:
@@ -455,7 +427,6 @@ def get_safety_checklist_all():
     except Exception:
         init_all_data_structures()
         return pd.read_csv(SAFETY_CHECKLIST_FILE, dtype=str).fillna("")
-
 
 def get_safety_checklist_for_slot(month, week, default_date_str=None):
     df_all = get_safety_checklist_all()
@@ -480,7 +451,6 @@ def get_safety_checklist_for_slot(month, week, default_date_str=None):
         "Remarks": ["Verified Compliant" for _ in DEFAULT_SAFETY_POINTS]
     })
 
-
 def save_safety_checklist_slot(month, week, edited_df, chosen_date=None):
     df_all = get_safety_checklist_all()
     edited_df = edited_df.copy()
@@ -489,10 +459,8 @@ def save_safety_checklist_slot(month, week, edited_df, chosen_date=None):
     if chosen_date:
         edited_df["Date"] = str(chosen_date)
     edited_df["Status"] = edited_df["Status"].apply(lambda x: "Passed" if x is True else "Failed")
-    df_remaining = df_all[
-        ~((df_all["Month"] == str(month)) & (df_all["Week"] == str(week)))] if not df_all.empty else pd.DataFrame()
+    df_remaining = df_all[~((df_all["Month"] == str(month)) & (df_all["Week"] == str(week)))] if not df_all.empty else pd.DataFrame()
     pd.concat([df_remaining, edited_df], ignore_index=True).to_csv(SAFETY_CHECKLIST_FILE, index=False)
-
 
 # ----------------- MAINTENANCE DATA ACCESSORS (#14) -----------------
 def get_daily_maint_for_slot(month, week, default_date_str=None):
@@ -525,7 +493,6 @@ def get_daily_maint_for_slot(month, week, default_date_str=None):
         "Remarks": ["Wire scraps & benches cleared" for _ in DEFAULT_DAILY_AREAS]
     })
 
-
 def save_daily_maint_slot(month, week, edited_df, chosen_date=None):
     try:
         df_all = pd.read_csv(MAINTENANCE_DAILY_FILE, dtype=str).fillna("")
@@ -540,10 +507,8 @@ def save_daily_maint_slot(month, week, edited_df, chosen_date=None):
         if col in edited_df.columns:
             edited_df[col] = edited_df[col].apply(lambda x: "Done" if x is True else "Pending")
 
-    df_rem = df_all[
-        ~((df_all["Month"] == str(month)) & (df_all["Week"] == str(week)))] if not df_all.empty else pd.DataFrame()
+    df_rem = df_all[~((df_all["Month"] == str(month)) & (df_all["Week"] == str(week)))] if not df_all.empty else pd.DataFrame()
     pd.concat([df_rem, edited_df], ignore_index=True).to_csv(MAINTENANCE_DAILY_FILE, index=False)
-
 
 def get_deep_maint_for_slot(month, week, default_date_str=None):
     try:
@@ -573,7 +538,6 @@ def get_deep_maint_for_slot(month, week, default_date_str=None):
         "Verified By": ["SPOC / Coordinator" for _ in DEFAULT_DEEP_TASKS]
     })
 
-
 def save_deep_maint_slot(month, week, edited_df, chosen_date=None):
     try:
         df_all = pd.read_csv(MAINTENANCE_DEEP_FILE, dtype=str).fillna("")
@@ -585,10 +549,8 @@ def save_deep_maint_slot(month, week, edited_df, chosen_date=None):
     if chosen_date:
         edited_df["Date"] = str(chosen_date)
     edited_df["Status"] = edited_df["Status"].apply(lambda x: "OK" if x is True else "Pending")
-    df_rem = df_all[
-        ~((df_all["Month"] == str(month)) & (df_all["Week"] == str(week)))] if not df_all.empty else pd.DataFrame()
+    df_rem = df_all[~((df_all["Month"] == str(month)) & (df_all["Week"] == str(week)))] if not df_all.empty else pd.DataFrame()
     pd.concat([df_rem, edited_df], ignore_index=True).to_csv(MAINTENANCE_DEEP_FILE, index=False)
-
 
 def get_breakdown_maint_for_slot(month, week):
     try:
@@ -613,7 +575,6 @@ def get_breakdown_maint_for_slot(month, week):
         "Remarks": ["Ready for students", "Tagged Red: Under Maintenance"]
     })
 
-
 def save_breakdown_maint_slot(month, week, edited_df):
     try:
         df_all = pd.read_csv(MAINTENANCE_BREAKDOWN_FILE, dtype=str).fillna("")
@@ -622,10 +583,8 @@ def save_breakdown_maint_slot(month, week, edited_df):
     edited_df = edited_df.copy()
     edited_df["Month"] = str(month)
     edited_df["Week"] = str(week)
-    df_rem = df_all[
-        ~((df_all["Month"] == str(month)) & (df_all["Week"] == str(week)))] if not df_all.empty else pd.DataFrame()
+    df_rem = df_all[~((df_all["Month"] == str(month)) & (df_all["Week"] == str(week)))] if not df_all.empty else pd.DataFrame()
     pd.concat([df_rem, edited_df], ignore_index=True).to_csv(MAINTENANCE_BREAKDOWN_FILE, index=False)
-
 
 # ----------------- REAL-TIME GOOGLE SHEET SYNC ENGINE -----------------
 def sync_data_from_google_sheet():
@@ -717,7 +676,6 @@ def sync_data_from_google_sheet():
     df_tc_all.to_csv(TEACHER_ATTENDANCE_FILE, index=False)
     return True, f"Synced {len(df_raw)} records automatically."
 
-
 def get_student_attendance_for_slot(month, week):
     sync_data_from_google_sheet()
     df_all = get_student_attendance_all()
@@ -731,7 +689,6 @@ def get_student_attendance_for_slot(month, week):
         "Period 1": ["" for _ in SECTIONS_LIST], "Period 2": ["" for _ in SECTIONS_LIST],
         "Total Present": ["" for _ in SECTIONS_LIST], "Total Absent": ["" for _ in SECTIONS_LIST]
     })
-
 
 def get_teacher_attendance_for_slot(month, week):
     sync_data_from_google_sheet()
@@ -749,7 +706,6 @@ def get_teacher_attendance_for_slot(month, week):
         "In-Time": ["" for _ in TEACHERS_LIST], "Out-Time": ["" for _ in TEACHERS_LIST],
         "Teacher Signature": ["" for _ in TEACHERS_LIST]
     })
-
 
 # ----------------- UNIVERSAL FILE RENDERER & PREVIEW -----------------
 def render_file_preview(file_path, file_name, unique_key):
@@ -783,7 +739,6 @@ def render_file_preview(file_path, file_name, unique_key):
             st.download_button(f"📥 Download File ({file_name})", data=f.read(), file_name=file_name,
                                key=f"dl_doc_{unique_key}")
 
-
 def get_existing_files_for_parameter(sno, title):
     folder_candidates = [
         f"{sno:02d}_{title.replace(' ', '_').replace('/', '_')}",
@@ -792,15 +747,52 @@ def get_existing_files_for_parameter(sno, title):
         title.replace(' ', '_').replace('/', '_')
     ]
     all_files = []
+    seen = set()
     for cand in folder_candidates:
         cand_dir = os.path.join(UPLOAD_DIR, cand)
         if os.path.exists(cand_dir):
-            for f in os.listdir(cand_dir):
+            for f in sorted(os.listdir(cand_dir)):
                 full_path = os.path.join(cand_dir, f)
-                if os.path.isfile(full_path) and (full_path, f) not in all_files:
+                if os.path.isfile(full_path) and f not in seen:
+                    seen.add(f)
                     all_files.append((full_path, f))
     return all_files
 
+def render_parameter_file_manager(sno, title):
+    folder_name = get_folder_name(sno, title)
+    record_dir = os.path.join(UPLOAD_DIR, folder_name)
+    os.makedirs(record_dir, exist_ok=True)
+
+    st.markdown("---")
+    st.markdown(f"##### 📂 Upload & Manage Files for #{sno} ({title})")
+    
+    uploaded_files = st.file_uploader(
+        f"Upload documents/photos/videos for #{sno}:",
+        accept_multiple_files=True,
+        key=f"mgr_uploader_{sno}"
+    )
+
+    if uploaded_files:
+        for f in uploaded_files:
+            with open(os.path.join(record_dir, f.name), "wb") as buffer:
+                buffer.write(f.getbuffer())
+        st.success(f"✅ Successfully saved {len(uploaded_files)} file(s).")
+        st.rerun()
+
+    existing_files = get_existing_files_for_parameter(sno, title)
+    if existing_files:
+        st.markdown(f"**📑 Uploaded Files ({len(existing_files)}):**")
+        for idx, (fpath, fname) in enumerate(existing_files):
+            c_a, c_b = st.columns([5, 1])
+            c_a.markdown(f"📄 **{fname}**")
+            # Only deletes THIS specific file
+            if c_b.button("🗑️ Delete", key=f"del_btn_{sno}_{idx}_{fname}", help=f"Delete only {fname}"):
+                if os.path.exists(fpath):
+                    os.remove(fpath)
+                st.warning(f"Deleted {fname}")
+                st.rerun()
+    else:
+        st.caption("No files uploaded for this section yet.")
 
 def render_student_attendance_viewer():
     st.markdown("### 📊 Section-wise Student STEM Attendance Record")
@@ -816,7 +808,6 @@ def render_student_attendance_viewer():
     st.caption(f"Showing Student Attendance for: **{sel_month} | {sel_week}** (Auto-Synced with Google Sheet)")
     st.dataframe(df_slot, use_container_width=True, hide_index=True)
 
-
 def render_teacher_attendance_viewer():
     st.markdown("### 🧑‍🏫 STEM Teacher Lab Duty & Activity Attendance")
     gform_link = get_saved_url(FORM_CONFIG_FILE)
@@ -831,8 +822,7 @@ def render_teacher_attendance_viewer():
     st.caption(f"Showing Teacher Attendance for: **{sel_month} | {sel_week}** (Auto-Synced with Google Sheet)")
     st.dataframe(df_slot, use_container_width=True, hide_index=True)
 
-
-# ----------------- UPDATED MAINTENANCE VIEWER (#14) -----------------
+# ----------------- MAINTENANCE VIEWER (#14) -----------------
 def render_maintenance_viewer():
     st.markdown("### 🛠️ Electronics STEM Lab Maintenance & Cleaning System")
     st.caption("Standardized Lab Protocol: Daily Sanitization, Deep Maintenance & Breakdown Tagging")
@@ -868,8 +858,7 @@ def render_maintenance_viewer():
         df_bd = get_breakdown_maint_for_slot(sel_month, sel_week)
         st.dataframe(df_bd, use_container_width=True, hide_index=True)
 
-
-# ----------------- UPDATED SAFETY CHECKLIST VIEWER (#16) -----------------
+# ----------------- SAFETY CHECKLIST VIEWER (#16) -----------------
 def render_safety_checklist_viewer():
     st.markdown("### 🛡️ Safety Compliance Checklist: Electronics STEM Lab")
     st.caption("Standardized as per ABIC STEM Lab Electronics Safety Protocol")
@@ -889,7 +878,6 @@ def render_safety_checklist_viewer():
     display_df = display_df.drop(columns=["Status"])
 
     st.dataframe(display_df, use_container_width=True, hide_index=True)
-
 
 def render_student_excel():
     possible_paths = [
@@ -927,7 +915,6 @@ def render_student_excel():
         st.warning("⚠️ `LMS STUDENT DATA.xlsx` file nahi mili.")
         st.info("Aap ise Admin Workspace me **Student List** me upload karein ya project folder me paste karein.")
 
-
 def render_scienceutsav_assessment():
     st.markdown("### 📊 ScienceUtsav Classroom Assessment & Performance Portal")
     saved_su_url = get_saved_url(SCIENCEUTSAV_CONFIG_FILE)
@@ -935,10 +922,8 @@ def render_scienceutsav_assessment():
         saved_su_url = "https://report.scienceutsav.com/class/k57a8q5h6mzanqt4vdvn48c1vx8ba0q3/report"
     col_l1, col_l2 = st.columns([1, 1])
     col_l1.link_button("🌐 Open ScienceUtsav Portal in New Tab", saved_su_url)
-    st.info(
-        "💡 Live dashboard loading below. Direct access kar sakte hain ya Admin panel se downloaded PDF upload kar sakte hain.")
+    st.info("💡 Live dashboard loading below. Direct access kar sakte hain ya Admin panel se downloaded PDF upload kar sakte hain.")
     components.iframe(saved_su_url, height=750, scrolling=True)
-
 
 # ----------------- ANNUAL INNOVATION ROADMAP DATA -----------------
 ANNUAL_PLAN_DATA = [
@@ -1014,7 +999,6 @@ ANNUAL_PLAN_DATA = [
      "Roles": "All 5-6 Team Members"}
 ]
 
-
 def render_annual_plan():
     st.markdown("""
     ### 📅 MONTHLY / ANNUAL STEM ACTIVITY PLAN (JULY 2026 – JANUARY 2027)
@@ -1047,10 +1031,8 @@ def render_annual_plan():
     else:
         display_cols = ["Month", "Session #", "Class 6", "Class 7", "Class 8", "Class 9", "Milestone", "Roles"]
 
-    st.markdown(
-        f"**Showing Activity Plan for:** `{selected_plan_month}` | `{selected_plan_class}` ({len(filtered_df)} Sessions)")
+    st.markdown(f"**Showing Activity Plan for:** `{selected_plan_month}` | `{selected_plan_class}` ({len(filtered_df)} Sessions)")
     st.dataframe(filtered_df[display_cols], use_container_width=True, hide_index=True)
-
 
 # ----------------- 56 SESSIONS MASTER LESSON PLANS -----------------
 LESSON_PLANS_DB = {
@@ -1343,7 +1325,6 @@ LESSON_PLANS_DB = {
          "Lab Evaluation (10M): Broadcast demo video (5M), Portal submission verified (5M).")
     ]
 }
-
 
 # ----------------- MASTER CONTENT ROUTER (ZERO TRUNCATION) -----------------
 def render_master_content(sno, title):
@@ -1689,7 +1670,6 @@ def render_master_content(sno, title):
 
     return False
 
-
 # ----------------- SIDEBAR NAVIGATION -----------------
 st.sidebar.title("🔬 ABIC STEM Portal")
 st.sidebar.caption("Aditya Birla Intermediate College, Renukoot")
@@ -1855,6 +1835,8 @@ if access_mode == "Admin Workspace":
                             save_student_attendance_slot(admin_st_month, admin_st_week, edited_st_slot_df)
                             st.success("Saved!")
                             st.rerun()
+                        render_parameter_file_manager(sno, title)
+
                     elif title == "Teacher Attendance":
                         cur_m_idx, cur_w_idx = get_current_indices()
                         c_m, c_w = st.columns(2)
@@ -1868,6 +1850,8 @@ if access_mode == "Admin Workspace":
                             save_teacher_attendance_slot(admin_tc_month, admin_tc_week, edited_tc_slot_df)
                             st.success("Saved!")
                             st.rerun()
+                        render_parameter_file_manager(sno, title)
+
                     elif title == "Maintenance Records":
                         cur_m_idx, cur_w_idx = get_current_indices()
                         c_m, c_w, c_d = st.columns([1.2, 1.2, 1.2])
@@ -1936,6 +1920,7 @@ if access_mode == "Admin Workspace":
                                 save_breakdown_maint_slot(adm_m_month, adm_m_week, ed_bd)
                                 st.success("Breakdown register saved successfully!")
                                 st.rerun()
+                        render_parameter_file_manager(sno, title)
 
                     elif title == "Safety Checklist":
                         cur_m_idx, cur_w_idx = get_current_indices()
@@ -1974,24 +1959,10 @@ if access_mode == "Admin Workspace":
                             st.success(
                                 f"Safety checklist for {admin_safe_month} ({admin_safe_week} - Date: {admin_safe_date}) saved!")
                             st.rerun()
+                        render_parameter_file_manager(sno, title)
                     else:
-                        uploaded_files = st.file_uploader(f"Upload files for #{sno} ({title})", type=None,
-                                                          accept_multiple_files=True, key=f"upload_{sno}")
-                        if uploaded_files:
-                            for f in uploaded_files:
-                                with open(os.path.join(record_dir, f.name), "wb") as buffer:
-                                    buffer.write(f.getbuffer())
-                            st.success(f"Saved {len(uploaded_files)} file(s).")
-                            st.rerun()
-                        existing_file_tuples = get_existing_files_for_parameter(sno, title)
-                        if existing_file_tuples:
-                            for fpath, fname in existing_file_tuples:
-                                c_a, c_b = st.columns([5, 1])
-                                c_a.text(f"📄 {fname}")
-                                if c_b.button("Delete", key=f"del_{sno}_{fname}"):
-                                    if os.path.exists(fpath):
-                                        os.remove(fpath)
-                                    st.rerun()
+                        render_parameter_file_manager(sno, title)
+
                     st.divider()
     else:
         st.title("🔒 Restricted Access")
