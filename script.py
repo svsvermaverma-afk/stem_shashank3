@@ -826,6 +826,7 @@ def render_file_preview(file_path, file_name, unique_key):
             st.download_button(f"📥 Download File ({file_name})", data=f.read(), file_name=file_name,
                                key=f"dl_doc_{unique_key}")
 
+# SAFE GET EXISTING FILES (FIXES NotADirectoryError + AUTO ROOT SCAN)
 def get_existing_files_for_parameter(sno, title):
     folder_candidates = [
         f"{sno:02d}_{title.replace(' ', '_').replace('/', '_')}",
@@ -835,14 +836,33 @@ def get_existing_files_for_parameter(sno, title):
     ]
     all_files = []
     seen = set()
+
+    # 1. Folder check with strict os.path.isdir to prevent NotADirectoryError
     for cand in folder_candidates:
         cand_dir = os.path.join(UPLOAD_DIR, cand)
-        if os.path.exists(cand_dir):
+        if os.path.isdir(cand_dir):
             for f in sorted(os.listdir(cand_dir)):
                 full_path = os.path.join(cand_dir, f)
                 if os.path.isfile(full_path) and f not in seen:
                     seen.add(f)
                     all_files.append((full_path, f))
+
+    # 2. Main root folder check for direct repository uploads
+    try:
+        root_files = [f for f in os.listdir(".") if os.path.isfile(f)]
+        for rf in root_files:
+            rf_lower = rf.lower()
+            if sno in [10, 11] and any(k in rf_lower for k in ["inventory", "materials", "equipment"]) and rf not in seen:
+                if rf.endswith((".pdf", ".xlsx", ".xls", ".csv")):
+                    seen.add(rf)
+                    all_files.append((rf, rf))
+            elif sno == 5 and "time" in rf_lower and "table" in rf_lower and rf not in seen:
+                if rf.endswith((".pdf", ".xlsx", ".xls", ".csv")):
+                    seen.add(rf)
+                    all_files.append((rf, rf))
+    except Exception:
+        pass
+
     return all_files
 
 def render_parameter_file_manager(sno, title):
@@ -1763,11 +1783,10 @@ if access_mode == "Admin Workspace":
         user_input = st.sidebar.text_input("Enter Admin Username", key="login_user_input")
         password_input = st.sidebar.text_input("Enter Admin Password", type="password", key="login_pass_input")
 
-        # Strip spaces and case-insensitive check to guarantee 100% login success
         if st.sidebar.button("Login", type="primary"):
             u_clean = user_input.strip().lower()
             p_clean = password_input.strip()
-            
+
             if u_clean == ADMIN_USER.lower() and p_clean in VALID_PASSWORDS:
                 st.session_state["is_admin_logged_in"] = True
                 st.sidebar.success("✅ Login Successful!")
