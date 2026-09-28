@@ -96,9 +96,9 @@ SHEET_CONFIG_FILE = os.path.join(DATA_DIR, "gsheet_url.txt")
 FORM_CONFIG_FILE = os.path.join(DATA_DIR, "gform_url.txt")
 SCIENCEUTSAV_CONFIG_FILE = os.path.join(DATA_DIR, "scienceutsav_url.txt")
 
-# CREDENTIALS (UPDATED: Password -> Admin@2026)
+# CREDENTIALS (UPDATED: Password -> Admin@123)
 ADMIN_USER = "shashank@abic"
-ADMIN_PASS = "Admin@2026"
+ADMIN_PASS = "Admin@1236"
 
 # PERMANENT HARDCODED LINKS
 DEFAULT_CONFIGS = {
