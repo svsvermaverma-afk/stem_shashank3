@@ -2,6 +2,7 @@ import streamlit as st
 import pandas as pd
 import os
 import re
+import sqlite3
 from datetime import datetime
 import streamlit.components.v1 as components
 
@@ -81,6 +82,7 @@ DATA_DIR = "portal_data"
 os.makedirs(UPLOAD_DIR, exist_ok=True)
 os.makedirs(DATA_DIR, exist_ok=True)
 
+TIMETABLE_DB_FILE = os.path.join(DATA_DIR, "timetable.db")
 STUDENT_ATTENDANCE_FILE = os.path.join(DATA_DIR, "student_attendance.csv")
 TEACHER_ATTENDANCE_FILE = os.path.join(DATA_DIR, "teacher_attendance.csv")
 SAFETY_CHECKLIST_FILE = os.path.join(DATA_DIR, "safety_checklist.csv")
@@ -94,9 +96,9 @@ SHEET_CONFIG_FILE = os.path.join(DATA_DIR, "gsheet_url.txt")
 FORM_CONFIG_FILE = os.path.join(DATA_DIR, "gform_url.txt")
 SCIENCEUTSAV_CONFIG_FILE = os.path.join(DATA_DIR, "scienceutsav_url.txt")
 
-# CREDENTIALS
+# CREDENTIALS (UPDATED: Password -> Admin@2026)
 ADMIN_USER = "shashank@abic"
-ADMIN_PASS = "stem@admin123"
+ADMIN_PASS = "Admin@2026"
 
 # PERMANENT HARDCODED LINKS
 DEFAULT_CONFIGS = {
@@ -203,6 +205,91 @@ if "active_admin_sno" not in st.session_state:
 
 if "is_admin_logged_in" not in st.session_state:
     st.session_state["is_admin_logged_in"] = False
+
+# ----------------- SQLITE TIME TABLE ENGINE -----------------
+def init_timetable_db():
+    conn = sqlite3.connect(TIMETABLE_DB_FILE)
+    c = conn.cursor()
+    c.execute('''
+        CREATE TABLE IF NOT EXISTS timetable (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            period_name TEXT NOT NULL,
+            time_slot TEXT NOT NULL,
+            monday TEXT,
+            tuesday TEXT,
+            wednesday TEXT,
+            thursday TEXT,
+            friday TEXT,
+            saturday TEXT
+        )
+    ''')
+    conn.commit()
+
+    c.execute("SELECT COUNT(*) FROM timetable")
+    if c.fetchone()[0] == 0:
+        official_slots = [
+            ("Zero Period", "8:05 AM - 8:50 AM", "-", "-", "-", "-", "-", "-"),
+            ("Period I", "9:15 AM - 9:55 AM", "-", "-", "VIII - C (SST)", "-", "-", "IX G (HD)"),
+            ("Period II", "9:55 AM - 10:30 AM", "-", "-", "-", "-", "-", "VII C (SNS)"),
+            ("Period III", "10:30 AM - 11:05 AM", "VI - A (SV)", "VII - A (RKS)", "VII B (MBJ)", "VIII-A (SV) / VIII B (MM)", "-", "-"),
+            ("Period IV", "11:05 AM - 11:40 AM", "-", "-", "-", "-", "-", "-"),
+            ("INTERVAL / RECESS", "11:40 AM - 12:05 PM", "I N T E R V A L", "I N T E R V A L", "I N T E R V A L", "I N T E R V A L", "I N T E R V A L", "I N T E R V A L"),
+            ("Period V", "12:05 PM - 12:45 PM", "-", "-", "-", "-", "VI C", "-"),
+            ("Period VI", "12:45 PM - 1:20 PM", "-", "-", "-", "-", "-", "-"),
+            ("Period VII", "1:20 PM - 1:55 PM", "VI - D (DJ) / IX - A (RKS)\nIX - E (CM) / IX - H (PK)", "IX - F (CM)", "IX C (SNS)", "VI - B (MM) / VIII D (PK)", "IX D / IX B / VII D", "-"),
+            ("Period VIII", "1:55 PM - 2:30 PM", "-", "-", "-", "-", "-", "-"),
+        ]
+        c.executemany('''
+            INSERT INTO timetable (period_name, time_slot, monday, tuesday, wednesday, thursday, friday, saturday)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+        ''', official_slots)
+        conn.commit()
+    conn.close()
+
+init_timetable_db()
+
+def get_timetable_df():
+    conn = sqlite3.connect(TIMETABLE_DB_FILE)
+    df = pd.read_sql_query("SELECT id, period_name AS [Period], time_slot AS [Timing], monday AS [Monday], tuesday AS [Tuesday], wednesday AS [Wednesday], thursday AS [Thursday], friday AS [Friday], saturday AS [Saturday] FROM timetable ORDER BY id ASC", conn)
+    conn.close()
+    return df
+
+def save_timetable_from_df(edited_df):
+    conn = sqlite3.connect(TIMETABLE_DB_FILE)
+    c = conn.cursor()
+    c.execute("DELETE FROM timetable")
+    for _, row in edited_df.iterrows():
+        c.execute('''
+            INSERT INTO timetable (period_name, time_slot, monday, tuesday, wednesday, thursday, friday, saturday)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+        ''', (str(row['Period']), str(row['Timing']), str(row['Monday']), str(row['Tuesday']), str(row['Wednesday']), str(row['Thursday']), str(row['Friday']), str(row['Saturday'])))
+    conn.commit()
+    conn.close()
+
+def render_timetable_view():
+    st.markdown("""
+    ### ⏰ STEM INNOVATION LAB - MASTER TIME TABLE (SESSION 2026-27)
+    **Aditya Birla Intermediate College, Renukoot, Sonebhadra (U.P.)**
+    * **Lab In-charge / SPOC:** Shashank Verma | **Effective Date:** 01 July 2026
+    * **Assembly / Prayer:** 9:00 AM - 9:15 AM (Warning Bell: 8:50 AM)
+    * **Final Bell:** Class 11-12: 2:25 PM | Class 6-10: 2:30 PM
+    """)
+    df_tt = get_timetable_df().drop(columns=["id"])
+    st.dataframe(df_tt, use_container_width=True, hide_index=True)
+    
+    with st.expander("ℹ️ Faculty Teacher Code Index"):
+        st.markdown("""
+        * **SV:** Mr. Shashank Verma (Physics / SPOC)
+        * **RKS:** Dr. Rakesh Singh
+        * **MBJ:** Mrs. Manju Bala Jindal
+        * **MM:** Mrs. Monika Mishra
+        * **DJ:** Mrs. Dev Jyoti Choudhary
+        * **SNS:** Mr. Shiv Narayan Singh
+        * **SST:** Mr. Shashank Shekhar Tiwari
+        * **CM:** Mr. Chandra Mohan Singh
+        * **HD:** Mr. Harendra Dwivedi
+        * **PK:** Mr. Praveen Kumar
+        """)
 
 # ----------------- PERMANENT URL ACCESS ENGINE -----------------
 def get_current_indices():
@@ -644,7 +731,7 @@ def sync_data_from_google_sheet():
 
         if raw_class:
             st_match_idx = df_st_all[(df_st_all["Month"] == month_name) & (df_st_all["Week"] == week_name) & (
-                        df_st_all["Class & Section"] == raw_class)].index
+                    df_st_all["Class & Section"] == raw_class)].index
             new_st_row = {
                 "Month": month_name, "Week": week_name, "Date": raw_date.split(" ")[0], "Day": raw_day,
                 "Class & Section": raw_class, "Total Students": raw_tot, "Period 1": raw_period, "Period 2": "",
@@ -658,7 +745,7 @@ def sync_data_from_google_sheet():
 
         if raw_teacher:
             tc_match_idx = df_tc_all[(df_tc_all["Month"] == month_name) & (df_tc_all["Week"] == week_name) & (
-                        df_tc_all["Teacher Name"] == raw_teacher)].index
+                    df_tc_all["Teacher Name"] == raw_teacher)].index
             new_tc_row = {
                 "Month": month_name, "Week": week_name, "Date": raw_date.split(" ")[0], "Day": raw_day,
                 "S.No.": str(len(df_tc_all) + 1), "Teacher Name": raw_teacher, "Class & Section Taught": raw_class,
@@ -785,7 +872,6 @@ def render_parameter_file_manager(sno, title):
         for idx, (fpath, fname) in enumerate(existing_files):
             c_a, c_b = st.columns([5, 1])
             c_a.markdown(f"📄 **{fname}**")
-            # Only deletes THIS specific file
             if c_b.button("🗑️ Delete", key=f"del_btn_{sno}_{idx}_{fname}", help=f"Delete only {fname}"):
                 if os.path.exists(fpath):
                     os.remove(fpath)
@@ -1460,13 +1546,7 @@ def render_master_content(sno, title):
         return True
 
     elif title == "Class-wise Timetable" or sno == 5:
-        st.markdown("""
-        ### ⏰ Weekly STEM Lab Schedule (2026-27)
-        * **Class VI (Sections A, B, C, D):** Tuesday & Thursday (Period 4)
-        * **Class VII (Sections A, B, C, D):** Monday & Wednesday (Period 5)
-        * **Class VIII (Sections A, B, C, D):** Wednesday & Friday (Period 6)
-        * **Class IX (Sections A to H):** Saturday (Period 2 to 4 - 3 Period Capstone Block)
-        """)
+        render_timetable_view()
         return True
 
     elif title == "Session / Lesson Plans" or sno == 6:
@@ -1822,7 +1902,17 @@ if access_mode == "Admin Workspace":
 
                 if is_active:
                     st.markdown(f"### ⚙️ Managing: #{sno}. {title}")
-                    if title == "Student Attendance":
+                    if title == "Class-wise Timetable":
+                        st.markdown("##### Edit SQLite Database Time Table:")
+                        df_tt_current = get_timetable_df()
+                        edited_tt = st.data_editor(df_tt_current.drop(columns=["id"]), num_rows="dynamic", use_container_width=True, key=f"adm_ed_tt_{sno}")
+                        if st.button("💾 Save Time Table to SQL Database", type="primary", key=f"btn_save_tt_{sno}"):
+                            save_timetable_from_df(edited_tt)
+                            st.success("Master Time Table updated in SQLite database!")
+                            st.rerun()
+                        render_parameter_file_manager(sno, title)
+
+                    elif title == "Student Attendance":
                         cur_m_idx, cur_w_idx = get_current_indices()
                         c_m, c_w = st.columns(2)
                         admin_st_month = c_m.selectbox("Select Month:", MONTHS, index=cur_m_idx, key=f"adm_st_m_{sno}")
@@ -1875,7 +1965,7 @@ if access_mode == "Admin Workspace":
                                         "Equipment Check", default=False),
                                     "Power Switch OFF": st.column_config.CheckboxColumn("Power OFF", default=False),
                                     "Workstation / Area": st.column_config.TextColumn("Workstation / Area",
-                                                                                      disabled=True)
+                                                                                     disabled=True)
                                 },
                                 num_rows="dynamic", use_container_width=True, key=f"ed_mt_daily_{sno}"
                             )
