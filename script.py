@@ -98,7 +98,7 @@ SCIENCEUTSAV_CONFIG_FILE = os.path.join(DATA_DIR, "scienceutsav_url.txt")
 
 # CREDENTIALS (UPDATED: Password -> Admin@123)
 ADMIN_USER = "shashank@abic"
-ADMIN_PASS = "Admin@1236"
+ADMIN_PASS = "Admin@123"
 
 # PERMANENT HARDCODED LINKS
 DEFAULT_CONFIGS = {
