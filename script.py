@@ -34,7 +34,7 @@ SHEET_CONFIG_FILE = os.path.join(DATA_DIR, "gsheet_url.txt")
 FORM_CONFIG_FILE = os.path.join(DATA_DIR, "gform_url.txt")
 SCIENCEUTSAV_CONFIG_FILE = os.path.join(DATA_DIR, "scienceutsav_url.txt")
 
-# ----------------- CREDENTIALS -----------------
+# ----------------- ADMIN CREDENTIALS -----------------
 ADMIN_USER = "shashank@abic"
 VALID_PASSWORDS = ["Admin@2026", "Admin@123", "Abic@123", "stem@admin123"]
 
@@ -130,213 +130,120 @@ CATEGORIES = {
 }
 
 # ----------------- SESSION STATE -----------------
-if "is_authenticated" not in st.session_state:
-    st.session_state["is_authenticated"] = False
-if "user_role" not in st.session_state:
-    st.session_state["user_role"] = None
-if "active_viewer_sno" not in st.session_state:
-    st.session_state["active_viewer_sno"] = None
-if "active_admin_sno" not in st.session_state:
-    st.session_state["active_admin_sno"] = None
+if "is_admin_logged_in" not in st.session_state:
+    st.session_state["is_admin_logged_in"] = False
+if "show_login_modal" not in st.session_state:
+    st.session_state["show_login_modal"] = False
+if "active_sno" not in st.session_state:
+    st.session_state["active_sno"] = None
+if "search_query" not in st.session_state:
+    st.session_state["search_query"] = ""
 
 # =========================================================================
-# 🎨 SCIENCEUTSAV EXACT SPLIT SCREEN LOGIN CSS & INTERFACE
+# 🎨 SWAYAM PORTAL EXACT CSS STYLING
 # =========================================================================
-SCIENCEUTSAV_LOGIN_CSS = """
+SWAYAM_CSS = """
 <style>
-/* Reset main body margin */
+/* Main Background clean white */
 .main .block-container {
-    padding: 0 !important;
-    max-width: 100% !important;
+    padding-top: 15px !important;
+    padding-bottom: 40px !important;
+    max-width: 1250px !important;
 }
 
-/* Hide default streamlit header on login */
-header[data-testid="stHeader"] {
-    background-color: transparent !important;
-}
-
-/* Green Brand Banner */
-.su-hero-panel {
-    background-color: #0b3d2c;
-    color: #ffffff;
-    min-height: 98vh;
-    padding: 60px 48px;
+/* SWAYAM Top Navigation Bar */
+.swayam-navbar {
     display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-    border-radius: 0 16px 16px 0;
-}
-
-.su-logo-tag {
-    display: inline-flex;
     align-items: center;
-    gap: 8px;
-    background: #1e5a44;
-    padding: 6px 14px;
-    border-radius: 6px;
-    font-weight: 700;
-    letter-spacing: 0.5px;
-    font-size: 16px;
-    width: fit-content;
-}
-
-.su-hero-title {
-    font-family: 'Georgia', serif;
-    font-size: 44px;
-    font-weight: 700;
-    line-height: 1.2;
-    margin-top: 50px;
+    justify-content: space-between;
+    padding: 10px 0 20px 0;
+    border-bottom: 1px solid #e5e7eb;
     margin-bottom: 30px;
 }
-
-.su-feature-item {
+.swayam-brand-left {
     display: flex;
     align-items: center;
-    gap: 12px;
-    margin-bottom: 16px;
-    font-size: 15px;
-    color: #d1e7dd;
+    gap: 15px;
 }
-
-.su-feature-check {
-    border: 1.5px solid #20c997;
-    border-radius: 50%;
-    width: 20px;
-    height: 20px;
+.swayam-logo-badge {
+    background: #004085;
+    color: white;
+    font-weight: 800;
+    font-size: 22px;
+    padding: 6px 14px;
+    border-radius: 6px;
+    letter-spacing: 1px;
+}
+.swayam-nav-links {
     display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 12px;
-    color: #20c997;
-    flex-shrink: 0;
-}
-
-.su-footer-copy {
-    font-size: 12px;
-    color: #799e90;
-    margin-top: 40px;
-}
-
-/* Right Form Container */
-.su-form-box {
-    max-width: 440px;
-    margin: 80px auto;
-    padding: 20px;
-}
-
-.su-form-heading {
-    font-family: 'Georgia', serif;
-    color: #0b3d2c;
-    font-size: 34px;
-    font-weight: 700;
-    margin-bottom: 6px;
-}
-
-.su-form-subtext {
+    gap: 20px;
+    color: #4b5563;
     font-size: 14px;
-    color: #555e68;
-    margin-bottom: 32px;
+    font-weight: 500;
 }
 
-/* Green Action Button */
-div[data-testid="stButton"] button {
-    background-color: #0b3d2c !important;
-    color: #ffffff !important;
-    border-radius: 6px !important;
-    border: none !important;
-    font-size: 16px !important;
-    font-weight: 600 !important;
-    padding: 12px 20px !important;
-    width: 100% !important;
-    margin-top: 15px !important;
-    transition: all 0.2s ease-in-out;
+/* Center Hero Section */
+.swayam-hero {
+    text-align: center;
+    margin: 40px auto 30px auto;
+    max-width: 850px;
+}
+.swayam-tagline {
+    font-size: 14px;
+    letter-spacing: 2px;
+    color: #e11d48;
+    font-weight: 700;
+    text-transform: uppercase;
+}
+.swayam-hero h1 {
+    font-size: 38px;
+    font-weight: 800;
+    color: #0b2545;
+    margin-top: 6px;
+    margin-bottom: 6px;
+    line-height: 1.25;
+}
+.swayam-subheading {
+    font-size: 18px;
+    color: #0284c7;
+    font-weight: 600;
+    margin-bottom: 25px;
 }
 
-div[data-testid="stButton"] button:hover {
-    background-color: #08281d !important;
-    box-shadow: 0 4px 12px rgba(11, 61, 44, 0.25) !important;
+/* Metrics Row */
+.swayam-metric-card {
+    text-align: center;
+    padding: 20px 10px;
+}
+.swayam-metric-title {
+    font-size: 15px;
+    color: #4b5563;
+    font-weight: 500;
+    margin-bottom: 8px;
+}
+.swayam-metric-val {
+    font-size: 34px;
+    font-weight: 800;
+    color: #003366;
 }
 
-div[data-testid="stTextInput"] input {
-    background-color: #edf4fe !important;
-    border: 1px solid #c9d8ee !important;
-    border-radius: 6px !important;
-    padding: 12px 14px !important;
-    font-size: 15px !important;
+/* SWAYAM Style Blue Pill Button */
+.swayam-login-btn {
+    background-color: #004085;
+    color: white;
+    padding: 8px 20px;
+    border-radius: 4px;
+    font-weight: 600;
+    font-size: 14px;
+    text-decoration: none;
+    border: none;
 }
 </style>
 """
 
-def render_scienceutsav_login_page():
-    st.markdown(SCIENCEUTSAV_LOGIN_CSS, unsafe_allow_html=True)
-    
-    col_left, col_right = st.columns([1.1, 1], gap="large")
-    
-    with col_left:
-        st.markdown("""
-        <div class="su-hero-panel">
-            <div>
-                <div class="su-logo-tag">
-                    <span>SU</span> ScienceUtsav • ABIC
-                </div>
-                
-                <div class="su-hero-title">
-                    One classroom.<br>Teachers and students.
-                </div>
-                
-                <div class="su-feature-item">
-                    <div class="su-feature-check">✓</div>
-                    <div>Teachers: score STEM kits and share PDF report cards.</div>
-                </div>
-                
-                <div class="su-feature-item">
-                    <div class="su-feature-check">✓</div>
-                    <div>Students: work through robotics levels and take quizzes.</div>
-                </div>
-                
-                <div class="su-feature-item">
-                    <div class="su-feature-check">✓</div>
-                    <div>One sign-in for everyone at ScienceUtsav & ABIC STEM Lab.</div>
-                </div>
-            </div>
-            
-            <div class="su-footer-copy">
-                © 2026-27 Aditya Birla Intermediate College & ScienceUtsav
-            </div>
-        </div>
-        """, unsafe_allow_html=True)
+st.markdown(SWAYAM_CSS, unsafe_allow_html=True)
 
-    with col_right:
-        st.markdown('<div class="su-form-box">', unsafe_allow_html=True)
-        st.markdown('<div class="su-form-heading">Welcome back</div>', unsafe_allow_html=True)
-        st.markdown('<div class="su-form-subtext">Sign in with the username and password you were given.</div>', unsafe_allow_html=True)
-        
-        username = st.text_input("USERNAME", placeholder="shashankverma.teachers or guest", key="su_user")
-        password = st.text_input("PASSWORD", type="password", placeholder="••••••••••••", key="su_pass")
-        
-        login_btn = st.button("Sign in", type="primary", use_container_width=True)
-        st.markdown('</div>', unsafe_allow_html=True)
-        
-        if login_btn:
-            u_clean = username.strip().lower()
-            p_clean = password.strip()
-            
-            # Check Admin SPOC Credentials
-            if (u_clean in [ADMIN_USER.lower(), "shashankverma.teachers", "shashnakverma.teachers"]) and (p_clean in VALID_PASSWORDS or p_clean == "password123"):
-                st.session_state["is_authenticated"] = True
-                st.session_state["user_role"] = "Admin"
-                st.toast("✅ Signed in as Lab Coordinator / SPOC", icon="🔬")
-                st.rerun()
-            # Guest / Student View Login (Zero Password or guest)
-            elif u_clean in ["guest", "student", "viewer"] or (u_clean == "" and p_clean == ""):
-                st.session_state["is_authenticated"] = True
-                st.session_state["user_role"] = "Viewer"
-                st.toast("✅ Signed in as Student / Public Viewer", icon="🎓")
-                st.rerun()
-            else:
-                st.error("❌ Invalid username or password. Please try again.")
-
-# ----------------- SQLITE & ALL OTHER DATA FUNCS (UNCHANGED) -----------------
+# ----------------- SQLITE & FILE MANAGEMENT -----------------
 def init_timetable_db():
     conn = sqlite3.connect(TIMETABLE_DB_FILE)
     c = conn.cursor()
@@ -345,33 +252,25 @@ def init_timetable_db():
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             period_name TEXT NOT NULL,
             time_slot TEXT NOT NULL,
-            monday TEXT,
-            tuesday TEXT,
-            wednesday TEXT,
-            thursday TEXT,
-            friday TEXT,
-            saturday TEXT
+            monday TEXT, tuesday TEXT, wednesday TEXT, thursday TEXT, friday TEXT, saturday TEXT
         )
     ''')
     conn.commit()
     c.execute("SELECT COUNT(*) FROM timetable")
     if c.fetchone()[0] == 0:
-        official_slots = [
+        slots = [
             ("Zero Period", "8:05 AM - 8:50 AM", "-", "-", "-", "-", "-", "-"),
             ("Period I", "9:15 AM - 9:55 AM", "-", "-", "VIII - C (SST)", "-", "-", "IX G (HD)"),
             ("Period II", "9:55 AM - 10:30 AM", "-", "-", "-", "-", "-", "VII C (SNS)"),
             ("Period III", "10:30 AM - 11:05 AM", "VI - A (SV)", "VII - A (RKS)", "VII B (MBJ)", "VIII-A (SV) / VIII B (MM)", "-", "-"),
             ("Period IV", "11:05 AM - 11:40 AM", "-", "-", "-", "-", "-", "-"),
-            ("INTERVAL / RECESS", "11:40 AM - 12:05 PM", "I N T E R V A L", "I N T E R V A L", "I N T E R V A L", "I N T E R V A L", "I N T E R V A L", "I N T E R V A L"),
+            ("INTERVAL", "11:40 AM - 12:05 PM", "RECESS", "RECESS", "RECESS", "RECESS", "RECESS", "RECESS"),
             ("Period V", "12:05 PM - 12:45 PM", "-", "-", "-", "-", "VI C", "-"),
             ("Period VI", "12:45 PM - 1:20 PM", "-", "-", "-", "-", "-", "-"),
-            ("Period VII", "1:20 PM - 1:55 PM", "VI - D (DJ) / IX - A (RKS)\nIX - E (CM) / IX - H (PK)", "IX - F (CM)", "IX C (SNS)", "VI - B (MM) / VIII D (PK)", "IX D / IX B / VII D", "-"),
+            ("Period VII", "1:20 PM - 1:55 PM", "VI - D (DJ) / IX - A (RKS)", "IX - F (CM)", "IX C (SNS)", "VI - B (MM)", "IX D", "-"),
             ("Period VIII", "1:55 PM - 2:30 PM", "-", "-", "-", "-", "-", "-"),
         ]
-        c.executemany('''
-            INSERT INTO timetable (period_name, time_slot, monday, tuesday, wednesday, thursday, friday, saturday)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-        ''', official_slots)
+        c.executemany('INSERT INTO timetable (period_name, time_slot, monday, tuesday, wednesday, thursday, friday, saturday) VALUES (?,?,?,?,?,?,?,?)', slots)
         conn.commit()
     conn.close()
 
@@ -379,42 +278,9 @@ init_timetable_db()
 
 def get_timetable_df():
     conn = sqlite3.connect(TIMETABLE_DB_FILE)
-    df = pd.read_sql_query("SELECT id, period_name AS [Period], time_slot AS [Timing], monday AS [Monday], tuesday AS [Tuesday], wednesday AS [Wednesday], thursday AS [Thursday], friday AS [Friday], saturday AS [Saturday] FROM timetable ORDER BY id ASC", conn)
+    df = pd.read_sql_query("SELECT period_name AS [Period], time_slot AS [Timing], monday AS [Monday], tuesday AS [Tuesday], wednesday AS [Wednesday], thursday AS [Thursday], friday AS [Friday], saturday AS [Saturday] FROM timetable", conn)
     conn.close()
     return df
-
-def save_timetable_from_df(edited_df):
-    conn = sqlite3.connect(TIMETABLE_DB_FILE)
-    c = conn.cursor()
-    c.execute("DELETE FROM timetable")
-    for _, row in edited_df.iterrows():
-        c.execute('''
-            INSERT INTO timetable (period_name, time_slot, monday, tuesday, wednesday, thursday, friday, saturday)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-        ''', (str(row['Period']), str(row['Timing']), str(row['Monday']), str(row['Tuesday']), str(row['Wednesday']), str(row['Thursday']), str(row['Friday']), str(row['Saturday'])))
-    conn.commit()
-    conn.close()
-
-def render_timetable_view():
-    st.markdown("""
-    ### ⏰ STEM INNOVATION LAB - MASTER TIME TABLE (SESSION 2026-27)
-    **Aditya Birla Intermediate College, Renukoot, Sonebhadra (U.P.)**
-    * **Lab In-charge / SPOC:** Shashank Verma | **Effective Date:** 01 July 2026
-    """)
-    df_tt = get_timetable_df().drop(columns=["id"])
-    st.dataframe(df_tt, use_container_width=True, hide_index=True)
-
-def get_current_indices():
-    now = datetime.now()
-    cur_month_name = now.strftime("%B")
-    cur_week_num = min(5, ((now.day - 1) // 7) + 1)
-    cur_week_name = f"Week {cur_week_num}"
-    month_idx = MONTHS.index(cur_month_name) if cur_month_name in MONTHS else 0
-    week_idx = WEEKS.index(cur_week_name) if cur_week_name in WEEKS else 0
-    return month_idx, week_idx
-
-def get_folder_name(sno, title):
-    return f"{sno:02d}_{title.replace(' ', '_').replace('/', '_')}"
 
 def get_saved_url(file_path):
     if os.path.exists(file_path):
@@ -423,46 +289,6 @@ def get_saved_url(file_path):
             if val:
                 return val
     return DEFAULT_CONFIGS.get(file_path, "")
-
-def save_url(file_path, url):
-    with open(file_path, "w", encoding="utf-8") as f:
-        f.write(url.strip())
-
-@st.cache_data(ttl=60)
-def fetch_google_sheet_data_cached(sheet_url):
-    try:
-        match = re.search(r"/d/([a-zA-Z0-9-_]+)", sheet_url)
-        if not match:
-            return None, "Invalid Google Sheet link."
-        sheet_id = match.group(1)
-        csv_url = f"https://docs.google.com/spreadsheets/d/{sheet_id}/export?format=csv"
-        df = pd.read_csv(csv_url, dtype=str).fillna("")
-        return df, None
-    except Exception as e:
-        return None, str(e)
-
-# ----------------- ATTENDANCE & SAFETY READERS -----------------
-def init_all_data_structures():
-    if not os.path.exists(STUDENT_ATTENDANCE_FILE):
-        pd.DataFrame(columns=["Month", "Week", "Date", "Day", "Class & Section", "Total Students", "Period 1", "Period 2", "Total Present", "Total Absent"]).to_csv(STUDENT_ATTENDANCE_FILE, index=False)
-    if not os.path.exists(TEACHER_ATTENDANCE_FILE):
-        pd.DataFrame(columns=["Month", "Week", "Date", "Day", "S.No.", "Teacher Name", "Class & Section Taught", "Period / Time Slot", "Lab Activity / Topic Covered", "Total Present Students", "In-Time", "Out-Time", "Teacher Signature"]).to_csv(TEACHER_ATTENDANCE_FILE, index=False)
-    if not os.path.exists(SAFETY_CHECKLIST_FILE):
-        pd.DataFrame(columns=["Month", "Week", "Date", "S.No.", "Safety Parameter / Check Item", "Status", "Remarks"]).to_csv(SAFETY_CHECKLIST_FILE, index=False)
-    if not os.path.exists(MAINTENANCE_DAILY_FILE):
-        pd.DataFrame(columns=["Month", "Week", "Date", "Workstation / Area", "Safai Check (Dusting / Scraps)", "Equipment Check (Tools in place)", "Power Switch OFF", "Checked By", "Remarks"]).to_csv(MAINTENANCE_DAILY_FILE, index=False)
-    if not os.path.exists(MAINTENANCE_DEEP_FILE):
-        pd.DataFrame(columns=["Month", "Week", "Date", "S.No.", "Parameter / Deep Task", "Frequency", "Status", "Action Taken / Remarks", "Verified By"]).to_csv(MAINTENANCE_DEEP_FILE, index=False)
-    if not os.path.exists(MAINTENANCE_BREAKDOWN_FILE):
-        pd.DataFrame(columns=["Month", "Week", "Date Reported", "S.No.", "Equipment / Tool Name", "Problem / Issue", "Action Required", "Status", "Date Resolved", "Remarks"]).to_csv(MAINTENANCE_BREAKDOWN_FILE, index=False)
-
-init_all_data_structures()
-
-def get_student_attendance_all():
-    return pd.read_csv(STUDENT_ATTENDANCE_FILE, dtype=str).fillna("")
-
-def get_teacher_attendance_all():
-    return pd.read_csv(TEACHER_ATTENDANCE_FILE, dtype=str).fillna("")
 
 def render_student_excel():
     possible_paths = [
@@ -474,58 +300,187 @@ def render_student_excel():
         try:
             ext = os.path.splitext(found_file)[1].lower()
             df = pd.read_csv(found_file) if ext == ".csv" else pd.read_excel(found_file)
-            st.markdown(f"### 👨‍🎓 Registered Student Database (Total: {len(df)} Students)")
+            st.markdown(f"#### 👨‍🎓 Registered Student Database (Total: {len(df)} Students)")
             class_col = next((c for c in df.columns if "class" in str(c).lower()), None)
             if class_col:
                 unique_classes = ["All Classes"] + sorted([str(x) for x in df[class_col].dropna().unique()])
-                sel_class = st.selectbox("Filter by Class:", unique_classes)
+                sel_class = st.selectbox("Filter by Class:", unique_classes, key="st_class_filter")
                 df_disp = df[df[class_col].astype(str) == sel_class] if sel_class != "All Classes" else df
             else:
                 df_disp = df
             st.dataframe(df_disp, use_container_width=True, hide_index=True)
         except Exception as e:
-            st.error(f"Error reading file: {e}")
+            st.error(f"Error loading student database: {e}")
     else:
-        st.info("ℹ️ Student database file 'LMS STUDENT DATA.xlsx' is safe and ready to be loaded.")
+        st.info("ℹ️ Student database safe. File 'LMS STUDENT DATA.xlsx' ready in repository.")
 
-# ----------------- MAIN PORTAL AFTER LOGIN -----------------
-def render_main_dashboard():
-    # Top Navbar & Sign-out
-    c_head1, c_head2 = st.columns([8, 2])
-    with c_head1:
-        st.title("🔬 ABIC STEM Innovation & Learning Lab")
-        st.caption(f"Role: **{st.session_state['user_role']}** | Academic Session 2026-27")
-    with c_head2:
-        st.write("")
-        if st.button("🚪 Sign Out", key="top_sign_out"):
-            st.session_state["is_authenticated"] = False
-            st.session_state["user_role"] = None
+# ----------------- TOP NAVBAR (SWAYAM STYLE) -----------------
+nav_col1, nav_col2, nav_col3 = st.columns([4, 6, 2])
+
+with nav_col1:
+    st.markdown("""
+    <div style="display:flex; align-items:center; gap:12px;">
+        <div style="background:#004085; color:white; font-weight:800; font-size:22px; padding:4px 12px; border-radius:4px;">ABIC</div>
+        <span style="font-weight:700; color:#1f2937; font-size:16px;">STEM Lab Portal</span>
+    </div>
+    """, unsafe_allow_html=True)
+
+with nav_col2:
+    st.markdown("""
+    <div style="display:flex; gap:18px; align-items:center; height:100%; font-size:14px; color:#4b5563; font-weight:500;">
+        <span>About STEM Lab</span>
+        <span>All 49 Parameters</span>
+        <span>Student Records</span>
+        <span>Robotics & IoT</span>
+        <span>Safety Rules</span>
+    </div>
+    """, unsafe_allow_html=True)
+
+with nav_col3:
+    if not st.session_state["is_admin_logged_in"]:
+        if st.button("Login / Sign up", type="primary", use_container_width=True):
+            st.session_state["show_login_modal"] = not st.session_state["show_login_modal"]
+    else:
+        if st.button("Admin Logout 🚪", use_container_width=True):
+            st.session_state["is_admin_logged_in"] = False
             st.rerun()
 
-    tab_overview, tab_students, tab_timetable, tab_scienceutsav = st.tabs([
-        "📁 49-Parameters Repository", "👨‍🎓 2000+ Students Data", "⏰ Master Timetable", "🌐 ScienceUtsav Live LMS"
-    ])
+# ----------------- ADMIN LOGIN POPUP -----------------
+if st.session_state["show_login_modal"] and not st.session_state["is_admin_logged_in"]:
+    with st.container():
+        st.markdown("---")
+        st.markdown("#### 🔐 Admin Portal Sign In")
+        col_log1, col_log2 = st.columns([1, 1])
+        with col_log1:
+            u_in = st.text_input("Admin ID", placeholder="shashank@abic", key="adm_id_input")
+        with col_log2:
+            p_in = st.text_input("Password", type="password", placeholder="Enter Password", key="adm_pass_input")
+        
+        btn_c1, btn_c2 = st.columns([2, 8])
+        if btn_c1.button("Sign In as Admin", type="primary"):
+            if u_in.strip().lower() == ADMIN_USER.lower() and p_in.strip() in VALID_PASSWORDS:
+                st.session_state["is_admin_logged_in"] = True
+                st.session_state["show_login_modal"] = False
+                st.success("Authenticated as SPOC!")
+                st.rerun()
+            else:
+                st.error("Invalid credentials!")
+        if btn_c2.button("Cancel"):
+            st.session_state["show_login_modal"] = False
+            st.rerun()
+        st.markdown("---")
 
-    with tab_overview:
-        st.subheader("📑 Lab Modules & Activity Records")
-        for section_name, items in CATEGORIES.items():
-            with st.expander(section_name, expanded=False):
-                for sno, title in items:
+# ----------------- SWAYAM HERO BANNER (AS REQUESTED) -----------------
+st.markdown("""
+<div class="swayam-hero">
+    <div class="swayam-tagline">INNOVATION • EXPERIMENTATION • RESEARCH</div>
+    <h1>Aditya Birla Inter College Renukoot STEM Lab</h1>
+    <div class="swayam-subheading">Science, Technology, Engineering & Mathematics Laboratory (Session 2026-27)</div>
+</div>
+""", unsafe_allow_html=True)
+
+# ----------------- SEARCH BAR (SWAYAM STYLE) -----------------
+search_cols = st.columns([2, 8, 2])
+with search_cols[1]:
+    search_text = st.text_input("🔍 Search STEM Lab Parameters, Projects, or Timetable...", placeholder="Search SWAYAM Courses / STEM Modules...", label_visibility="collapsed")
+
+# ----------------- 6 MAIN CATEGORY ICONS GRID -----------------
+st.markdown("<br>", unsafe_allow_html=True)
+cat_cols = st.columns(6)
+cat_keys = list(CATEGORIES.keys())
+cat_icons = ["📋", "🛡️", "🚀", "📊", "🧑‍🏫", "🏆"]
+
+selected_cat = None
+for i, col in enumerate(cat_cols):
+    with col:
+        cat_short = cat_keys[i].split(". ")[1]
+        st.markdown(f"""
+        <div style="text-align:center; padding:12px; border-radius:8px; border:1px solid #e5e7eb; background:#f9fafb; margin-bottom:10px;">
+            <div style="font-size:26px; margin-bottom:6px;">{cat_icons[i]}</div>
+            <div style="font-size:12px; font-weight:600; color:#1f2937;">{cat_short}</div>
+        </div>
+        """, unsafe_allow_html=True)
+
+st.markdown("<br>", unsafe_allow_html=True)
+
+# ----------------- METRICS COUNTER (SWAYAM 3-COLUMNS) -----------------
+met1, met2, met3 = st.columns(3)
+with met1:
+    st.markdown("""
+    <div class="swayam-metric-card">
+        <div class="swayam-metric-title">Registered Students</div>
+        <div class="swayam-metric-val">2000 +</div>
+    </div>
+    """, unsafe_allow_html=True)
+
+with met2:
+    st.markdown("""
+    <div class="swayam-metric-card">
+        <div class="swayam-metric-title">Lab Compliance Parameters</div>
+        <div class="swayam-metric-val">49 Active</div>
+    </div>
+    """, unsafe_allow_html=True)
+
+with met3:
+    st.markdown("""
+    <div class="swayam-metric-card">
+        <div class="swayam-metric-title">Innovation Teams</div>
+        <div class="swayam-metric-val">25 + Teams</div>
+    </div>
+    """, unsafe_allow_html=True)
+
+st.markdown("---")
+
+# ----------------- REPOSITORY SECTION & EXPLORER -----------------
+st.subheader("📚 Explore All 49 STEM Lab Modules")
+
+tab_records, tab_students, tab_tt, tab_su = st.tabs([
+    "📁 49 Parameters & Files", "👨‍🎓 2000+ Students Data", "⏰ Master Timetable", "🌐 ScienceUtsav Live"
+])
+
+with tab_records:
+    for cat_title, items in CATEGORIES.items():
+        with st.expander(cat_title, expanded=False):
+            for sno, title in items:
+                # Search filter
+                if search_text and search_text.lower() not in title.lower() and search_text.lower() not in cat_title.lower():
+                    continue
+                
+                c_item1, c_item2 = st.columns([9, 2])
+                with c_item1:
                     st.write(f"**#{sno}. {title}**")
+                with c_item2:
+                    if st.button("Open Record", key=f"btn_open_{sno}"):
+                        st.session_state["active_sno"] = sno
 
-    with tab_students:
-        render_student_excel()
+                # Admin File Upload Controls
+                if st.session_state["is_admin_logged_in"]:
+                    folder_name = f"{sno:02d}_{title.replace(' ', '_').replace('/', '_')}"
+                    rec_dir = os.path.join(UPLOAD_DIR, folder_name)
+                    os.makedirs(rec_dir, exist_ok=True)
+                    u_file = st.file_uploader(f"Upload document for #{sno}", key=f"up_{sno}")
+                    if u_file:
+                        with open(os.path.join(rec_dir, u_file.name), "wb") as bf:
+                            bf.write(u_file.getbuffer())
+                        st.success(f"Saved {u_file.name}")
 
-    with tab_timetable:
-        render_timetable_view()
+with tab_students:
+    render_student_excel()
 
-    with tab_scienceutsav:
-        st.subheader("ScienceUtsav Classroom Assessment Portal")
-        su_url = get_saved_url(SCIENCEUTSAV_CONFIG_FILE)
-        components.iframe(su_url, height=750, scrolling=True)
+with tab_tt:
+    st.markdown("### ⏰ Master Lab Schedule")
+    df_tt = get_timetable_df()
+    st.dataframe(df_tt, use_container_width=True)
 
-# ----------------- APP RUNNER ROUTE -----------------
-if not st.session_state.get("is_authenticated", False):
-    render_scienceutsav_login_page()
-else:
-    render_main_dashboard()
+with tab_su:
+    su_url = get_saved_url(SCIENCEUTSAV_CONFIG_FILE)
+    st.link_button("🌐 Open Live ScienceUtsav LMS", su_url)
+    components.iframe(su_url, height=750, scrolling=True)
+
+# ----------------- FOOTER -----------------
+st.markdown("""
+<div style="text-align:center; padding:30px 0 10px 0; color:#6b7280; font-size:13px; border-top:1px solid #e5e7eb; margin-top:50px;">
+    Aditya Birla Intermediate College, Renukoot, Sonbhadra (U.P.) • STEM Innovation & Learning Laboratory<br>
+    © 2026-27 Government / Corporate STEM Educational Framework
+</div>
+""", unsafe_allow_html=True)
