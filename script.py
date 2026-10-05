@@ -18,7 +18,7 @@ st.set_page_config(page_title="ABIC STEM Lab Portal", page_icon="🔬", layout="
 UPLOAD_DIR = "stem_lab_records"
 DATA_DIR = "portal_data"
 
-# Safe Directory Initialization to eliminate FileExistsError
+# Safe Directory Initialization to eliminate FileExistsError permanently
 try:
     if os.path.exists(UPLOAD_DIR) and not os.path.isdir(UPLOAD_DIR):
         UPLOAD_DIR = "stem_lab_records_dir"
@@ -152,8 +152,8 @@ if "show_login_modal" not in st.session_state:
     st.session_state["show_login_modal"] = False
 if "active_viewer_sno" not in st.session_state:
     st.session_state["active_viewer_sno"] = None
-if "active_admin_sno" not in st.session_state:
-    st.session_state["active_admin_sno"] = None
+if "selected_category_filter" not in st.session_state:
+    st.session_state["selected_category_filter"] = None
 
 # ----------------- STYLING CSS (SWAYAM INTERFACE) -----------------
 st.markdown("""
@@ -162,6 +162,37 @@ st.markdown("""
     padding-top: 15px !important;
     padding-bottom: 40px !important;
     max-width: 1250px !important;
+}
+
+div.cat-btn-container button {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: center !important;
+    text-align: center !important;
+    min-height: 95px !important;
+    background-color: #ffffff !important;
+    border: 1px solid #d1d5db !important;
+    border-radius: 10px !important;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.05) !important;
+    transition: all 0.2s ease !important;
+    padding: 10px 6px !important;
+    width: 100% !important;
+}
+
+div.cat-btn-container button:hover {
+    border-color: #004085 !important;
+    background-color: #f0f7ff !important;
+    transform: translateY(-2px) !important;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1) !important;
+}
+
+div.cat-btn-container button p {
+    font-size: 13px !important;
+    font-weight: 600 !important;
+    color: #1f2937 !important;
+    margin: 0 !important;
+    text-align: center !important;
 }
 
 div[data-testid="stButton"] button {
@@ -188,7 +219,7 @@ div[data-testid="stButton"] button:hover {
 
 .swayam-hero {
     text-align: center;
-    margin: 25px auto 20px auto;
+    margin: 20px auto 16px auto;
     max-width: 950px;
 }
 .swayam-tagline {
@@ -209,7 +240,7 @@ div[data-testid="stButton"] button:hover {
     font-size: 17px;
     color: #0284c7;
     font-weight: 600;
-    margin-bottom: 20px;
+    margin-bottom: 18px;
 }
 .swayam-metric-card {
     text-align: center;
@@ -230,7 +261,6 @@ div[data-testid="stButton"] button:hover {
     color: #003366;
 }
 
-/* Custom Executive Message Cards */
 .msg-container {
     background-color: #f0f7ff;
     border: 1px solid #cce3ff;
@@ -456,45 +486,51 @@ def render_executive_messages():
 # ----------------- ATTENDANCE, SAFETY & MAINTENANCE INIT -----------------
 def init_all_data_structures():
     if not os.path.exists(STUDENT_ATTENDANCE_FILE):
-        pd.DataFrame({
+        structure = {
             "Month": [], "Week": [], "Date": [], "Day": [], "Class & Section": [],
             "Total Students": [], "Period 1": [], "Period 2": [], "Total Present": [], "Total Absent": []
-        }).to_csv(STUDENT_ATTENDANCE_FILE, index=False)
+        }
+        pd.DataFrame(structure).to_csv(STUDENT_ATTENDANCE_FILE, index=False)
 
     if not os.path.exists(TEACHER_ATTENDANCE_FILE):
-        pd.DataFrame({
+        structure = {
             "Month": [], "Week": [], "Date": [], "Day": [], "S.No.": [],
             "Teacher Name": [], "Class & Section Taught": [], "Period / Time Slot": [],
             "Lab Activity / Topic Covered": [], "Total Present Students": [],
             "In-Time": [], "Out-Time": [], "Teacher Signature": []
-        }).to_csv(TEACHER_ATTENDANCE_FILE, index=False)
+        }
+        pd.DataFrame(structure).to_csv(TEACHER_ATTENDANCE_FILE, index=False)
 
     if not os.path.exists(SAFETY_CHECKLIST_FILE):
-        pd.DataFrame({
+        structure = {
             "Month": [], "Week": [], "Date": [], "S.No.": [],
             "Safety Parameter / Check Item": [], "Status": [], "Remarks": []
-        }).to_csv(SAFETY_CHECKLIST_FILE, index=False)
+        }
+        pd.DataFrame(structure).to_csv(SAFETY_CHECKLIST_FILE, index=False)
 
     if not os.path.exists(MAINTENANCE_DAILY_FILE):
-        pd.DataFrame({
+        structure = {
             "Month": [], "Week": [], "Date": [], "Workstation / Area": [],
             "Safai Check (Dusting / Scraps)": [], "Equipment Check (Tools in place)": [],
             "Power Switch OFF": [], "Checked By": [], "Remarks": []
-        }).to_csv(MAINTENANCE_DAILY_FILE, index=False)
+        }
+        pd.DataFrame(structure).to_csv(MAINTENANCE_DAILY_FILE, index=False)
 
     if not os.path.exists(MAINTENANCE_DEEP_FILE):
-        pd.DataFrame({
+        structure = {
             "Month": [], "Week": [], "Date": [], "S.No.": [],
             "Parameter / Deep Task": [], "Frequency": [], "Status": [],
             "Action Taken / Remarks": [], "Verified By": []
-        }).to_csv(MAINTENANCE_DEEP_FILE, index=False)
+        }
+        pd.DataFrame(structure).to_csv(MAINTENANCE_DEEP_FILE, index=False)
 
     if not os.path.exists(MAINTENANCE_BREAKDOWN_FILE):
-        pd.DataFrame({
+        structure = {
             "Month": [], "Week": [], "Date Reported": [], "S.No.": [],
             "Equipment / Tool Name": [], "Problem / Issue": [], "Action Required": [],
             "Status": [], "Date Resolved": [], "Remarks": []
-        }).to_csv(MAINTENANCE_BREAKDOWN_FILE, index=False)
+        }
+        pd.DataFrame(structure).to_csv(MAINTENANCE_BREAKDOWN_FILE, index=False)
 
 init_all_data_structures()
 
@@ -958,7 +994,7 @@ def render_maintenance_viewer():
     sel_date = c3.date_input("Audit / Log Date:", value=datetime.now(), key="view_maint_date")
 
     tab_m1, tab_m2, tab_m3 = st.tabs(["🧹 1. Daily Cleaning & Workstation Log", "🔍 2. Deep Maintenance & Hygiene",
-                                      "⚠️️ 3. Equipment Breakdown Register"])
+                                      "⚠ 3. Equipment Breakdown Register"])
 
     with tab_m1:
         st.markdown(f"##### 📅 Daily Log for: `{sel_month} | {sel_week} | {sel_date}`")
@@ -983,7 +1019,7 @@ def render_maintenance_viewer():
         st.dataframe(df_bd, use_container_width=True, hide_index=True)
 
 def render_safety_checklist_viewer():
-    st.markdown("### 🛡️ Safety Compliance Checklist: Electronics STEM Lab")
+    st.markdown("### 🛡️️ Safety Compliance Checklist: Electronics STEM Lab")
     cur_m_idx, cur_w_idx = get_current_indices()
 
     c1, c2, c3 = st.columns([1.2, 1.2, 1.2])
@@ -1540,7 +1576,6 @@ if st.session_state["show_login_modal"] and not st.session_state["is_admin_logge
         
         btn_c1, btn_c2 = st.columns([2, 8])
         if btn_c1.button("Sign In as Admin", type="primary"):
-            # Strictly accepts 'Admin', 'admin', 'ADMIN'
             if u_in.strip().lower() == ADMIN_USER and p_in.strip().lower() == ADMIN_PASSWORD:
                 st.session_state["is_admin_logged_in"] = True
                 st.session_state["show_login_modal"] = False
@@ -1572,25 +1607,39 @@ search_cols = st.columns([2, 8, 2])
 with search_cols[1]:
     search_text = st.text_input("🔍 Search STEM Lab Parameters, Projects, or Timetable...", placeholder="Search STEM Modules / Parameters...", label_visibility="collapsed")
 
-# 6 Main Category Icons Grid
+# =========================================================================
+# 🔘 6 CLICKABLE CATEGORY ICONS
+# =========================================================================
 st.markdown("<br>", unsafe_allow_html=True)
+
 cat_cols = st.columns(6)
 cat_keys = list(CATEGORIES.keys())
 cat_icons = ["📋", "🛡️", "🚀", "📊", "🧑‍🏫", "🏆"]
+cat_titles = [
+    "Administration & Planning",
+    "Inventory & Safety",
+    "Activities & Projects",
+    "Assessment & Competitions",
+    "Training & Communication",
+    "Reports & Achievements"
+]
 
 for i, col in enumerate(cat_cols):
     with col:
-        cat_short = cat_keys[i].split(". ")[1]
-        st.markdown(f"""
-        <div style="text-align:center; padding:12px; border-radius:8px; border:1px solid #e5e7eb; background:#f8fafc; margin-bottom:10px;">
-            <div style="font-size:24px; margin-bottom:4px;">{cat_icons[i]}</div>
-            <div style="font-size:12px; font-weight:600; color:#1f2937;">{cat_short}</div>
-        </div>
-        """, unsafe_allow_html=True)
+        st.markdown('<div class="cat-btn-container">', unsafe_allow_html=True)
+        btn_caption = f"{cat_icons[i]}\n\n**{cat_titles[i]}**"
+        
+        if st.button(btn_caption, key=f"cat_tile_{i}", use_container_width=True):
+            if st.session_state["selected_category_filter"] == cat_keys[i]:
+                st.session_state["selected_category_filter"] = None
+            else:
+                st.session_state["selected_category_filter"] = cat_keys[i]
+            st.rerun()
+        st.markdown('</div>', unsafe_allow_html=True)
 
 st.markdown("<br>", unsafe_allow_html=True)
 
-# 3 Metrics Counters (SWAYAM Style)
+# ----------------- 3 METRICS COUNTER -----------------
 met1, met2, met3 = st.columns(3)
 with met1:
     st.markdown("""
@@ -1623,16 +1672,28 @@ st.markdown("---")
 # =========================================================================
 st.subheader("📚 Explore STEM Laboratory Records & Systems")
 
+if st.session_state["selected_category_filter"]:
+    c_banner1, c_banner2 = st.columns([8, 2])
+    c_banner1.info(f"📂 **Showing Options for:** `{st.session_state['selected_category_filter']}`")
+    if c_banner2.button("✖ Clear Filter (Show All)", key="clear_cat_filter"):
+        st.session_state["selected_category_filter"] = None
+        st.rerun()
+
 tab_records, tab_students, tab_tt, tab_su, tab_summary = st.tabs([
     "📁 49 Parameters & Files", "👨‍🎓 2000+ Students Data", "⏰ Master Timetable", "🌐 ScienceUtsav Live", "📊 Repository Status"
 ])
 
 with tab_records:
     if st.session_state["is_admin_logged_in"]:
-        st.info("🔓 Admin Mode Active: Aap sabhi 49 parameters me files upload wa manage kar sakte hain.")
+        st.info("🔓 Admin Mode Active: Aap sabhi parameters me files upload wa manage kar sakte hain.")
 
-    for cat_title, items in CATEGORIES.items():
-        with st.expander(cat_title, expanded=False):
+    categories_to_show = CATEGORIES.items()
+    if st.session_state["selected_category_filter"]:
+        categories_to_show = [(st.session_state["selected_category_filter"], CATEGORIES[st.session_state["selected_category_filter"]])]
+
+    for cat_title, items in categories_to_show:
+        is_expanded = True if st.session_state["selected_category_filter"] else False
+        with st.expander(cat_title, expanded=is_expanded):
             for sno, title in items:
                 if search_text and search_text.lower() not in title.lower() and search_text.lower() not in cat_title.lower():
                     continue
@@ -1657,7 +1718,6 @@ with tab_records:
                     elif not has_builtin:
                         st.caption("No document uploaded yet for this parameter.")
 
-                    # Admin File Upload Controls inside parameter
                     if st.session_state["is_admin_logged_in"]:
                         render_parameter_file_manager(sno, title)
                     st.markdown("---")
