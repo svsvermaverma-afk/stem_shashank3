@@ -96,9 +96,9 @@ SHEET_CONFIG_FILE = os.path.join(DATA_DIR, "gsheet_url.txt")
 FORM_CONFIG_FILE = os.path.join(DATA_DIR, "gform_url.txt")
 SCIENCEUTSAV_CONFIG_FILE = os.path.join(DATA_DIR, "scienceutsav_url.txt")
 
-# ----------------- BULLET-PROOF CREDENTIALS SETUP -----------------
-ADMIN_USER = "shashank@abic"
-VALID_PASSWORDS = ["Admin@2026", "Admin@123", "Abic@123", "stem@admin123"]
+# ----------------- ADMIN CREDENTIALS SETUP (ADMIN / ADMIN) -----------------
+ADMIN_USER = "admin"
+VALID_PASSWORDS = ["admin"]
 
 # PERMANENT HARDCODED LINKS
 DEFAULT_CONFIGS = {
@@ -292,14 +292,11 @@ def render_timetable_view():
         """)
 
 # ----------------- PERMANENT URL ACCESS ENGINE -----------------
-def get_current_indices():
+def get_current_month_index():
     now = datetime.now()
     cur_month_name = now.strftime("%B")
-    cur_week_num = min(5, ((now.day - 1) // 7) + 1)
-    cur_week_name = f"Week {cur_week_num}"
     month_idx = MONTHS.index(cur_month_name) if cur_month_name in MONTHS else 0
-    week_idx = WEEKS.index(cur_week_name) if cur_week_name in WEEKS else 0
-    return month_idx, week_idx
+    return month_idx
 
 def get_folder_name(sno, title):
     return f"{sno:02d}_{title.replace(' ', '_').replace('/', '_')}"
@@ -430,14 +427,14 @@ def render_executive_messages():
 def init_all_data_structures():
     if not os.path.exists(STUDENT_ATTENDANCE_FILE):
         structure = {
-            "Month": [], "Week": [], "Date": [], "Day": [], "Class & Section": [],
+            "Month": [], "Date": [], "Day": [], "Class & Section": [],
             "Total Students": [], "Period 1": [], "Period 2": [], "Total Present": [], "Total Absent": []
         }
         pd.DataFrame(structure).to_csv(STUDENT_ATTENDANCE_FILE, index=False)
 
     if not os.path.exists(TEACHER_ATTENDANCE_FILE):
         structure = {
-            "Month": [], "Week": [], "Date": [], "Day": [], "S.No.": [],
+            "Month": [], "Date": [], "Day": [], "S.No.": [],
             "Teacher Name": [], "Class & Section Taught": [], "Period / Time Slot": [],
             "Lab Activity / Topic Covered": [], "Total Present Students": [],
             "In-Time": [], "Out-Time": [], "Teacher Signature": []
@@ -477,7 +474,7 @@ def init_all_data_structures():
 
 init_all_data_structures()
 
-# ----------------- ATTENDANCE & SAFETY LOGIC -----------------
+# ----------------- ATTENDANCE & SAFETY LOGIC (MONTH-WISE) -----------------
 def get_student_attendance_all():
     try:
         return pd.read_csv(STUDENT_ATTENDANCE_FILE, dtype=str).fillna("")
@@ -485,12 +482,11 @@ def get_student_attendance_all():
         init_all_data_structures()
         return pd.read_csv(STUDENT_ATTENDANCE_FILE, dtype=str).fillna("")
 
-def save_student_attendance_slot(month, week, edited_df):
+def save_student_attendance_slot(month, edited_df):
     df_all = get_student_attendance_all()
     edited_df = edited_df.copy()
     edited_df["Month"] = str(month)
-    edited_df["Week"] = str(week)
-    df_remaining = df_all[~((df_all["Month"] == str(month)) & (df_all["Week"] == str(week)))] if not df_all.empty else pd.DataFrame()
+    df_remaining = df_all[df_all["Month"] != str(month)] if not df_all.empty else pd.DataFrame()
     pd.concat([df_remaining, edited_df], ignore_index=True).to_csv(STUDENT_ATTENDANCE_FILE, index=False)
 
 def get_teacher_attendance_all():
@@ -500,12 +496,11 @@ def get_teacher_attendance_all():
         init_all_data_structures()
         return pd.read_csv(TEACHER_ATTENDANCE_FILE, dtype=str).fillna("")
 
-def save_teacher_attendance_slot(month, week, edited_df):
+def save_teacher_attendance_slot(month, edited_df):
     df_all = get_teacher_attendance_all()
     edited_df = edited_df.copy()
     edited_df["Month"] = str(month)
-    edited_df["Week"] = str(week)
-    df_remaining = df_all[~((df_all["Month"] == str(month)) & (df_all["Week"] == str(week)))] if not df_all.empty else pd.DataFrame()
+    df_remaining = df_all[df_all["Month"] != str(month)] if not df_all.empty else pd.DataFrame()
     pd.concat([df_remaining, edited_df], ignore_index=True).to_csv(TEACHER_ATTENDANCE_FILE, index=False)
 
 def get_safety_checklist_all():
@@ -721,19 +716,16 @@ def sync_data_from_google_sheet():
         try:
             dt = pd.to_datetime(raw_date, errors="coerce")
             month_name = dt.strftime("%B") if pd.notnull(dt) else now.strftime("%B")
-            week_num = min(5, ((dt.day - 1) // 7) + 1) if pd.notnull(dt) else min(5, ((now.day - 1) // 7) + 1)
-            week_name = f"Week {week_num}"
             if not raw_day and pd.notnull(dt):
                 raw_day = dt.strftime("%A")
         except Exception:
             month_name = now.strftime("%B")
-            week_name = "Week 1"
 
         if raw_class:
-            st_match_idx = df_st_all[(df_st_all["Month"] == month_name) & (df_st_all["Week"] == week_name) & (
+            st_match_idx = df_st_all[(df_st_all["Month"] == month_name) & (
                     df_st_all["Class & Section"] == raw_class)].index
             new_st_row = {
-                "Month": month_name, "Week": week_name, "Date": raw_date.split(" ")[0], "Day": raw_day,
+                "Month": month_name, "Date": raw_date.split(" ")[0], "Day": raw_day,
                 "Class & Section": raw_class, "Total Students": raw_tot, "Period 1": raw_period, "Period 2": "",
                 "Total Present": raw_pres, "Total Absent": raw_abs
             }
@@ -744,10 +736,10 @@ def sync_data_from_google_sheet():
                 df_st_all = pd.concat([df_st_all, pd.DataFrame([new_st_row])], ignore_index=True)
 
         if raw_teacher:
-            tc_match_idx = df_tc_all[(df_tc_all["Month"] == month_name) & (df_tc_all["Week"] == week_name) & (
+            tc_match_idx = df_tc_all[(df_tc_all["Month"] == month_name) & (
                     df_tc_all["Teacher Name"] == raw_teacher)].index
             new_tc_row = {
-                "Month": month_name, "Week": week_name, "Date": raw_date.split(" ")[0], "Day": raw_day,
+                "Month": month_name, "Date": raw_date.split(" ")[0], "Day": raw_day,
                 "S.No.": str(len(df_tc_all) + 1), "Teacher Name": raw_teacher, "Class & Section Taught": raw_class,
                 "Period / Time Slot": raw_period, "Lab Activity / Topic Covered": raw_topic,
                 "Total Present Students": raw_pres, "In-Time": raw_in, "Out-Time": raw_out,
@@ -763,13 +755,14 @@ def sync_data_from_google_sheet():
     df_tc_all.to_csv(TEACHER_ATTENDANCE_FILE, index=False)
     return True, f"Synced {len(df_raw)} records automatically."
 
-def get_student_attendance_for_slot(month, week):
+def get_student_attendance_for_slot(month):
     sync_data_from_google_sheet()
     df_all = get_student_attendance_all()
-    if not df_all.empty and {"Month", "Week", "Date", "Day"}.issubset(set(df_all.columns)):
-        filtered = df_all[(df_all["Month"] == str(month)) & (df_all["Week"] == str(week))]
+    if not df_all.empty and "Month" in df_all.columns:
+        filtered = df_all[df_all["Month"] == str(month)]
         if not filtered.empty:
-            return filtered.drop(columns=[c for c in ["Month", "Week"] if c in filtered.columns])
+            drop_cols = [c for c in ["Month", "Week"] if c in filtered.columns]
+            return filtered.drop(columns=drop_cols)
     return pd.DataFrame({
         "Date": ["" for _ in SECTIONS_LIST], "Day": ["" for _ in SECTIONS_LIST],
         "Class & Section": SECTIONS_LIST, "Total Students": ["" for _ in SECTIONS_LIST],
@@ -777,13 +770,14 @@ def get_student_attendance_for_slot(month, week):
         "Total Present": ["" for _ in SECTIONS_LIST], "Total Absent": ["" for _ in SECTIONS_LIST]
     })
 
-def get_teacher_attendance_for_slot(month, week):
+def get_teacher_attendance_for_slot(month):
     sync_data_from_google_sheet()
     df_all = get_teacher_attendance_all()
-    if not df_all.empty and {"Month", "Week", "Date", "Day"}.issubset(set(df_all.columns)):
-        filtered = df_all[(df_all["Month"] == str(month)) & (df_all["Week"] == str(week))]
+    if not df_all.empty and "Month" in df_all.columns:
+        filtered = df_all[df_all["Month"] == str(month)]
         if not filtered.empty:
-            return filtered.drop(columns=[c for c in ["Month", "Week"] if c in filtered.columns])
+            drop_cols = [c for c in ["Month", "Week"] if c in filtered.columns]
+            return filtered.drop(columns=drop_cols)
     return pd.DataFrame({
         "Date": ["" for _ in TEACHERS_LIST], "Day": ["" for _ in TEACHERS_LIST],
         "S.No.": list(range(1, len(TEACHERS_LIST) + 1)), "Teacher Name": TEACHERS_LIST,
@@ -826,7 +820,6 @@ def render_file_preview(file_path, file_name, unique_key):
             st.download_button(f"📥 Download File ({file_name})", data=f.read(), file_name=file_name,
                                key=f"dl_doc_{unique_key}")
 
-# SAFE GET EXISTING FILES (FIXES NotADirectoryError + AUTO ROOT SCAN)
 def get_existing_files_for_parameter(sno, title):
     folder_candidates = [
         f"{sno:02d}_{title.replace(' ', '_').replace('/', '_')}",
@@ -837,7 +830,6 @@ def get_existing_files_for_parameter(sno, title):
     all_files = []
     seen = set()
 
-    # 1. Folder check with strict os.path.isdir to prevent NotADirectoryError
     for cand in folder_candidates:
         cand_dir = os.path.join(UPLOAD_DIR, cand)
         if os.path.isdir(cand_dir):
@@ -847,7 +839,6 @@ def get_existing_files_for_parameter(sno, title):
                     seen.add(f)
                     all_files.append((full_path, f))
 
-    # 2. Main root folder check for direct repository uploads
     try:
         root_files = [f for f in os.listdir(".") if os.path.isfile(f)]
         for rf in root_files:
@@ -906,12 +897,10 @@ def render_student_attendance_viewer():
     if gform_link:
         st.link_button("📝 Open Teacher Daily STEM Entry Form", gform_link)
         st.write("")
-    cur_m_idx, cur_w_idx = get_current_indices()
-    c1, c2 = st.columns(2)
-    sel_month = c1.selectbox("Select Month (Student):", MONTHS, index=cur_m_idx, key="view_st_month")
-    sel_week = c2.selectbox("Select Week (Student):", WEEKS, index=cur_w_idx, key="view_st_week")
-    df_slot = get_student_attendance_for_slot(sel_month, sel_week)
-    st.caption(f"Showing Student Attendance for: **{sel_month} | {sel_week}** (Auto-Synced with Google Sheet)")
+    cur_m_idx = get_current_month_index()
+    sel_month = st.selectbox("Select Month (Student):", MONTHS, index=cur_m_idx, key="view_st_month")
+    df_slot = get_student_attendance_for_slot(sel_month)
+    st.caption(f"Showing Student Attendance for: **{sel_month}** (Auto-Synced with Google Sheet)")
     st.dataframe(df_slot, use_container_width=True, hide_index=True)
 
 def render_teacher_attendance_viewer():
@@ -920,12 +909,10 @@ def render_teacher_attendance_viewer():
     if gform_link:
         st.link_button("📝 Open Teacher Daily STEM Entry Form", gform_link)
         st.write("")
-    cur_m_idx, cur_w_idx = get_current_indices()
-    c1, c2 = st.columns(2)
-    sel_month = c1.selectbox("Select Month (Teacher):", MONTHS, index=cur_m_idx, key="view_tc_month")
-    sel_week = c2.selectbox("Select Week (Teacher):", WEEKS, index=cur_w_idx, key="view_tc_week")
-    df_slot = get_teacher_attendance_for_slot(sel_month, sel_week)
-    st.caption(f"Showing Teacher Attendance for: **{sel_month} | {sel_week}** (Auto-Synced with Google Sheet)")
+    cur_m_idx = get_current_month_index()
+    sel_month = st.selectbox("Select Month (Teacher):", MONTHS, index=cur_m_idx, key="view_tc_month")
+    df_slot = get_teacher_attendance_for_slot(sel_month)
+    st.caption(f"Showing Teacher Attendance for: **{sel_month}** (Auto-Synced with Google Sheet)")
     st.dataframe(df_slot, use_container_width=True, hide_index=True)
 
 # ----------------- MAINTENANCE VIEWER (#14) -----------------
@@ -933,10 +920,10 @@ def render_maintenance_viewer():
     st.markdown("### 🛠️ Electronics STEM Lab Maintenance & Cleaning System")
     st.caption("Standardized Lab Protocol: Daily Sanitization, Deep Maintenance & Breakdown Tagging")
 
-    cur_m_idx, cur_w_idx = get_current_indices()
+    cur_m_idx = get_current_month_index()
     c1, c2, c3 = st.columns([1.2, 1.2, 1.2])
     sel_month = c1.selectbox("Select Month (Maintenance):", MONTHS, index=cur_m_idx, key="view_maint_month")
-    sel_week = c2.selectbox("Select Week (Maintenance):", WEEKS, index=cur_w_idx, key="view_maint_week")
+    sel_week = c2.selectbox("Select Week (Maintenance):", WEEKS, index=0, key="view_maint_week")
     sel_date = c3.date_input("Audit / Log Date:", value=datetime.now(), key="view_maint_date")
 
     tab_m1, tab_m2, tab_m3 = st.tabs(["🧹 1. Daily Cleaning & Workstation Log", "🔍 2. Deep Maintenance & Hygiene",
@@ -968,11 +955,11 @@ def render_maintenance_viewer():
 def render_safety_checklist_viewer():
     st.markdown("### 🛡️ Safety Compliance Checklist: Electronics STEM Lab")
     st.caption("Standardized as per ABIC STEM Lab Electronics Safety Protocol")
-    cur_m_idx, cur_w_idx = get_current_indices()
+    cur_m_idx = get_current_month_index()
 
     c1, c2, c3 = st.columns([1.2, 1.2, 1.2])
     sel_month = c1.selectbox("Select Month (Safety Audit):", MONTHS, index=cur_m_idx, key="view_safe_month")
-    sel_week = c2.selectbox("Select Week (Safety Audit):", WEEKS, index=cur_w_idx, key="view_safe_week")
+    sel_week = c2.selectbox("Select Week (Safety Audit):", WEEKS, index=0, key="view_safe_week")
     sel_date = c3.date_input("Inspection Date:", value=datetime.now(), key="view_safe_date")
 
     df_slot = get_safety_checklist_for_slot(sel_month, sel_week, default_date_str=str(sel_date))
@@ -1937,40 +1924,36 @@ if access_mode == "Admin Workspace":
                         render_parameter_file_manager(sno, title)
 
                     elif title == "Student Attendance":
-                        cur_m_idx, cur_w_idx = get_current_indices()
-                        c_m, c_w = st.columns(2)
-                        admin_st_month = c_m.selectbox("Select Month:", MONTHS, index=cur_m_idx, key=f"adm_st_m_{sno}")
-                        admin_st_week = c_w.selectbox("Select Week:", WEEKS, index=cur_w_idx, key=f"adm_st_w_{sno}")
-                        current_st_slot_df = get_student_attendance_for_slot(admin_st_month, admin_st_week)
+                        cur_m_idx = get_current_month_index()
+                        admin_st_month = st.selectbox("Select Month:", MONTHS, index=cur_m_idx, key=f"adm_st_m_{sno}")
+                        current_st_slot_df = get_student_attendance_for_slot(admin_st_month)
                         edited_st_slot_df = st.data_editor(current_st_slot_df, num_rows="dynamic",
                                                            use_container_width=True, key=f"adm_ed_st_{sno}")
                         if st.button(f"💾 Save Student Attendance ({admin_st_month})", type="primary",
                                      key=f"btn_st_s_{sno}"):
-                            save_student_attendance_slot(admin_st_month, admin_st_week, edited_st_slot_df)
-                            st.success("Saved!")
+                            save_student_attendance_slot(admin_st_month, edited_st_slot_df)
+                            st.success(f"Student attendance for {admin_st_month} saved!")
                             st.rerun()
                         render_parameter_file_manager(sno, title)
 
                     elif title == "Teacher Attendance":
-                        cur_m_idx, cur_w_idx = get_current_indices()
-                        c_m, c_w = st.columns(2)
-                        admin_tc_month = c_m.selectbox("Select Month:", MONTHS, index=cur_m_idx, key=f"adm_tc_m_{sno}")
-                        admin_tc_week = c_w.selectbox("Select Week:", WEEKS, index=cur_w_idx, key=f"adm_tc_w_{sno}")
-                        current_tc_slot_df = get_teacher_attendance_for_slot(admin_tc_month, admin_tc_week)
+                        cur_m_idx = get_current_month_index()
+                        admin_tc_month = st.selectbox("Select Month:", MONTHS, index=cur_m_idx, key=f"adm_tc_m_{sno}")
+                        current_tc_slot_df = get_teacher_attendance_for_slot(admin_tc_month)
                         edited_tc_slot_df = st.data_editor(current_tc_slot_df, num_rows="dynamic",
                                                            use_container_width=True, key=f"adm_ed_tc_{sno}")
                         if st.button(f"💾 Save Teacher Attendance ({admin_tc_month})", type="primary",
                                      key=f"btn_tc_s_{sno}"):
-                            save_teacher_attendance_slot(admin_tc_month, admin_tc_week, edited_tc_slot_df)
-                            st.success("Saved!")
+                            save_teacher_attendance_slot(admin_tc_month, edited_tc_slot_df)
+                            st.success(f"Teacher attendance for {admin_tc_month} saved!")
                             st.rerun()
                         render_parameter_file_manager(sno, title)
 
                     elif title == "Maintenance Records":
-                        cur_m_idx, cur_w_idx = get_current_indices()
+                        cur_m_idx = get_current_month_index()
                         c_m, c_w, c_d = st.columns([1.2, 1.2, 1.2])
                         adm_m_month = c_m.selectbox("Select Month:", MONTHS, index=cur_m_idx, key=f"adm_mt_m_{sno}")
-                        adm_m_week = c_w.selectbox("Select Week:", WEEKS, index=cur_w_idx, key=f"adm_mt_w_{sno}")
+                        adm_m_week = c_w.selectbox("Select Week:", WEEKS, index=0, key=f"adm_mt_w_{sno}")
                         adm_m_date = c_d.date_input("Audit / Log Date:", value=datetime.now(), key=f"adm_mt_d_{sno}")
 
                         tb1, tb2, tb3 = st.tabs(["🧹 1. Daily Cleaning Log", "🔍 2. Deep Maintenance Audit",
@@ -2037,11 +2020,11 @@ if access_mode == "Admin Workspace":
                         render_parameter_file_manager(sno, title)
 
                     elif title == "Safety Checklist":
-                        cur_m_idx, cur_w_idx = get_current_indices()
+                        cur_m_idx = get_current_month_index()
                         c_m, c_w, c_d = st.columns([1.2, 1.2, 1.2])
                         admin_safe_month = c_m.selectbox("Select Month:", MONTHS, index=cur_m_idx,
                                                          key=f"adm_sf_m_{sno}")
-                        admin_safe_week = c_w.selectbox("Select Week:", WEEKS, index=cur_w_idx, key=f"adm_sf_w_{sno}")
+                        admin_safe_week = c_w.selectbox("Select Week:", WEEKS, index=0, key=f"adm_sf_w_{sno}")
                         admin_safe_date = c_d.date_input("Audit Date:", value=datetime.now(), key=f"adm_sf_d_{sno}")
 
                         current_safe_df = get_safety_checklist_for_slot(admin_safe_month, admin_safe_week,
