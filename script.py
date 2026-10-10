@@ -182,7 +182,7 @@ CATEGORIES = {
     ],
     "4. Assessment & Competitions": [
         (27, "Assessment Rubrics"), (28, "Student Assessment"), (29, "Student Performance"),
-        (30, "STEM SPARK Registration"), (31, "STEM SPARK Team Details"), (32, "STEM SPARK Submissions"),
+        (30, "STEM QUEST 2026 Registration"), (31, "STEM QUEST 2026 Team Details"), (32, "STEM QUEST 2026 Submissions"),
         (33, "VVM Records"), (34, "Other Competitions"),
     ],
     "5. Training & Communication": [
@@ -1454,7 +1454,7 @@ def render_master_content(sno, title):
         7. To encourage teamwork and collaborative learning.
         8. To develop communication, presentation and documentation skills.
         9. To connect STEM concepts with real-life applications.
-        10. To encourage participation in STEM competitions and innovation programmes (Erehwon, STEM SPARK, VVM).
+        10. To encourage participation in STEM competitions and innovation programmes (Erehwon, STEM QUEST 2026, VVM).
 
         #### 4. Major Areas of STEM Learning
         * **Science Experiments:** Physics, Chemistry & Biology inquiry setups.
@@ -1513,7 +1513,7 @@ def render_master_content(sno, title):
            * Never force microcontroller pins; report bent pins or loose solder joints immediately.
            * Return all sensor modules, tools, multimeters, and jumpers to designated labeled bins after every period.
         4. **Emergency Protocol:**
-           * In the event of smoke, burning smell, or electrical sparking, immediately hit the master bench power cutoff switch.
+           * In the event of smoke, burning smell, or electrical QUEST 2026ing, immediately hit the master bench power cutoff switch.
            * CO2 Fire Extinguisher and First Aid Medical Kit are stationed at the main entrance door.
         """)
         return True
@@ -1532,7 +1532,7 @@ def render_master_content(sno, title):
 
         #### 2. Coordinator Information
         * **Name:** Shashank Verma
-        * **Designation:** PGT
+        * **Designation:** TGT
         * **Academic Qualification:** M.Sc., B.Ed.
         * **Official Role:** STEM Coordinator / School STEM SPOC
         * **Official School Email:** `shashank.verma@adityabirlaschools.in`
@@ -1543,7 +1543,7 @@ def render_master_content(sno, title):
         2. Managing digital data synchronization with Google Sheets, Google Forms, and ScienceUtsav LMS.
         3. Coordinating weekly lab timetables, section-wise student attendance, and teacher duty allocations.
         4. Overseeing equipment safety, tool inventories, Bambu Lab 3D printer maintenance, and component procurement.
-        5. Mentoring 25+ student innovation teams for the National Erehwon Competition, STEM SPARK, and VVM.
+        5. Mentoring 25+ student innovation teams for the National Erehwon Competition, STEM QUEST 2026, and VVM.
         6. Preparing monthly, quarterly, and annual STEM laboratory progress reports for school management.
         """)
         return True
@@ -1650,7 +1650,7 @@ def render_master_content(sno, title):
         * Switch off power before making connections.
         * Do not connect to power source without teacher supervision.
         * Keep water away from electrical equipment.
-        * Report any sparking, unusual heating or fault immediately.
+        * Report any QUEST 2026ing, unusual heating or fault immediately.
         * Do not touch exposed connections.
 
         #### 3. Arduino, Sensors & Robotics
