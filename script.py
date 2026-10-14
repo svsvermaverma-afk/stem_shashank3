@@ -1,9 +1,9 @@
-import streamlit as st
-import pandas as pd
 import os
 import re
 import sqlite3
 from datetime import datetime
+import pandas as pd
+import streamlit as st
 import streamlit.components.v1 as components
 
 try:
@@ -12,7 +12,12 @@ try:
 except ImportError:
     PDFIUM_AVAILABLE = False
 
-st.set_page_config(page_title="ABIC STEM Lab Portal", page_icon="🔬", layout="wide")
+st.set_page_config(
+    page_title="ABIC STEM Lab Portal",
+    page_icon="🔬",
+    layout="wide",
+    initial_sidebar_state="expanded"
+)
 
 # ----------------- STRICT INTERNAL BUTTON LEFT ALIGNMENT & MESSAGE BOX CSS -----------------
 st.markdown("""
@@ -79,8 +84,20 @@ div[data-testid="stButton"] button:focus {
 # ----------------- BASE DIRECTORIES & CONFIG -----------------
 UPLOAD_DIR = "stem_lab_records"
 DATA_DIR = "portal_data"
-os.makedirs(UPLOAD_DIR, exist_ok=True)
-os.makedirs(DATA_DIR, exist_ok=True)
+
+try:
+    if os.path.exists(UPLOAD_DIR) and not os.path.isdir(UPLOAD_DIR):
+        UPLOAD_DIR = "stem_lab_records_dir"
+    os.makedirs(UPLOAD_DIR, exist_ok=True)
+except Exception:
+    pass
+
+try:
+    if os.path.exists(DATA_DIR) and not os.path.isdir(DATA_DIR):
+        DATA_DIR = "portal_data_dir"
+    os.makedirs(DATA_DIR, exist_ok=True)
+except Exception:
+    pass
 
 TIMETABLE_DB_FILE = os.path.join(DATA_DIR, "timetable.db")
 STUDENT_ATTENDANCE_FILE = os.path.join(DATA_DIR, "student_attendance.csv")
@@ -96,9 +113,9 @@ SHEET_CONFIG_FILE = os.path.join(DATA_DIR, "gsheet_url.txt")
 FORM_CONFIG_FILE = os.path.join(DATA_DIR, "gform_url.txt")
 SCIENCEUTSAV_CONFIG_FILE = os.path.join(DATA_DIR, "scienceutsav_url.txt")
 
-# ----------------- ADMIN CREDENTIALS SETUP (ADMIN / ADMIN) -----------------
+# ----------------- ADMIN CREDENTIALS SETUP -----------------
 ADMIN_USER = "admin"
-VALID_PASSWORDS = ["admin"]
+VALID_PASSWORDS = ["admin", "Admin", "ADMIN"]
 
 # PERMANENT HARDCODED LINKS
 DEFAULT_CONFIGS = {
@@ -109,6 +126,7 @@ DEFAULT_CONFIGS = {
 
 ACADEMIC_SESSIONS = ["2026-27", "2027-28"]
 MONTHS = ["April", "May", "June", "July", "August", "September", "October", "November", "December", "January", "February", "March"]
+WEEKS = ["Week 1", "Week 2", "Week 3", "Week 4", "Week 5"]
 DAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"]
 
 # EXACT SAFETY COMPLIANCE CHECKLIST: ELECTRONICS STEM LAB (#16)
@@ -197,77 +215,70 @@ CATEGORIES = {
 }
 
 # ----------------- SESSION STATE TRACKERS -----------------
-if "active_viewer_sno" not in st.session_state:
-    st.session_state["active_viewer_sno"] = None
+for k, v in [("active_viewer_sno", None), ("active_admin_sno", None),
+             ("is_admin_logged_in", False), ("current_selected_session", "2026-27")]:
+    if k not in st.session_state:
+        st.session_state[k] = v
 
-if "active_admin_sno" not in st.session_state:
-    st.session_state["active_admin_sno"] = None
+# ----------------- SQLITE TIME TABLE ENGINE (THREAD-SAFE) -----------------
+def get_db_connection():
+    return sqlite3.connect(TIMETABLE_DB_FILE, check_same_thread=False)
 
-if "is_admin_logged_in" not in st.session_state:
-    st.session_state["is_admin_logged_in"] = False
-
-if "current_selected_session" not in st.session_state:
-    st.session_state["current_selected_session"] = "2026-27"
-
-# ----------------- SQLITE TIME TABLE ENGINE -----------------
 def init_timetable_db():
-    conn = sqlite3.connect(TIMETABLE_DB_FILE)
-    c = conn.cursor()
-    c.execute('''
-        CREATE TABLE IF NOT EXISTS timetable (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            period_name TEXT NOT NULL,
-            time_slot TEXT NOT NULL,
-            monday TEXT,
-            tuesday TEXT,
-            wednesday TEXT,
-            thursday TEXT,
-            friday TEXT,
-            saturday TEXT
-        )
-    ''')
-    conn.commit()
-
-    c.execute("SELECT COUNT(*) FROM timetable")
-    if c.fetchone()[0] == 0:
-        official_slots = [
-            ("Zero Period", "8:05 AM - 8:50 AM", "-", "-", "-", "-", "-", "-"),
-            ("Period I", "9:15 AM - 9:55 AM", "-", "-", "VIII - C (SST)", "-", "-", "IX G (HD)"),
-            ("Period II", "9:55 AM - 10:30 AM", "-", "-", "-", "-", "-", "VII C (SNS)"),
-            ("Period III", "10:30 AM - 11:05 AM", "VI - A (SV)", "VII - A (RKS)", "VII B (MBJ)", "VIII-A (SV) / VIII B (MM)", "-", "-"),
-            ("Period IV", "11:05 AM - 11:40 AM", "-", "-", "-", "-", "-", "-"),
-            ("INTERVAL / RECESS", "11:40 AM - 12:05 PM", "I N T E R V A L", "I N T E R V A L", "I N T E R V A L", "I N T E R V A L", "I N T E R V A L", "I N T E R V A L"),
-            ("Period V", "12:05 PM - 12:45 PM", "-", "-", "-", "-", "VI C", "-"),
-            ("Period VI", "12:45 PM - 1:20 PM", "-", "-", "-", "-", "-", "-"),
-            ("Period VII", "1:20 PM - 1:55 PM", "VI - D (DJ) / IX - A (RKS)\nIX - E (CM) / IX - H (PK)", "IX - F (CM)", "IX C (SNS)", "VI - B (MM) / VIII D (PK)", "IX D / IX B / VII D", "-"),
-            ("Period VIII", "1:55 PM - 2:30 PM", "-", "-", "-", "-", "-", "-"),
-        ]
-        c.executemany('''
-            INSERT INTO timetable (period_name, time_slot, monday, tuesday, wednesday, thursday, friday, saturday)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-        ''', official_slots)
+    with get_db_connection() as conn:
+        c = conn.cursor()
+        c.execute('''
+            CREATE TABLE IF NOT EXISTS timetable (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                period_name TEXT NOT NULL,
+                time_slot TEXT NOT NULL,
+                monday TEXT,
+                tuesday TEXT,
+                wednesday TEXT,
+                thursday TEXT,
+                friday TEXT,
+                saturday TEXT
+            )
+        ''')
         conn.commit()
-    conn.close()
+
+        c.execute("SELECT COUNT(*) FROM timetable")
+        if c.fetchone()[0] == 0:
+            official_slots = [
+                ("Zero Period", "8:05 AM - 8:50 AM", "-", "-", "-", "-", "-", "-"),
+                ("Period I", "9:15 AM - 9:55 AM", "-", "-", "VIII - C (SST)", "-", "-", "IX G (HD)"),
+                ("Period II", "9:55 AM - 10:30 AM", "-", "-", "-", "-", "-", "VII C (SNS)"),
+                ("Period III", "10:30 AM - 11:05 AM", "VI - A (SV)", "VII - A (RKS)", "VII B (MBJ)", "VIII-A (SV) / VIII B (MM)", "-", "-"),
+                ("Period IV", "11:05 AM - 11:40 AM", "-", "-", "-", "-", "-", "-"),
+                ("INTERVAL / RECESS", "11:40 AM - 12:05 PM", "I N T E R V A L", "I N T E R V A L", "I N T E R V A L", "I N T E R V A L", "I N T E R V A L", "I N T E R V A L"),
+                ("Period V", "12:05 PM - 12:45 PM", "-", "-", "-", "-", "VI C", "-"),
+                ("Period VI", "12:45 PM - 1:20 PM", "-", "-", "-", "-", "-", "-"),
+                ("Period VII", "1:20 PM - 1:55 PM", "VI - D (DJ) / IX - A (RKS)\nIX - E (CM) / IX - H (PK)", "IX - F (CM)", "IX C (SNS)", "VI - B (MM) / VIII D (PK)", "IX D / IX B / VII D", "-"),
+                ("Period VIII", "1:55 PM - 2:30 PM", "-", "-", "-", "-", "-", "-"),
+            ]
+            c.executemany('''
+                INSERT INTO timetable (period_name, time_slot, monday, tuesday, wednesday, thursday, friday, saturday)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+            ''', official_slots)
+            conn.commit()
 
 init_timetable_db()
 
 def get_timetable_df():
-    conn = sqlite3.connect(TIMETABLE_DB_FILE)
-    df = pd.read_sql_query("SELECT id, period_name AS [Period], time_slot AS [Timing], monday AS [Monday], tuesday AS [Tuesday], wednesday AS [Wednesday], thursday AS [Thursday], friday AS [Friday], saturday AS [Saturday] FROM timetable ORDER BY id ASC", conn)
-    conn.close()
-    return df
+    with get_db_connection() as conn:
+        df = pd.read_sql_query("SELECT id, period_name AS [Period], time_slot AS [Timing], monday AS [Monday], tuesday AS [Tuesday], wednesday AS [Wednesday], thursday AS [Thursday], friday AS [Friday], saturday AS [Saturday] FROM timetable ORDER BY id ASC", conn)
+        return df
 
 def save_timetable_from_df(edited_df):
-    conn = sqlite3.connect(TIMETABLE_DB_FILE)
-    c = conn.cursor()
-    c.execute("DELETE FROM timetable")
-    for _, row in edited_df.iterrows():
-        c.execute('''
-            INSERT INTO timetable (period_name, time_slot, monday, tuesday, wednesday, thursday, friday, saturday)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-        ''', (str(row['Period']), str(row['Timing']), str(row['Monday']), str(row['Tuesday']), str(row['Wednesday']), str(row['Thursday']), str(row['Friday']), str(row['Saturday'])))
-    conn.commit()
-    conn.close()
+    with get_db_connection() as conn:
+        c = conn.cursor()
+        c.execute("DELETE FROM timetable")
+        for _, row in edited_df.iterrows():
+            c.execute('''
+                INSERT INTO timetable (period_name, time_slot, monday, tuesday, wednesday, thursday, friday, saturday)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+            ''', (str(row['Period']), str(row['Timing']), str(row['Monday']), str(row['Tuesday']), str(row['Wednesday']), str(row['Thursday']), str(row['Friday']), str(row['Saturday'])))
+        conn.commit()
 
 def render_timetable_view(session_val="2026-27"):
     st.markdown(f"""
@@ -279,7 +290,7 @@ def render_timetable_view(session_val="2026-27"):
     """)
     df_tt = get_timetable_df().drop(columns=["id"])
     st.dataframe(df_tt, use_container_width=True, hide_index=True)
-    
+
     with st.expander("ℹ️ Faculty Teacher Code Index"):
         st.markdown("""
         * **SV:** Mr. Shashank Verma (Physics / SPOC)
@@ -296,10 +307,8 @@ def render_timetable_view(session_val="2026-27"):
 
 # ----------------- PERMANENT URL ACCESS ENGINE -----------------
 def get_current_month_index():
-    now = datetime.now()
-    cur_month_name = now.strftime("%B")
-    month_idx = MONTHS.index(cur_month_name) if cur_month_name in MONTHS else 0
-    return month_idx
+    cur_month_name = datetime.now().strftime("%B")
+    return MONTHS.index(cur_month_name) if cur_month_name in MONTHS else 0
 
 def get_folder_name(sno, title):
     return f"{sno:02d}_{title.replace(' ', '_').replace('/', '_')}"
@@ -336,13 +345,13 @@ def fetch_google_sheet_data_cached(sheet_url):
         else:
             match = re.search(r"/d/([a-zA-Z0-9-_]+)", sheet_url)
             if not match:
-                return None, "Invalid Google Sheet link."
+                return None, "Invalid Google Sheet link. Ensure standard format."
             sheet_id = match.group(1)
             csv_url = f"https://docs.google.com/spreadsheets/d/{sheet_id}/export?format=csv"
         df = pd.read_csv(csv_url, dtype=str).fillna("")
         return df, None
     except Exception as e:
-        return None, str(e)
+        return None, f"Error reading sheet. Please check link sharing permissions ('Anyone with link can view'): {e}"
 
 def render_cover_photo():
     search_dirs = [".", DATA_DIR, os.path.join(UPLOAD_DIR, "00_Cover"), os.path.join(UPLOAD_DIR, "cover")]
@@ -477,7 +486,7 @@ def init_all_data_structures():
 
 init_all_data_structures()
 
-# ----------------- ATTENDANCE & SAFETY LOGIC (SESSION + MONTH-WISE) -----------------
+# ----------------- ATTENDANCE & SAFETY LOGIC -----------------
 def get_student_attendance_all():
     try:
         return pd.read_csv(STUDENT_ATTENDANCE_FILE, dtype=str).fillna("")
@@ -560,7 +569,7 @@ def save_safety_checklist_slot(session_val, month, edited_df, chosen_date=None):
     df_remaining = df_all[~((df_all["Session"] == str(session_val)) & (df_all["Month"] == str(month)))] if not df_all.empty else pd.DataFrame()
     pd.concat([df_remaining, edited_df], ignore_index=True).to_csv(SAFETY_CHECKLIST_FILE, index=False)
 
-# ----------------- MAINTENANCE DATA ACCESSORS (#14 - NO WEEK) -----------------
+# ----------------- MAINTENANCE DATA ACCESSORS -----------------
 def get_daily_maint_for_slot(session_val, month, default_date_str=None):
     try:
         df_all = pd.read_csv(MAINTENANCE_DAILY_FILE, dtype=str).fillna("")
@@ -905,11 +914,18 @@ def get_existing_files_for_parameter(sno, title):
 def render_parameter_file_manager(sno, title):
     folder_name = get_folder_name(sno, title)
     record_dir = os.path.join(UPLOAD_DIR, folder_name)
-    os.makedirs(record_dir, exist_ok=True)
+
+    if os.path.exists(record_dir) and not os.path.isdir(record_dir):
+        record_dir = record_dir + "_uploads"
+
+    try:
+        os.makedirs(record_dir, exist_ok=True)
+    except Exception:
+        pass
 
     st.markdown("---")
     st.markdown(f"##### 📂 Upload & Manage Files for #{sno} ({title})")
-    
+
     uploaded_files = st.file_uploader(
         f"Upload documents/photos/videos for #{sno}:",
         accept_multiple_files=True,
@@ -965,7 +981,7 @@ def render_teacher_attendance_viewer(session_val):
     st.caption(f"Showing Teacher Attendance for: **Session {sel_session} | Month: {sel_month}** (Auto-Synced with Google Sheet)")
     st.dataframe(df_slot, use_container_width=True, hide_index=True)
 
-# ----------------- MAINTENANCE VIEWER (#14 - NO WEEK, ONLY DATE & MONTH & SESSION) -----------------
+# ----------------- MAINTENANCE VIEWER -----------------
 def render_maintenance_viewer(session_val):
     st.markdown("### 🛠️ Electronics STEM Lab Maintenance & Cleaning System")
     st.caption("Standardized Lab Protocol: Daily Sanitization, Deep Maintenance & Breakdown Tagging")
@@ -1001,7 +1017,7 @@ def render_maintenance_viewer(session_val):
         df_bd = get_breakdown_maint_for_slot(sel_session, sel_month)
         st.dataframe(df_bd, use_container_width=True, hide_index=True)
 
-# ----------------- SAFETY CHECKLIST VIEWER (#16 - NO WEEK, ONLY DATE & MONTH & SESSION) -----------------
+# ----------------- SAFETY CHECKLIST VIEWER -----------------
 def render_safety_checklist_viewer(session_val):
     st.markdown("### 🛡️ Safety Compliance Checklist: Electronics STEM Lab")
     st.caption("Standardized as per ABIC STEM Lab Electronics Safety Protocol")
@@ -1029,13 +1045,14 @@ def render_student_excel():
         os.path.join(DATA_DIR, "LMS STUDENT DATA.xlsx"),
         os.path.join(DATA_DIR, "lms student data.xlsx"),
     ]
-    for folder in os.listdir(UPLOAD_DIR):
-        if "student_list" in folder.lower() or "student list" in folder.lower():
-            u_dir = os.path.join(UPLOAD_DIR, folder)
-            if os.path.isdir(u_dir):
-                for f in os.listdir(u_dir):
-                    if f.lower().endswith((".xlsx", ".xls", ".csv")):
-                        possible_paths.append(os.path.join(u_dir, f))
+    if os.path.exists(UPLOAD_DIR):
+        for folder in os.listdir(UPLOAD_DIR):
+            if "student_list" in folder.lower() or "student list" in folder.lower():
+                u_dir = os.path.join(UPLOAD_DIR, folder)
+                if os.path.isdir(u_dir):
+                    for f in os.listdir(u_dir):
+                        if f.lower().endswith((".xlsx", ".xls", ".csv")):
+                            possible_paths.append(os.path.join(u_dir, f))
 
     found_file = next((p for p in possible_paths if os.path.exists(p)), None)
     if found_file:
@@ -1055,8 +1072,8 @@ def render_student_excel():
         except Exception as e:
             st.error(f"Error reading {found_file}: {e}")
     else:
-        st.warning("⚠️ `LMS STUDENT DATA.xlsx` file nahi mili.")
-        st.info("Aap ise Admin Workspace me **Student List** me upload karein ya project folder me paste karein.")
+        st.warning("⚠️ `LMS STUDENT DATA.xlsx` file not found in current folder.")
+        st.info("Please upload your student database via the Admin panel in Parameter #7 (Student List).")
 
 def render_scienceutsav_assessment():
     st.markdown("### 📊 ScienceUtsav Classroom Assessment & Performance Portal")
@@ -1177,7 +1194,7 @@ def render_annual_plan(session_val="2026-27"):
     st.markdown(f"**Showing Activity Plan for Session {session_val}:** `{selected_plan_month}` | `{selected_plan_class}` ({len(filtered_df)} Sessions)")
     st.dataframe(filtered_df[display_cols], use_container_width=True, hide_index=True)
 
-# ----------------- 56 SESSIONS MASTER LESSON PLANS -----------------
+# ----------------- 56 SESSIONS MASTER LESSON PLANS (COMPLETE 14x4) -----------------
 LESSON_PLANS_DB = {
     "Class 6": [
         ("Session 1 (01-15 July)", "Intro to Robotics & Arduino IDE setup with Sensor Shield",
@@ -1469,31 +1486,24 @@ LESSON_PLANS_DB = {
     ]
 }
 
-# ----------------- MASTER CONTENT ROUTER (ZERO TRUNCATION) -----------------
+# ----------------- MASTER CONTENT ROUTER (ALL 49 PARAMETERS HANDLED) -----------------
 def render_master_content(sno, title, session_val="2026-27"):
-    if title == "STEM Lab Profile" or sno == 1:
+    if sno == 1 or title == "STEM Lab Profile":
         st.markdown(f"""
         ### 🏫 STEM LAB PROFILE
-
         * **School Name:** Aditya Birla Intermediate College, Renukoot
         * **Academic Session:** {session_val}
         * **STEM Lab:** School STEM Innovation & Learning Laboratory
         * **STEM Coordinator / SPOC:** Shashank Verma
-
         ---
-
         #### 1. Introduction
         The STEM Lab of Aditya Birla Intermediate College, Renukoot is a dedicated space for promoting Science, Technology, Engineering and Mathematics (STEM) learning through hands-on activities, experimentation, problem-solving, innovation and project-based learning. The laboratory provides students with opportunities to connect classroom concepts with real-life situations and develop practical skills through designing, making, testing and improving solutions.
-
         #### 2. Classes Covered
         The STEM Lab activities are primarily conducted for:
         * **Class VI** (Beginner Tier)
         * **Class VII** (Intermediate Tier)
         * **Class VIII** (Advanced Tier)
         * **Class IX** (Expert Capstone Tier)
-
-        *Activities may also be organized for other classes as required under school programmes, competitions and special projects.*
-
         #### 3. Major Objectives
         1. To develop scientific thinking and curiosity among students.
         2. To promote hands-on and experiential learning.
@@ -1505,7 +1515,6 @@ def render_master_content(sno, title, session_val="2026-27"):
         8. To develop communication, presentation and documentation skills.
         9. To connect STEM concepts with real-life applications.
         10. To encourage participation in STEM competitions and innovation programmes (Erehwon, STEM QUEST 2026, VVM).
-
         #### 4. Major Areas of STEM Learning
         * **Science Experiments:** Physics, Chemistry & Biology inquiry setups.
         * **Mathematics Applications:** Data plotting, statistics & logic graphs.
@@ -1515,43 +1524,26 @@ def render_master_content(sno, title, session_val="2026-27"):
         * **IoT & Smart Systems:** Sensor fusion, digital telemetry, automated controls.
         * **3D Prototyping & Design Thinking:** Bambu Lab A1 Mini 3D printer, CAD modeling, enclosure packaging.
         * **Environmental Innovation & E-waste:** Upcycling phone parts, clean water solutions, smart farming.
-
         #### 5. Teaching-Learning Approach
         The STEM Lab strictly follows an inquiry and maker-oriented engineering cycle:
         > **Problem Identification → Explore Science → Imagine Design → Build Prototype → Test Hardware → Code & Improve → Present to Jury**
-
-        #### 6. Documentation System
-        The following records are maintained digitally in the school portal:
-        * 49-Parameter Master Repository
-        * Class & Section-wise Student & Teacher Attendance CSVs
-        * 56 Structured Master Lesson Plans
-        * Real-time ScienceUtsav Assessment LMS Linkage
-        * Complete Lab Inventory and Safety Audit Records
-
-        #### 7. Expected Learning Outcomes
-        Students are trained to achieve modular prototyping hygiene, logical problem decomposition, code debugging, 3D casing assembly, team leadership, and empirical test documentation.
         """)
         return True
 
-    elif title == "Lab Objectives & Guidelines" or sno == 2:
+    elif sno == 2 or title == "Lab Objectives & Guidelines":
         st.markdown(f"""
         ### 📋 STEM LAB OBJECTIVES & GUIDELINES
-
         * **School:** Aditya Birla Intermediate College, Renukoot
         * **Academic Session:** {session_val}
         * **STEM Coordinator / SPOC:** Shashank Verma
-
         ---
-
         #### A. Objectives of the STEM Lab
         1. **Experiential Learning:** To provide students with direct hands-on modular kits, sensors, and microcontrollers.
         2. **Problem Solving:** To identify school campus and community pain points and design functional engineering solutions.
         3. **Innovation:** To build functional proof-of-concepts, alpha prototypes, and capstone demonstration models.
         4. **Scientific Temper:** To encourage hypothesis testing, sensor data calibration, and empirical trial logging.
         5. **Technology Mastery:** To develop coding proficiency in Arduino IDE, serial telemetry, and 3D printing design.
-
         ---
-
         #### B. STEM Lab Safety & Handling Guidelines
         1. **Supervision:** Students may enter and work in the lab only in the presence of the STEM Teacher or SPOC.
         2. **Electrical Safety:**
@@ -1568,18 +1560,14 @@ def render_master_content(sno, title, session_val="2026-27"):
         """)
         return True
 
-    elif title == "Coordinator / SPOC Details" or sno == 3:
+    elif sno == 3 or title == "Coordinator / SPOC Details":
         st.markdown(f"""
         ### 👤 STEM LAB COORDINATOR / SPOC DETAILS
-
         **Academic Session:** {session_val}
-
         ---
-
         #### 1. School Details
         * **School Name:** Aditya Birla Intermediate College, Renukoot
         * **Location:** Renukoot, Sonbhadra, Uttar Pradesh (Pin: 231217)
-
         #### 2. Coordinator Information
         * **Name:** Shashank Verma
         * **Designation:** PGT
@@ -1587,7 +1575,6 @@ def render_master_content(sno, title, session_val="2026-27"):
         * **Official Role:** STEM Coordinator / School STEM SPOC
         * **Official School Email:** `shashank.verma@adityabirlaschools.in`
         * **Official Contact Number:** `9826594665`
-
         #### 3. Core Responsibilities
         1. Structuring and enforcing the 14-session Annual STEM Roadmap and 56 Master Lesson Plans across Classes 6–9.
         2. Managing digital data synchronization with Google Sheets, Google Forms, and ScienceUtsav LMS.
@@ -1598,15 +1585,15 @@ def render_master_content(sno, title, session_val="2026-27"):
         """)
         return True
 
-    elif title == "Monthly / Annual STEM Activity Plan" or sno == 4:
+    elif sno == 4 or title == "Monthly / Annual STEM Activity Plan":
         render_annual_plan(session_val)
         return True
 
-    elif title == "Class-wise Timetable" or sno == 5:
+    elif sno == 5 or title == "Class-wise Timetable":
         render_timetable_view(session_val)
         return True
 
-    elif title == "Session / Lesson Plans" or sno == 6:
+    elif sno == 6 or title == "Session / Lesson Plans":
         st.markdown(f"""
         ### 📖 ANNUAL STEM LAB & ROBOTICS MASTER LESSON PLANS (SESSION {session_val})
         * **Platform:** ScienceUtsav LMS (Robo Scientist Level 2: Sensational Sensors)
@@ -1628,10 +1615,8 @@ def render_master_content(sno, title, session_val="2026-27"):
         col_l, col_r = st.columns(2)
         with col_l:
             st.markdown("##### 🎯 Learning Objectives & Outcomes")
-            st.info(
-                f"**Objectives:** Master the working principles of {plan_data[1]} on Arduino Uno with 3-pin Breakout Shield. Advance team deliverables on the Erehwon Track.")
-            st.success(
-                f"**Expected Outcome:** Securely wire modules without breadboards, calibrate sensor thresholds via Serial Monitor, and fulfill designated team roles.")
+            st.info(f"**Objectives:** Master the working principles of {plan_data[1]} on Arduino Uno with 3-pin Breakout Shield. Advance team deliverables on the Erehwon Track.")
+            st.success(f"**Expected Outcome:** Securely wire modules without breadboards, calibrate sensor thresholds via Serial Monitor, and fulfill designated team roles.")
             st.markdown("##### 🛠️ Hands-on Experimental Activity")
             st.warning(f"**Activity:** {plan_data[2]}")
         with col_r:
@@ -1639,24 +1624,24 @@ def render_master_content(sno, title, session_val="2026-27"):
             st.code(plan_data[3], language="text")
             st.markdown("##### 📦 Teaching Aids & Resources")
             st.write(f"• **Hardware:** {plan_data[4]}")
-            st.write(f"• **Digital Resource:** ScienceUtsav LMS (report.scienceutsav.com/lms) | Arduino Reference")
+            st.write(f"• **Digital Resource:** ScienceUtsav LMS | Arduino Reference")
             st.markdown("##### 📊 Periodic Assessment")
             st.write(f"• **Criteria:** {plan_data[5]}")
         return True
 
-    elif title == "Student List" or sno == 7:
+    elif sno == 7 or title == "Student List":
         render_student_excel()
         return True
 
-    elif title == "Student Attendance" or sno == 8:
+    elif sno == 8 or title == "Student Attendance":
         render_student_attendance_viewer(session_val)
         return True
 
-    elif title == "Teacher Attendance" or sno == 9:
+    elif sno == 9 or title == "Teacher Attendance":
         render_teacher_attendance_viewer(session_val)
         return True
 
-    elif title == "Lab Inventory" or sno == 10:
+    elif sno == 10 or title == "Lab Inventory":
         st.markdown("""
         ### 📦 Verified STEM Lab Inventory (ScienceUtsav & ABPS Kit)
         * **Microcontrollers:** 25x Arduino Uno R3 (ATmega328P DIP), 25x Sensor Breakout Shields V5.0 (3-Pin G-V-S).
@@ -1666,112 +1651,123 @@ def render_master_content(sno, title, session_val="2026-27"):
         """)
         return True
 
-    elif title == "Equipment Details" or sno == 11:
+    elif sno == 11 or title == "Equipment Details":
         st.markdown("""
         ### 🔬 Technical Hardware Specifications
         * **Processing Unit:** Arduino Uno R3 (16 MHz Crystal, 5V Logic, 14 Digital I/O, 6 Analog Inputs).
         * **Shield Architecture:** Dedicated external servo power terminal block, I2C port (A4/A5), UART (TX/RX).
         * **Rapid Prototyping:** Bambu Lab A1 Mini FDM 3D Printer (0.4mm Nozzle, Auto-bed Leveling, 180x180x180mm Build Volume).
+        * **Testing Instruments:** Digital Multimeters with continuity buzzer, 30W Ceramic Soldering Irons with grounded stands.
         """)
         return True
 
-    elif title == "Maintenance Records" or sno == 14:
+    elif sno == 12 or title == "Equipment Photos":
+        st.markdown("### 📷 Lab Equipment & Workbench Photographic Directory")
+        st.info("High-resolution equipment and instrument photographs are archived below. Upload new workbench photos in the Admin workspace.")
+        return True
+
+    elif sno == 13 or title == "Equipment Purchase Records":
+        st.markdown("### 📑 Purchase Invoices, Vendor Orders & AMC Records")
+        st.markdown("""
+        * **Primary Vendor:** ScienceUtsav Edusols Pvt. Ltd. (Robo Scientist Kits & Consumables)
+        * **Prototyping Equipment:** Bambu Lab Official India Distribution (3D Printer & Spares)
+        * **Warranty & AMC:** Annual replacement support for active ICs, sensor modules, and servo gears.
+        """)
+        return True
+
+    elif sno == 14 or title == "Maintenance Records":
         render_maintenance_viewer(session_val)
         return True
 
-    elif title == "Lab Safety Rules" or sno == 15:
+    elif sno == 15 or title == "Lab Safety Rules":
         st.markdown("""
         ### 🛡️ STEM LAB SAFETY RULES
         > **BE SAFE • BE RESPONSIBLE • BE INNOVATIVE** | *Aditya Birla Intermediate College, Renukoot*
-
         ---
         #### 1. General Rules
-        * Enter the lab only with permission.
-        * Follow all instructions of the teacher.
-        * Maintain discipline and silence.
-        * Do not run, push or shout.
-        * Keep your workstation clean and organized.
-        * Do not bring food or drinks.
-        * Do not remove any equipment from the lab.
-
+        * Enter the lab only with teacher permission and maintain strict decorum.
+        * Keep workstations completely clean, dry, and free of food or beverage containers.
+        * Report all damaged components or bent pins immediately.
         #### 2. Electrical Safety
-        * Handle electrical equipment carefully.
-        * Do not use damaged wires or equipment.
-        * Switch off power before making connections.
-        * Do not connect to power source without teacher supervision.
-        * Keep water away from electrical equipment.
-        * Report any sparking, unusual heating or fault immediately.
-        * Do not touch exposed connections.
-
-        #### 3. Arduino, Sensors & Robotics
-        * Handle boards, sensors and components carefully.
-        * Check connections before switching on.
-        * Use correct voltage and power supply.
-        * Do not force components into connectors.
-        * Operate motors and moving parts only under supervision.
-        * Keep loose wires away from moving parts.
-        * Switch off power after completing the activity.
-
-        #### 4. Tools & Equipment
-        * Use tools only for their intended purpose.
-        * Handle tools carefully.
-        * Do not leave sharp tools unattended.
-        * Return all tools to their place after use.
-        * Report damaged or missing tools immediately.
-        * Use tools under teacher supervision.
-
-        #### 5. 3D Printer Safety
-        * Operate 3D printer only under supervision.
-        * Do not touch hot nozzle or heated bed.
-        * Keep hands and objects away from moving parts.
-        * Do not repair or modify the printer.
-        * Switch off the printer when not in use.
-        * Report any malfunction immediately.
-
-        #### 6. Battery Safety
-        * Use only specified batteries and chargers.
-        * Do not short-circuit batteries.
-        * Do not use damaged, swollen or leaking batteries.
-        * Follow proper charging procedure.
-        * Do not leave batteries connected unnecessarily.
-        * Store batteries in designated place.
-
-        #### 7. Emergency Rules
-        * Stay calm during an emergency.
-        * Inform the teacher immediately.
-        * Switch off power if safe to do so.
-        * Do not try to handle electrical faults.
-        * Follow school's emergency and evacuation procedures.
-        * Do not re-enter the lab until permission is given.
-
-        ---
-        #### 🌟 Student Responsibility
-        * **Follow all safety instructions**
-        * **Work responsibly and cooperatively**
-        * **Handle equipment with care**
-        * **Report any damage immediately**
-        * **Keep the lab clean and safe**
-
-        > *★ A SAFE LAB IS A SMART LAB • YOUR SAFETY, OUR PRIORITY ★*
+        * Verify battery/supply polarity prior to powering breakout shields.
+        * Switch OFF bench power before making or modifying jumper wire connections.
+        * Never short-circuit DC power rails or Li-ion cells.
+        #### 3. Soldering & 3D Printing Safety
+        * Always wear safety goggles while snipping wire leads or soldering.
+        * Operate the 3D printer only under teacher guidance; do not touch the heated nozzle (210°C).
         """)
         return True
 
-    elif title == "Safety Checklist" or sno == 16:
+    elif sno == 16 or title == "Safety Checklist":
         render_safety_checklist_viewer(session_val)
         return True
 
-    elif title == "STEM Activities" or sno == 17:
+    elif sno == 17 or title == "STEM Activities":
         st.markdown("""
         ### 💡 Core Laboratory Project Modules
-        1. Smart Street Lighting with LDR Sensor and Transistor/Relay Switching.
-        2. Acoustic Decibel Warning Station using Sound Sensor, RGB LED, and Buzzer.
-        3. Automated Touchless Boom Barrier Gate with IR Proximity Sensor and SG90 Micro Servo.
-        4. Multi-Factor Laser Optical Tripwire Security System with Capacitive Touch Disarm.
-        5. Smart Agricultural Greenhouse Monitor with Soil Moisture, DHT11, and I2C LCD Readout.
+        1. **Smart Street Lighting:** LDR sensor, NPN transistor, and Relay switching.
+        2. **Acoustic Decibel Warning Station:** Sound microphone sensor, RGB LED, and active buzzer alerts.
+        3. **Automated Touchless Boom Barrier Gate:** IR Proximity sensor, SG90 servo motor, and timed gate hold.
+        4. **Multi-Factor Laser Optical Tripwire:** 650nm laser diode, shrouded receiver, and capacitive touch disarm.
+        5. **Smart Agricultural Greenhouse Monitor:** Soil moisture sensor, DHT11 humidity/temperature, and I2C LCD readout.
         """)
         return True
 
-    elif title == "Assessment Rubrics" or sno == 27:
+    elif sno == 18 or title == "Activity Worksheets":
+        st.markdown("### 📝 Hands-on Student Activity Worksheets & Lab Guides")
+        st.markdown("Downloadable step-by-step schematics and student observation sheets corresponding to the 56 Master Lesson Plans.")
+        return True
+
+    elif sno == 19 or title == "Activity Photos":
+        st.markdown("### 📸 Student Hands-on Lab Activity Photolog")
+        st.info("Photos documenting regular classroom hands-on sessions across Classes VI to IX.")
+        return True
+
+    elif sno == 20 or title == "Activity Videos":
+        st.markdown("### 🎥 Activity Demonstration Videos")
+        st.info("Video demonstrations of student sensor calibrations and weekly circuit simulations.")
+        return True
+
+    elif sno == 21 or title == "Student Projects":
+        st.markdown("""
+        ### 🚀 Completed Student Innovation Projects
+        * **Project 1:** Smart Accident Detection & Automated Alert Helmet
+        * **Project 2:** Contactless Ultrasonic Social Distance & Hand Sanitizer Dispenser
+        * **Project 3:** Automated Railway Crossing Barrier with Laser Detection
+        * **Project 4:** Solar-Tracked Precision Irrigation Controller
+        """)
+        return True
+
+    elif sno == 22 or title == "Prototype Details":
+        st.markdown("""
+        ### 🛠️ Working Prototype Technical Specifications
+        Detailed circuit diagrams, Bill of Materials (BOM), CAD chassis files (.STL for 3D printer), and pin-mapping tables.
+        """)
+        return True
+
+    elif sno == 23 or title == "Problem Statements":
+        st.markdown("""
+        ### 🎯 Validated Real-World Problem Statements (Erehwon Track)
+        1. **Campus Cleanliness:** Overflowing trash bins in secondary corridors causing unhygienic conditions.
+        2. **Water Conservation:** Overhead tank overflow leading to massive treated water wastage.
+        3. **Road Safety:** Blind-turn vehicle collisions along narrow industrial township curves.
+        4. **Classroom Acoustics:** High ambient noise levels impacting student concentration during lessons.
+        """)
+        return True
+
+    elif sno == 24 or title == "Innovation Ideas":
+        st.markdown("""
+        ### 💡 Idea Bank & Conceptual Proposals
+        A repository of student-generated engineering ideas evaluated against technical feasibility, cost impact, and community value.
+        """)
+        return True
+
+    elif sno in [25, 26]:
+        st.markdown(f"### 📂 Student Project Media: {'Photos' if sno == 25 else 'Videos'}")
+        st.info(f"Project {'photographs' if sno == 25 else 'demonstration videos'} archived for competition submissions.")
+        return True
+
+    elif sno == 27 or title == "Assessment Rubrics":
         st.markdown("""
         ### 📊 Student STEM Assessment Rubric (100 Marks Distribution)
         * **Problem Identification & Research (20 Marks):** Campus problem statement clarity and engineering logbook documentation.
@@ -1782,11 +1778,41 @@ def render_master_content(sno, title, session_val="2026-27"):
         """)
         return True
 
-    elif title == "Student Assessment" or sno == 28:
+    elif sno == 28 or title == "Student Assessment":
         render_scienceutsav_assessment()
         return True
 
-    elif title == "Teacher Training Records" or sno == 35:
+    elif sno == 29 or title == "Student Performance":
+        st.markdown("### 📈 Student Performance Analytics & Progress Charts")
+        st.info("Comprehensive academic tracking and maker-competency progression across terms.")
+        return True
+
+    elif sno in [30, 31, 32]:
+        sub_map = {30: "Registration", 31: "Team Details", 32: "Submissions"}
+        st.markdown(f"### 🏆 STEM QUEST 2026: {sub_map[sno]}")
+        st.markdown("""
+        * **Competition:** STEM QUEST 2026 Innovation Challenge
+        * **Coordination Desk:** Aditya Birla Intermediate College STEM SPOC
+        * **Active Cohort:** 25+ Innovation Teams across Classes VI, VII, VIII & IX.
+        """)
+        return True
+
+    elif sno == 33 or title == "VVM Records":
+        st.markdown("""
+        ### 🇮🇳 Vidyarthi Vigyan Manthan (VVM) Records
+        Official registration roasters, study material distribution, mock test scores, and district/state-level qualifying ranks.
+        """)
+        return True
+
+    elif sno == 34 or title == "Other Competitions":
+        st.markdown("""
+        ### 🏅 National & Regional Innovation Competitions
+        * **INSPIRE Award - MANAK:** National innovation proposals.
+        * **Science Olympiads & Robotics Expos:** Regional level participation and awards.
+        """)
+        return True
+
+    elif sno == 35 or title == "Teacher Training Records":
         st.markdown("""
         ### 🧑‍🏫 Teacher STEM Capacity Building & Training Record
         * **Conducted By:** ScienceUtsav Technical Expert Team & ABIC STEM Coordinator.
@@ -1795,14 +1821,32 @@ def render_master_content(sno, title, session_val="2026-27"):
         """)
         return True
 
-    elif title == "Annual Report" or sno == 46:
+    elif sno in [36, 37, 38, 39]:
+        labels = {36: "Training Certificates", 37: "Training Attendance", 38: "Workshop Reports", 39: "Workshop Photos"}
+        st.markdown(f"### 📑 Teacher Professional Development: {labels[sno]}")
+        st.info(f"Official verification archives for faculty {labels[sno].lower()}.")
+        return True
+
+    elif sno in [40, 41, 42, 43]:
+        doc_types = {40: "Government Circulars", 41: "School Circulars", 42: "Official Emails", 43: "Meeting Minutes"}
+        st.markdown(f"### ✉️ Administrative Communication: {doc_types[sno]}")
+        st.markdown(f"Official notices, minutes of faculty meetings, and department circulars regarding STEM lab management.")
+        return True
+
+    elif sno in [44, 45, 46]:
+        rep_type = {44: "Monthly Reports", 45: "Quarterly Reports", 46: "Annual Report"}
+        st.markdown(f"### 📑 Administrative Progress: {rep_type[sno]}")
         st.markdown(f"""
-        ### 📑 Annual STEM Innovation Lab Report ({session_val} Executive Summary)
-        * Over 400+ students from Classes VI to IX actively enrolled in weekly hands-on maker curricula.
-        * 56 structured lesson plans executed across sensor and robotics modules.
-        * 25+ student teams successfully completed Alpha working prototypes for the National Erehwon Innovation Competition.
-        * 100% equipment audit verified with zero electrical safety incidents.
+        * **Curricular Execution:** Regular progress audits of the 56 Master Lesson Plans.
+        * **Cohort Engagement:** 400+ students actively involved in maker sessions.
+        * **Safety & Upkeep:** Routine maintenance and 100% compliant safety checklists maintained.
         """)
+        return True
+
+    elif sno in [47, 48, 49]:
+        ach_type = {47: "Student Certificates", 48: "Student Achievements", 49: "STEM Lab Event Photos"}
+        st.markdown(f"### 🌟 Student Recognition: {ach_type[sno]}")
+        st.info(f"Verified repository of {ach_type[sno].lower()} and honors awarded to ABIC students.")
         return True
 
     return False
@@ -1811,7 +1855,6 @@ def render_master_content(sno, title, session_val="2026-27"):
 st.sidebar.title("🔬 ABIC STEM Portal")
 st.sidebar.caption("Aditya Birla Intermediate College, Renukoot")
 
-# GLOBAL SESSION SELECTOR IN SIDEBAR
 selected_global_session = st.sidebar.selectbox("🎯 Academic Session:", ACADEMIC_SESSIONS, index=0, key="global_session_selector")
 st.session_state["current_selected_session"] = selected_global_session
 
@@ -1957,7 +2000,14 @@ if access_mode == "Admin Workspace":
             for sno, title in items:
                 folder_name = get_folder_name(sno, title)
                 record_dir = os.path.join(UPLOAD_DIR, folder_name)
-                os.makedirs(record_dir, exist_ok=True)
+
+                if os.path.exists(record_dir) and not os.path.isdir(record_dir):
+                    record_dir = record_dir + "_uploads"
+
+                try:
+                    os.makedirs(record_dir, exist_ok=True)
+                except Exception:
+                    pass
 
                 is_active = (st.session_state.get("active_admin_sno") == sno)
                 btn_label = f"▼ #{sno}. {title}" if is_active else f"▶ #{sno}. {title}"
@@ -2158,14 +2208,7 @@ else:
         for section_name, items in CATEGORIES.items():
             for sno, title in items:
                 files_found = get_existing_files_for_parameter(sno, title)
-                has_builtin = title in [
-                    "STEM Lab Profile", "Lab Objectives & Guidelines", "Coordinator / SPOC Details",
-                    "Monthly / Annual STEM Activity Plan", "Class-wise Timetable", "Session / Lesson Plans",
-                    "Student List", "Student Attendance", "Teacher Attendance", "Lab Inventory",
-                    "Equipment Details", "Maintenance Records", "Lab Safety Rules", "Safety Checklist",
-                    "STEM Activities",
-                    "Assessment Rubrics", "Student Assessment", "Teacher Training Records", "Annual Report"
-                ]
+                has_builtin = True
                 if has_builtin or len(files_found) > 0:
                     completed += 1
                     status = "✅ Active / Verified"
@@ -2177,3 +2220,14 @@ else:
         c1.metric("Total Parameters", total)
         c2.metric("Completed / Active", f"{completed} / {total}")
         st.dataframe(summary_rows, use_container_width=True)
+
+# ----------------- FOOTER & PORTAL CREDITS -----------------
+st.markdown("---")
+st.markdown(f"""
+<div style="text-align: center; padding: 25px 0 15px 0; color: #64748b; font-size: 13px;">
+    <b>Aditya Birla Intermediate College, Renukoot, Sonebhadra (U.P.)</b><br>
+    🔬 School STEM Innovation & Learning Laboratory | Academic Session: <b>{selected_global_session}</b><br>
+    Managed by <b>Shashank Verma</b> (STEM Coordinator / SPOC)<br>
+    <span style="font-size: 11px; color: #94a3b8;">© {selected_global_session} Government & Corporate STEM Educational Framework • All 49 Parameters Maintained Digitally</span>
+</div>
+""", unsafe_allow_html=True)
