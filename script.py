@@ -81,6 +81,34 @@ div[data-testid="stButton"] button:focus {
 </style>
 """, unsafe_allow_html=True)
 
+# ----------------- DYNAMIC APRIL-TO-MARCH ACADEMIC SESSION ENGINE -----------------
+def get_current_academic_session():
+    now = datetime.now()
+    year = now.year
+    # Session runs April 1 to March 31
+    if now.month < 4:
+        start_year = year - 1
+    else:
+        start_year = year
+    return f"{start_year}-{str(start_year + 1)[-2:]}"
+
+def generate_academic_sessions():
+    now = datetime.now()
+    curr_sess = get_current_academic_session()
+    base_year = int(curr_sess.split("-")[0])
+    # Generates previous session, current session, and next 2 sessions automatically
+    sessions = []
+    for y in range(base_year - 1, base_year + 3):
+        sessions.append(f"{y}-{str(y + 1)[-2:]}")
+    return sessions
+
+ACADEMIC_SESSIONS = generate_academic_sessions()
+CURRENT_AUTO_SESSION = get_current_academic_session()
+
+MONTHS = ["April", "May", "June", "July", "August", "September", "October", "November", "December", "January", "February", "March"]
+WEEKS = ["Week 1", "Week 2", "Week 3", "Week 4", "Week 5"]
+DAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"]
+
 # ----------------- BASE DIRECTORIES & CONFIG -----------------
 UPLOAD_DIR = "stem_lab_records"
 DATA_DIR = "portal_data"
@@ -123,11 +151,6 @@ DEFAULT_CONFIGS = {
     FORM_CONFIG_FILE: "https://docs.google.com/forms/d/e/1FAIpQLSeAE6pzeLi-NVO4aTA82gfXH2oKqtFf3TTlIyI0VCQobP9qxQ/viewform?usp=sharing&ouid=116197222500145214334",
     SCIENCEUTSAV_CONFIG_FILE: "https://report.scienceutsav.com/class/k57a8q5h6mzanqt4vdvn48c1vx8ba0q3/report"
 }
-
-ACADEMIC_SESSIONS = ["2026-27", "2027-28"]
-MONTHS = ["April", "May", "June", "July", "August", "September", "October", "November", "December", "January", "February", "March"]
-WEEKS = ["Week 1", "Week 2", "Week 3", "Week 4", "Week 5"]
-DAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"]
 
 # EXACT SAFETY COMPLIANCE CHECKLIST: ELECTRONICS STEM LAB (#16)
 DEFAULT_SAFETY_POINTS = [
@@ -216,7 +239,7 @@ CATEGORIES = {
 
 # ----------------- SESSION STATE TRACKERS -----------------
 for k, v in [("active_viewer_sno", None), ("active_admin_sno", None),
-             ("is_admin_logged_in", False), ("current_selected_session", "2026-27")]:
+             ("is_admin_logged_in", False), ("current_selected_session", CURRENT_AUTO_SESSION)]:
     if k not in st.session_state:
         st.session_state[k] = v
 
@@ -280,11 +303,12 @@ def save_timetable_from_df(edited_df):
             ''', (str(row['Period']), str(row['Timing']), str(row['Monday']), str(row['Tuesday']), str(row['Wednesday']), str(row['Thursday']), str(row['Friday']), str(row['Saturday'])))
         conn.commit()
 
-def render_timetable_view(session_val="2026-27"):
+def render_timetable_view(session_val=CURRENT_AUTO_SESSION):
+    start_year = session_val.split("-")[0]
     st.markdown(f"""
     ### ⏰ STEM INNOVATION LAB - MASTER TIME TABLE (SESSION {session_val})
     **Aditya Birla Intermediate College, Renukoot, Sonebhadra (U.P.)**
-    * **Lab In-charge / SPOC:** Shashank Verma | **Effective Date:** 01 July {session_val.split('-')[0]}
+    * **Lab In-charge / SPOC:** Shashank Verma | **Effective Date:** 01 July {start_year}
     * **Assembly / Prayer:** 9:00 AM - 9:15 AM (Warning Bell: 8:50 AM)
     * **Final Bell:** Class 11-12: 2:25 PM | Class 6-10: 2:30 PM
     """)
@@ -312,6 +336,11 @@ def get_current_month_index():
 
 def get_folder_name(sno, title):
     return f"{sno:02d}_{title.replace(' ', '_').replace('/', '_')}"
+
+def get_session_upload_dir(session_val, sno, title):
+    """Generates clean GitHub/local session-isolated directory path."""
+    folder_name = get_folder_name(sno, title)
+    return os.path.join(UPLOAD_DIR, str(session_val), folder_name)
 
 def get_saved_url(file_path):
     if os.path.exists(file_path):
@@ -500,7 +529,7 @@ def save_student_attendance_slot(session_val, month, edited_df):
     edited_df["Session"] = str(session_val)
     edited_df["Month"] = str(month)
     if "Session" not in df_all.columns:
-        df_all["Session"] = "2026-27"
+        df_all["Session"] = str(session_val)
     df_remaining = df_all[~((df_all["Session"] == str(session_val)) & (df_all["Month"] == str(month)))] if not df_all.empty else pd.DataFrame()
     pd.concat([df_remaining, edited_df], ignore_index=True).to_csv(STUDENT_ATTENDANCE_FILE, index=False)
 
@@ -517,7 +546,7 @@ def save_teacher_attendance_slot(session_val, month, edited_df):
     edited_df["Session"] = str(session_val)
     edited_df["Month"] = str(month)
     if "Session" not in df_all.columns:
-        df_all["Session"] = "2026-27"
+        df_all["Session"] = str(session_val)
     df_remaining = df_all[~((df_all["Session"] == str(session_val)) & (df_all["Month"] == str(month)))] if not df_all.empty else pd.DataFrame()
     pd.concat([df_remaining, edited_df], ignore_index=True).to_csv(TEACHER_ATTENDANCE_FILE, index=False)
 
@@ -535,7 +564,7 @@ def get_safety_checklist_for_slot(session_val, month, default_date_str=None):
 
     if not df_all.empty:
         if "Session" not in df_all.columns:
-            df_all["Session"] = "2026-27"
+            df_all["Session"] = str(session_val)
         filtered = df_all[(df_all["Session"] == str(session_val)) & (df_all["Month"] == str(month))]
         if not filtered.empty:
             drop_cols = [c for c in ["Session", "Month", "Week"] if c in filtered.columns]
@@ -560,7 +589,7 @@ def save_safety_checklist_slot(session_val, month, edited_df, chosen_date=None):
     edited_df["Session"] = str(session_val)
     edited_df["Month"] = str(month)
     if "Session" not in df_all.columns:
-        df_all["Session"] = "2026-27"
+        df_all["Session"] = str(session_val)
     if chosen_date:
         edited_df["Date"] = str(chosen_date)
     edited_df["Status"] = edited_df["Status"].apply(lambda x: "Passed" if x is True else "Failed")
@@ -582,7 +611,7 @@ def get_daily_maint_for_slot(session_val, month, default_date_str=None):
 
     if not df_all.empty:
         if "Session" not in df_all.columns:
-            df_all["Session"] = "2026-27"
+            df_all["Session"] = str(session_val)
         filtered = df_all[(df_all["Session"] == str(session_val)) & (df_all["Month"] == str(month))]
         if not filtered.empty:
             drop_cols = [c for c in ["Session", "Month", "Week"] if c in filtered.columns]
@@ -612,7 +641,7 @@ def save_daily_maint_slot(session_val, month, edited_df, chosen_date=None):
     edited_df["Session"] = str(session_val)
     edited_df["Month"] = str(month)
     if "Session" not in df_all.columns:
-        df_all["Session"] = "2026-27"
+        df_all["Session"] = str(session_val)
     if chosen_date:
         edited_df["Date"] = str(chosen_date)
     if "Week" in edited_df.columns:
@@ -636,7 +665,7 @@ def get_deep_maint_for_slot(session_val, month, default_date_str=None):
 
     if not df_all.empty:
         if "Session" not in df_all.columns:
-            df_all["Session"] = "2026-27"
+            df_all["Session"] = str(session_val)
         filtered = df_all[(df_all["Session"] == str(session_val)) & (df_all["Month"] == str(month))]
         if not filtered.empty:
             drop_cols = [c for c in ["Session", "Month", "Week"] if c in filtered.columns]
@@ -664,7 +693,7 @@ def save_deep_maint_slot(session_val, month, edited_df, chosen_date=None):
     edited_df["Session"] = str(session_val)
     edited_df["Month"] = str(month)
     if "Session" not in df_all.columns:
-        df_all["Session"] = "2026-27"
+        df_all["Session"] = str(session_val)
     if chosen_date:
         edited_df["Date"] = str(chosen_date)
     if "Week" in edited_df.columns:
@@ -682,7 +711,7 @@ def get_breakdown_maint_for_slot(session_val, month):
 
     if not df_all.empty:
         if "Session" not in df_all.columns:
-            df_all["Session"] = "2026-27"
+            df_all["Session"] = str(session_val)
         filtered = df_all[(df_all["Session"] == str(session_val)) & (df_all["Month"] == str(month))]
         if not filtered.empty:
             drop_cols = [c for c in ["Session", "Month", "Week"] if c in filtered.columns]
@@ -708,14 +737,14 @@ def save_breakdown_maint_slot(session_val, month, edited_df):
     edited_df["Session"] = str(session_val)
     edited_df["Month"] = str(month)
     if "Session" not in df_all.columns:
-        df_all["Session"] = "2026-27"
+        df_all["Session"] = str(session_val)
     if "Week" in edited_df.columns:
         edited_df = edited_df.drop(columns=["Week"])
     df_rem = df_all[~((df_all["Session"] == str(session_val)) & (df_all["Month"] == str(month)))] if not df_all.empty else pd.DataFrame()
     pd.concat([df_rem, edited_df], ignore_index=True).to_csv(MAINTENANCE_BREAKDOWN_FILE, index=False)
 
 # ----------------- REAL-TIME GOOGLE SHEET SYNC ENGINE -----------------
-def sync_data_from_google_sheet(target_session="2026-27"):
+def sync_data_from_google_sheet(target_session=CURRENT_AUTO_SESSION):
     sheet_url = get_saved_url(SHEET_CONFIG_FILE)
     if not sheet_url:
         return False, "Google Sheet URL not configured."
@@ -811,7 +840,7 @@ def get_student_attendance_for_slot(session_val, month):
     df_all = get_student_attendance_all()
     if not df_all.empty and "Month" in df_all.columns:
         if "Session" not in df_all.columns:
-            df_all["Session"] = "2026-27"
+            df_all["Session"] = str(session_val)
         filtered = df_all[(df_all["Session"] == str(session_val)) & (df_all["Month"] == str(month))]
         if not filtered.empty:
             drop_cols = [c for c in ["Session", "Month", "Week"] if c in filtered.columns]
@@ -828,7 +857,7 @@ def get_teacher_attendance_for_slot(session_val, month):
     df_all = get_teacher_attendance_all()
     if not df_all.empty and "Month" in df_all.columns:
         if "Session" not in df_all.columns:
-            df_all["Session"] = "2026-27"
+            df_all["Session"] = str(session_val)
         filtered = df_all[(df_all["Session"] == str(session_val)) & (df_all["Month"] == str(month))]
         if not filtered.empty:
             drop_cols = [c for c in ["Session", "Month", "Week"] if c in filtered.columns]
@@ -875,18 +904,29 @@ def render_file_preview(file_path, file_name, unique_key):
             st.download_button(f"📥 Download File ({file_name})", data=f.read(), file_name=file_name,
                                key=f"dl_doc_{unique_key}")
 
-def get_existing_files_for_parameter(sno, title):
+def get_existing_files_for_parameter(sno, title, session_val=CURRENT_AUTO_SESSION):
+    """
+    Session-Isolated retrieval:
+    1. Looks in stem_lab_records/{session_val}/{folder_name}/ (GitHub & Local new structure)
+    2. Fallback to stem_lab_records/{folder_name}/ (Legacy backward compatibility)
+    """
+    folder_name = get_folder_name(sno, title)
+    
+    # Preferred Session Directory
+    session_specific_dir = os.path.join(UPLOAD_DIR, str(session_val), folder_name)
+    
+    # Fallback Candidate Directories (backward compatibility)
     folder_candidates = [
-        f"{sno:02d}_{title.replace(' ', '_').replace('/', '_')}",
-        f"{(sno + 1):02d}_{title.replace(' ', '_').replace('/', '_')}",
-        f"{(sno - 1):02d}_{title.replace(' ', '_').replace('/', '_')}",
-        title.replace(' ', '_').replace('/', '_')
+        session_specific_dir,
+        os.path.join(UPLOAD_DIR, folder_name),
+        os.path.join(UPLOAD_DIR, str(session_val), title.replace(' ', '_').replace('/', '_')),
+        os.path.join(UPLOAD_DIR, title.replace(' ', '_').replace('/', '_'))
     ]
+
     all_files = []
     seen = set()
 
-    for cand in folder_candidates:
-        cand_dir = os.path.join(UPLOAD_DIR, cand)
+    for cand_dir in folder_candidates:
         if os.path.isdir(cand_dir):
             for f in sorted(os.listdir(cand_dir)):
                 full_path = os.path.join(cand_dir, f)
@@ -911,12 +951,9 @@ def get_existing_files_for_parameter(sno, title):
 
     return all_files
 
-def render_parameter_file_manager(sno, title):
-    folder_name = get_folder_name(sno, title)
-    record_dir = os.path.join(UPLOAD_DIR, folder_name)
-
-    if os.path.exists(record_dir) and not os.path.isdir(record_dir):
-        record_dir = record_dir + "_uploads"
+def render_parameter_file_manager(sno, title, session_val=CURRENT_AUTO_SESSION):
+    # Session isolated folder target
+    record_dir = get_session_upload_dir(session_val, sno, title)
 
     try:
         os.makedirs(record_dir, exist_ok=True)
@@ -924,34 +961,35 @@ def render_parameter_file_manager(sno, title):
         pass
 
     st.markdown("---")
-    st.markdown(f"##### 📂 Upload & Manage Files for #{sno} ({title})")
+    st.markdown(f"##### 📂 Upload & Manage Files for #{sno} ({title}) — `Session: {session_val}`")
+    st.caption(f"📁 GitHub / Local Storage Path: `{record_dir}`")
 
     uploaded_files = st.file_uploader(
-        f"Upload documents/photos/videos for #{sno}:",
+        f"Upload documents/photos/videos for #{sno} (Session {session_val}):",
         accept_multiple_files=True,
-        key=f"mgr_uploader_{sno}"
+        key=f"mgr_uploader_{session_val}_{sno}"
     )
 
     if uploaded_files:
         for f in uploaded_files:
             with open(os.path.join(record_dir, f.name), "wb") as buffer:
                 buffer.write(f.getbuffer())
-        st.success(f"✅ Successfully saved {len(uploaded_files)} file(s).")
+        st.success(f"✅ Successfully saved {len(uploaded_files)} file(s) into Session {session_val}.")
         st.rerun()
 
-    existing_files = get_existing_files_for_parameter(sno, title)
+    existing_files = get_existing_files_for_parameter(sno, title, session_val)
     if existing_files:
         st.markdown(f"**📑 Uploaded Files ({len(existing_files)}):**")
         for idx, (fpath, fname) in enumerate(existing_files):
             c_a, c_b = st.columns([5, 1])
-            c_a.markdown(f"📄 **{fname}**")
-            if c_b.button("🗑️ Delete", key=f"del_btn_{sno}_{idx}_{fname}", help=f"Delete only {fname}"):
+            c_a.markdown(f"📄 **{fname}** (`{os.path.dirname(fpath)}`)")
+            if c_b.button("🗑️ Delete", key=f"del_btn_{session_val}_{sno}_{idx}_{fname}", help=f"Delete only {fname}"):
                 if os.path.exists(fpath):
                     os.remove(fpath)
                 st.warning(f"Deleted {fname}")
                 st.rerun()
     else:
-        st.caption("No files uploaded for this section yet.")
+        st.caption(f"No files uploaded for Session {session_val} yet.")
 
 def render_student_attendance_viewer(session_val):
     st.markdown("### 📊 Section-wise Student STEM Attendance Record")
@@ -1046,13 +1084,11 @@ def render_student_excel():
         os.path.join(DATA_DIR, "lms student data.xlsx"),
     ]
     if os.path.exists(UPLOAD_DIR):
-        for folder in os.listdir(UPLOAD_DIR):
-            if "student_list" in folder.lower() or "student list" in folder.lower():
-                u_dir = os.path.join(UPLOAD_DIR, folder)
-                if os.path.isdir(u_dir):
-                    for f in os.listdir(u_dir):
-                        if f.lower().endswith((".xlsx", ".xls", ".csv")):
-                            possible_paths.append(os.path.join(u_dir, f))
+        for root, dirs, files in os.walk(UPLOAD_DIR):
+            if any(k in root.lower() for k in ["student_list", "student list"]):
+                for f in files:
+                    if f.lower().endswith((".xlsx", ".xls", ".csv")):
+                        possible_paths.append(os.path.join(root, f))
 
     found_file = next((p for p in possible_paths if os.path.exists(p)), None)
     if found_file:
@@ -1072,7 +1108,7 @@ def render_student_excel():
         except Exception as e:
             st.error(f"Error reading {found_file}: {e}")
     else:
-        st.warning("⚠️ `LMS STUDENT DATA.xlsx` file not found in current folder.")
+        st.warning("⚠️ `LMS STUDENT DATA.xlsx` file not found in repository.")
         st.info("Please upload your student database via the Admin panel in Parameter #7 (Student List).")
 
 def render_scienceutsav_assessment():
@@ -1159,7 +1195,7 @@ ANNUAL_PLAN_DATA = [
      "Roles": "All 5-6 Team Members"}
 ]
 
-def render_annual_plan(session_val="2026-27"):
+def render_annual_plan(session_val=CURRENT_AUTO_SESSION):
     st.markdown(f"""
     ### 📅 MONTHLY / ANNUAL STEM ACTIVITY PLAN (ACADEMIC SESSION {session_val})
     > **Schedule:** 2 Sessions / Month (14 Total Sessions) | **Target:** 25+ Innovation Teams (Classes 6–9 | 5–6 Students Per Team)
@@ -1487,7 +1523,7 @@ LESSON_PLANS_DB = {
 }
 
 # ----------------- MASTER CONTENT ROUTER (ALL 49 PARAMETERS HANDLED) -----------------
-def render_master_content(sno, title, session_val="2026-27"):
+def render_master_content(sno, title, session_val=CURRENT_AUTO_SESSION):
     if sno == 1 or title == "STEM Lab Profile":
         st.markdown(f"""
         ### 🏫 STEM LAB PROFILE
@@ -1670,7 +1706,7 @@ def render_master_content(sno, title, session_val="2026-27"):
         st.markdown("### 📑 Purchase Invoices, Vendor Orders & AMC Records")
         st.markdown("""
         * **Primary Vendor:** ScienceUtsav Edusols Pvt. Ltd. (Robo Scientist Kits & Consumables)
-        * **Prototyping Equipment:** Bambu Lab Official India Distribution (3D Printer & Spares)
+        * **Prototyping Equipment:** Bambu Lab India Distribution (3D Printer & Spares)
         * **Warranty & AMC:** Annual replacement support for active ICs, sensor modules, and servo gears.
         """)
         return True
@@ -1855,7 +1891,15 @@ def render_master_content(sno, title, session_val="2026-27"):
 st.sidebar.title("🔬 ABIC STEM Portal")
 st.sidebar.caption("Aditya Birla Intermediate College, Renukoot")
 
-selected_global_session = st.sidebar.selectbox("🎯 Academic Session:", ACADEMIC_SESSIONS, index=0, key="global_session_selector")
+# Automatic default selection based on current April-to-March year
+default_session_index = ACADEMIC_SESSIONS.index(CURRENT_AUTO_SESSION) if CURRENT_AUTO_SESSION in ACADEMIC_SESSIONS else 0
+
+selected_global_session = st.sidebar.selectbox(
+    "🎯 Academic Session:",
+    ACADEMIC_SESSIONS,
+    index=default_session_index,
+    key="global_session_selector"
+)
 st.session_state["current_selected_session"] = selected_global_session
 
 access_mode = st.sidebar.radio("Navigation Mode", ["Public Viewer", "Admin Workspace"])
@@ -1998,11 +2042,7 @@ if access_mode == "Admin Workspace":
         for section_name, items in CATEGORIES.items():
             st.markdown(f"#### 📑 {section_name}")
             for sno, title in items:
-                folder_name = get_folder_name(sno, title)
-                record_dir = os.path.join(UPLOAD_DIR, folder_name)
-
-                if os.path.exists(record_dir) and not os.path.isdir(record_dir):
-                    record_dir = record_dir + "_uploads"
+                record_dir = get_session_upload_dir(selected_global_session, sno, title)
 
                 try:
                     os.makedirs(record_dir, exist_ok=True)
@@ -2017,7 +2057,7 @@ if access_mode == "Admin Workspace":
                     st.rerun()
 
                 if is_active:
-                    st.markdown(f"### ⚙️ Managing: #{sno}. {title}")
+                    st.markdown(f"### ⚙️ Managing: #{sno}. {title} (`Session {selected_global_session}`)")
                     if title == "Class-wise Timetable":
                         st.markdown("##### Edit SQLite Database Time Table:")
                         df_tt_current = get_timetable_df()
@@ -2026,7 +2066,7 @@ if access_mode == "Admin Workspace":
                             save_timetable_from_df(edited_tt)
                             st.success("Master Time Table updated in SQLite database!")
                             st.rerun()
-                        render_parameter_file_manager(sno, title)
+                        render_parameter_file_manager(sno, title, selected_global_session)
 
                     elif title == "Student Attendance":
                         c_ses, c_m = st.columns(2)
@@ -2041,7 +2081,7 @@ if access_mode == "Admin Workspace":
                             save_student_attendance_slot(adm_ses, admin_st_month, edited_st_slot_df)
                             st.success(f"Saved for {adm_ses} - {admin_st_month}!")
                             st.rerun()
-                        render_parameter_file_manager(sno, title)
+                        render_parameter_file_manager(sno, title, selected_global_session)
 
                     elif title == "Teacher Attendance":
                         c_ses, c_m = st.columns(2)
@@ -2056,7 +2096,7 @@ if access_mode == "Admin Workspace":
                             save_teacher_attendance_slot(adm_ses, admin_tc_month, edited_tc_slot_df)
                             st.success(f"Saved for {adm_ses} - {admin_tc_month}!")
                             st.rerun()
-                        render_parameter_file_manager(sno, title)
+                        render_parameter_file_manager(sno, title, selected_global_session)
 
                     elif title == "Maintenance Records":
                         cur_m_idx = get_current_month_index()
@@ -2120,7 +2160,7 @@ if access_mode == "Admin Workspace":
                                 save_breakdown_maint_slot(adm_m_ses, adm_m_month, ed_bd)
                                 st.success("Breakdown register saved successfully!")
                                 st.rerun()
-                        render_parameter_file_manager(sno, title)
+                        render_parameter_file_manager(sno, title, selected_global_session)
 
                     elif title == "Safety Checklist":
                         cur_m_idx = get_current_month_index()
@@ -2157,9 +2197,9 @@ if access_mode == "Admin Workspace":
                             st.success(
                                 f"Safety checklist for Session {adm_safe_ses} - {admin_safe_month} (Date: {admin_safe_date}) saved!")
                             st.rerun()
-                        render_parameter_file_manager(sno, title)
+                        render_parameter_file_manager(sno, title, selected_global_session)
                     else:
-                        render_parameter_file_manager(sno, title)
+                        render_parameter_file_manager(sno, title, selected_global_session)
 
                     st.divider()
     else:
@@ -2179,7 +2219,7 @@ else:
         for section_name, items in CATEGORIES.items():
             st.subheader(f"📑 {section_name}")
             for sno, title in items:
-                files_found = get_existing_files_for_parameter(sno, title)
+                files_found = get_existing_files_for_parameter(sno, title, selected_global_session)
                 is_active = (st.session_state.get("active_viewer_sno") == sno)
                 toggle_btn_label = f"▼ #{sno}. {title}" if is_active else f"▶ #{sno}. {title}"
 
@@ -2193,12 +2233,12 @@ else:
 
                     if files_found:
                         st.markdown("---")
-                        st.markdown("##### 📁 Uploaded Documents & Files:")
+                        st.markdown(f"##### 📁 Uploaded Documents & Files (`Session: {selected_global_session}`):")
                         for idx, (fpath, fname) in enumerate(files_found):
                             render_file_preview(fpath, fname, f"{sno}_{idx}")
                             st.write("")
                     elif not has_builtin_content:
-                        st.info("No document uploaded yet for this section.")
+                        st.info(f"No document uploaded yet for Session {selected_global_session} in this section.")
                     st.markdown("---")
 
     with tab2:
@@ -2207,7 +2247,7 @@ else:
         summary_rows = []
         for section_name, items in CATEGORIES.items():
             for sno, title in items:
-                files_found = get_existing_files_for_parameter(sno, title)
+                files_found = get_existing_files_for_parameter(sno, title, selected_global_session)
                 has_builtin = True
                 if has_builtin or len(files_found) > 0:
                     completed += 1
